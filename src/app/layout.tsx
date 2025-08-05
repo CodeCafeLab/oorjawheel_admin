@@ -1,9 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { Toaster } from '@/components/ui/toaster'
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/layout/app-sidebar'
-import { Header } from '@/components/layout/header'
+import RootClientLayout from './client-layout'
 
 export const metadata: Metadata = {
   title: 'Oorja Admin',
@@ -30,16 +27,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <SidebarProvider>
-          <AppSidebar />
-          <div className="flex flex-col w-full min-h-screen">
-            <Header />
-            <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-background">
-              {children}
-            </main>
-          </div>
-        </SidebarProvider>
-        <Toaster />
+        <RootClientLayout>{children}</RootClientLayout>
       </body>
     </html>
   )
