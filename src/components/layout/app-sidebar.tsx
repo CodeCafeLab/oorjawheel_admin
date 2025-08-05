@@ -44,7 +44,7 @@ const OorjaLogo = () => (
 
 const navItems = [
   { href: '/', label: 'Dashboard' },
-  { href: '/customers', label: 'Customers' },
+  { href: '/users', label: 'Users' },
   { href: '/products', label: 'Products' },
   { href: '/orders', label: 'Orders' },
   { href: '/reports', label: 'Reports' },
@@ -53,7 +53,7 @@ const navItems = [
 
 const icons: { [key: string]: React.ElementType } = {
     Dashboard: LayoutDashboard,
-    Customers: Users,
+    Users: Users,
     Products: Package,
     Orders: ShoppingCart,
     Reports: BarChart3,

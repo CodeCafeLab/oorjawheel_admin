@@ -18,7 +18,7 @@ import Link from 'next/link'
 
 const navItems = [
     { href: '/', label: 'Dashboard' },
-    { href: '/customers', label: 'Customers' },
+    { href: '/users', label: 'Users' },
     { href: '/products', label: 'Products' },
     { href: '/orders', label: 'Orders' },
     { href: '/reports', label: 'Reports' },
