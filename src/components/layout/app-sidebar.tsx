@@ -21,6 +21,7 @@ import {
   LogOut,
   Smartphone,
   FileText,
+  History,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -50,6 +51,7 @@ const navItems = [
   { href: '/devices', label: 'Devices' },
   { href: '/orders', label: 'Orders' },
   { href: '/cms', label: 'Content CMS' },
+  { href: '/logs', label: 'Logs' },
   { href: '/reports', label: 'Reports' },
   { href: '/settings', label: 'Settings' },
 ]
@@ -60,6 +62,7 @@ const icons: { [key: string]: React.ElementType } = {
     Devices: Smartphone,
     Orders: ShoppingCart,
     'Content CMS': FileText,
+    Logs: History,
     Reports: BarChart3,
     Settings: Settings,
 }
