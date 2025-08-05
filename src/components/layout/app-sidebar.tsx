@@ -19,6 +19,7 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  Smartphone,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -45,7 +46,7 @@ const OorjaLogo = () => (
 const navItems = [
   { href: '/', label: 'Dashboard' },
   { href: '/users', label: 'Users' },
-  { href: '/products', label: 'Products' },
+  { href: '/devices', label: 'Devices' },
   { href: '/orders', label: 'Orders' },
   { href: '/reports', label: 'Reports' },
   { href: '/settings', label: 'Settings' },
@@ -54,7 +55,7 @@ const navItems = [
 const icons: { [key: string]: React.ElementType } = {
     Dashboard: LayoutDashboard,
     Users: Users,
-    Products: Package,
+    Devices: Smartphone,
     Orders: ShoppingCart,
     Reports: BarChart3,
     Settings: Settings,

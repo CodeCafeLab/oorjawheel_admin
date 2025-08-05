@@ -19,7 +19,7 @@ import Link from 'next/link'
 const navItems = [
     { href: '/', label: 'Dashboard' },
     { href: '/users', label: 'Users' },
-    { href: '/products', label: 'Products' },
+    { href: '/devices', label: 'Devices' },
     { href: '/orders', label: 'Orders' },
     { href: '/reports', label: 'Reports' },
     { href: '/settings', label: 'Settings' },
