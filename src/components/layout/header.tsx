@@ -21,7 +21,7 @@ const navItems = [
     { href: '/', label: 'Dashboard' },
     { href: '/users', label: 'Users' },
     { href: '/devices', label: 'Devices' },
-    { href: '/cms', label: 'Content CMS' },
+    { href: '/cms', label: 'CMS Builder' },
     { href: '/logs', label: 'Logs' },
     { href: '/analytics', label: 'Analytics' },
     { href: '/super-login', label: 'Super Login' },
