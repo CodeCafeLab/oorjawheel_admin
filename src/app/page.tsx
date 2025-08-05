@@ -20,48 +20,45 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  LineChart,
-  Line,
+  PieChart,
+  Pie,
 } from 'recharts'
 import type { ChartConfig } from "@/components/ui/chart"
-import { DollarSign, Users, Package, ShoppingCart } from "lucide-react"
+import { Users, Package, AlertTriangle, Terminal } from "lucide-react"
 
 const kpiData = [
-  { title: "Total Revenue", value: "₹4,52,31,890", icon: DollarSign, change: "+20.1% from last month" },
-  { title: "New Customers", value: "+2,350", icon: Users, change: "+180.1% from last month" },
-  { title: "Products Sold", value: "+12,234", icon: Package, change: "+19% from last month" },
-  { title: "Pending Orders", value: "27", icon: ShoppingCart, change: "-2 since last hour" },
-];
+    { title: "Active Devices", value: "1,250", icon: Package, change: "+50 since last week" },
+    { title: "Total Users", value: "2,350", icon: Users, change: "+180 from last month" },
+    { title: "Commands Executed", value: "5,420", icon: Terminal, change: "Last 24h" },
+    { title: "Warranty Triggers", value: "15", icon: AlertTriangle, change: "This month" },
+  ];
 
-const salesData = [
-  { month: 'Jan', sales: 4000 },
-  { month: 'Feb', sales: 3000 },
-  { month: 'Mar', sales: 5000 },
-  { month: 'Apr', sales: 4500 },
-  { month: 'May', sales: 6000 },
-  { month: 'Jun', sales: 5500 },
+const commandVolumeData = [
+    { day: 'Mon', commands: 220 },
+    { day: 'Tue', commands: 180 },
+    { day: 'Wed', commands: 300 },
+    { day: 'Thu', commands: 250 },
+    { day: 'Fri', commands: 400 },
+    { day: 'Sat', commands: 350 },
+    { day: 'Sun', commands: 450 },
 ];
-const salesChartConfig = {
-  sales: {
-    label: "Sales",
+const commandVolumeChartConfig = {
+  commands: {
+    label: "Commands",
     color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig
 
-const revenueData = [
-  { month: 'Jan', revenue: 2400 },
-  { month: 'Feb', revenue: 1398 },
-  { month: 'Mar', revenue: 9800 },
-  { month: 'Apr', revenue: 3908 },
-  { month: 'May', revenue: 4800 },
-  { month: 'Jun', revenue: 3800 },
-  { month: 'Jul', revenue: 4300 },
+const deviceStatusData = [
+  { status: 'Active', count: 1250, fill: 'hsl(var(--chart-1))' },
+  { status: 'Locked', count: 75, fill: 'hsl(var(--chart-2))' },
+  { status: 'Disabled', count: 30, fill: 'hsl(var(--chart-3))' },
 ];
-const revenueChartConfig = {
-  revenue: {
-    label: "Revenue",
-    color: "hsl(var(--accent))",
-  },
+const deviceStatusChartConfig = {
+    count: { label: 'Count' },
+    Active: { label: 'Active', color: 'hsl(var(--chart-1))' },
+    Locked: { label: 'Locked', color: 'hsl(var(--chart-2))' },
+    Disabled: { label: 'Disabled', color: 'hsl(var(--chart-3))' },
 } satisfies ChartConfig
 
 
@@ -85,71 +82,82 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="lg:col-span-4 shadow-md">
           <CardHeader>
-            <CardTitle className="font-headline">Sales Overview</CardTitle>
-            <CardDescription>Monthly sales performance.</CardDescription>
+            <CardTitle className="font-headline">Daily Command Volume</CardTitle>
+            <CardDescription>Commands executed over the last 7 days.</CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <ChartContainer config={salesChartConfig} className="min-h-[300px] w-full">
-              <BarChart accessibilityLayer data={salesData}>
+            <ChartContainer config={commandVolumeChartConfig} className="min-h-[300px] w-full">
+              <BarChart accessibilityLayer data={commandVolumeData}>
                 <CartesianGrid vertical={false} />
                 <XAxis
-                  dataKey="month"
+                  dataKey="day"
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
-                  tickFormatter={(value) => value.slice(0, 3)}
                 />
                 <YAxis
                   tickLine={false}
                   axisLine={false}
                   tickMargin={10}
-                  tickFormatter={(value) => `₹${value / 1000}k`}
                 />
                 <ChartTooltip
                   cursor={false}
                   content={<ChartTooltipContent />}
                 />
                 <ChartLegend content={<ChartLegendContent />} />
-                <Bar dataKey="sales" fill="var(--color-sales)" radius={4} />
+                <Bar dataKey="commands" fill="var(--color-commands)" radius={4} />
               </BarChart>
             </ChartContainer>
           </CardContent>
         </Card>
         <Card className="lg:col-span-3 shadow-md">
           <CardHeader>
-            <CardTitle className="font-headline">Revenue Growth</CardTitle>
-             <CardDescription>Revenue trend over time.</CardDescription>
+            <CardTitle className="font-headline">Device Status</CardTitle>
+             <CardDescription>Current distribution of device statuses.</CardDescription>
           </CardHeader>
-          <CardContent className="pl-2">
-            <ChartContainer config={revenueChartConfig} className="min-h-[300px] w-full">
-              <LineChart accessibilityLayer data={revenueData}>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="month"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tickFormatter={(value) => value.slice(0, 3)}
-                />
-                 <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tickFormatter={(value) => `₹${value / 1000}k`}
-                />
+          <CardContent className="flex justify-center">
+            <ChartContainer config={deviceStatusChartConfig} className="min-h-[300px] max-h-[300px] w-full">
+              <PieChart accessibilityLayer>
                 <ChartTooltip
                   cursor={false}
-                  content={<ChartTooltipContent />}
+                  content={<ChartTooltipContent hideLabel />}
                 />
-                <ChartLegend content={<ChartLegendContent />} />
-                <Line
-                  dataKey="revenue"
-                  type="monotone"
-                  stroke="var(--color-revenue)"
-                  strokeWidth={2}
-                  dot={false}
+                <ChartLegend content={<ChartLegendContent nameKey="status" />} />
+                <Pie
+                  data={deviceStatusData}
+                  dataKey="count"
+                  nameKey="status"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  labelLine={false}
+                  label={({
+                    cx,
+                    cy,
+                    midAngle,
+                    innerRadius,
+                    outerRadius,
+                    percent,
+                  }) => {
+                    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                    const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
+                    const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill="white"
+                        textAnchor={x > cx ? 'start' : 'end'}
+                        dominantBaseline="central"
+                        className="text-xs"
+                      >
+                        {`${(percent * 100).toFixed(0)}%`}
+                      </text>
+                    );
+                  }}
                 />
-              </LineChart>
+              </PieChart>
             </ChartContainer>
           </CardContent>
         </Card>
