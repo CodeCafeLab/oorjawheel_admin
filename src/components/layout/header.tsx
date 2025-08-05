@@ -21,6 +21,7 @@ const navItems = [
     { href: '/users', label: 'Users' },
     { href: '/devices', label: 'Devices' },
     { href: '/orders', label: 'Orders' },
+    { href: '/cms', label: 'Content CMS' },
     { href: '/reports', label: 'Reports' },
     { href: '/settings', label: 'Settings' },
 ]
