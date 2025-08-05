@@ -1,3 +1,4 @@
+
 "use client"
 
 import {
@@ -72,11 +73,11 @@ const weeklyActiveUsersConfig = {
 } satisfies ChartConfig
 
 
-export default function ReportsPage() {
+export default function AnalyticsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-headline">Reports & Analytics</h1>
+        <h1 className="text-3xl font-headline">Analytics</h1>
         <p className="text-muted-foreground">
           Detailed insights into your business performance.
         </p>

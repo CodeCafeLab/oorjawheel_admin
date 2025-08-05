@@ -1,3 +1,4 @@
+
 'use client'
 
 import { Search, Bell } from 'lucide-react'
@@ -20,10 +21,10 @@ const navItems = [
     { href: '/', label: 'Dashboard' },
     { href: '/users', label: 'Users' },
     { href: '/devices', label: 'Devices' },
-    { href: '/orders', label: 'Orders' },
     { href: '/cms', label: 'Content CMS' },
     { href: '/logs', label: 'Logs' },
-    { href: '/reports', label: 'Reports' },
+    { href: '/analytics', label: 'Analytics' },
+    { href: '/super-login', label: 'Super Login' },
     { href: '/settings', label: 'Settings' },
 ]
 

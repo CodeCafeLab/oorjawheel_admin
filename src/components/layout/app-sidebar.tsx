@@ -1,3 +1,4 @@
+
 'use client'
 
 import Link from 'next/link'
@@ -14,14 +15,13 @@ import {
 import {
   LayoutDashboard,
   Users,
-  Package,
-  ShoppingCart,
-  BarChart3,
   Settings,
   LogOut,
   Smartphone,
   FileText,
   History,
+  BarChart3,
+  KeyRound,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -49,10 +49,10 @@ const navItems = [
   { href: '/', label: 'Dashboard' },
   { href: '/users', label: 'Users' },
   { href: '/devices', label: 'Devices' },
-  { href: '/orders', label: 'Orders' },
   { href: '/cms', label: 'Content CMS' },
   { href: '/logs', label: 'Logs' },
-  { href: '/reports', label: 'Reports' },
+  { href: '/analytics', label: 'Analytics' },
+  { href: '/super-login', label: 'Super Login' },
   { href: '/settings', label: 'Settings' },
 ]
 
@@ -60,10 +60,10 @@ const icons: { [key: string]: React.ElementType } = {
     Dashboard: LayoutDashboard,
     Users: Users,
     Devices: Smartphone,
-    Orders: ShoppingCart,
     'Content CMS': FileText,
     Logs: History,
-    Reports: BarChart3,
+    Analytics: BarChart3,
+    'Super Login': KeyRound,
     Settings: Settings,
 }
 
