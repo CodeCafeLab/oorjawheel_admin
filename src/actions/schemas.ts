@@ -11,3 +11,12 @@ export const userFormSchema = z.object({
 });
 
 export type CreateUserInput = z.infer<typeof userFormSchema>;
+
+export const loginSchema = z.object({
+    email: z.string().email({
+        message: 'Please enter a valid email address.',
+    }),
+    password: z.string().min(1, {
+        message: 'Password is required.',
+    }),
+});

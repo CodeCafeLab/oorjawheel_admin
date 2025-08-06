@@ -1,5 +1,7 @@
 "use client"
 
+import * as React from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -11,7 +13,10 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
+import { login } from "@/actions/auth"
+import { z } from "zod"
+import { loginSchema } from "@/actions/schemas"
 
 const OorjaLogo = () => (
     <svg
@@ -35,29 +40,86 @@ const OorjaLogo = () => (
 
 
 export default function LoginPage() {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [email, setEmail] = React.useState("")
+  const [password, setPassword] = React.useState("")
+  const [loading, setLoading] = React.useState(false)
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+        const values: z.infer<typeof loginSchema> = { email, password };
+        const result = await login(values)
+
+        if (result.success) {
+            toast({
+                title: "Login Successful",
+                description: "Welcome back!",
+            })
+            router.push("/")
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Login Failed",
+                description: result.message,
+            })
+        }
+    } catch (error) {
+        toast({
+            variant: "destructive",
+            title: "An Error Occurred",
+            description: "Something went wrong. Please try again.",
+        })
+    } finally {
+        setLoading(false);
+    }
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background font-body">
        <Card className="w-full max-w-sm">
-        <CardHeader className="space-y-1 text-center">
-            <div className="flex justify-center mb-4">
-                <OorjaLogo />
-            </div>
-          <CardTitle className="text-2xl font-headline">Oorja Admin Login</CardTitle>
-          <CardDescription>Enter your credentials to access the panel</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="admin@oorja.com" required />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" required />
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col">
-          <Button className="w-full">Sign in</Button>
-        </CardFooter>
+        <form onSubmit={handleLogin}>
+            <CardHeader className="space-y-1 text-center">
+                <div className="flex justify-center mb-4">
+                    <OorjaLogo />
+                </div>
+              <CardTitle className="text-2xl font-headline">Oorja Admin Login</CardTitle>
+              <CardDescription>Enter your credentials to access the panel</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="admin@oorja.com" 
+                    required 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="password">Password</Label>
+                <Input 
+                    id="password" 
+                    type="password" 
+                    required 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col">
+              <Button className="w-full" type="submit" disabled={loading}>
+                {loading ? 'Signing in...' : 'Sign in'}
+                </Button>
+            </CardFooter>
+        </form>
       </Card>
     </div>
   )
