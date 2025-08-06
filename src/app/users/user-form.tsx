@@ -16,13 +16,11 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { toast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { userFormSchema } from "@/actions/schemas"
 import { addUser } from "@/actions/users"
-import { useRouter } from "next/navigation"
 
-export function UserForm() {
-    const router = useRouter();
+export function UserForm({ setOpen }: { setOpen: (open: boolean) => void }) {
   const form = useForm<z.infer<typeof userFormSchema>>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
@@ -38,9 +36,7 @@ export function UserForm() {
         title: "User Added",
         description: "The new user has been created successfully.",
       })
-      // Optionally, close the dialog and refresh the table
-      // This depends on how you manage the dialog state
-      router.refresh(); 
+      setOpen(false)
     } else {
       toast({
         variant: "destructive",

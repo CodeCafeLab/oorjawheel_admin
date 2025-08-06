@@ -1,3 +1,5 @@
+"use client";
+
 import { z } from 'zod';
 import { columns } from './columns';
 import { DataTable } from './data-table';
@@ -13,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { UserForm } from './user-form';
+import * as React from 'react';
 
 
 // Mock data fetching
@@ -27,8 +30,22 @@ async function getUsers() {
   return z.array(userSchema).parse(data);
 }
 
-export default async function UsersPage() {
-  const users = await getUsers();
+export default function UsersPage() {
+    const [users, setUsers] = React.useState<z.infer<typeof userSchema>[]>([]);
+    const [open, setOpen] = React.useState(false);
+
+    React.useEffect(() => {
+        getUsers().then(setUsers);
+    }, []);
+
+    // This is a workaround to refresh the page data after a user is added.
+    // A more robust solution would use a state management library or server-side data fetching with revalidation.
+    React.useEffect(() => {
+      if (!open) {
+        getUsers().then(setUsers);
+      }
+    }, [open]);
+
 
   return (
     <div className="space-y-6">
@@ -39,7 +56,7 @@ export default async function UsersPage() {
             Manage operators and their assigned devices.
           </p>
         </div>
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
@@ -53,7 +70,7 @@ export default async function UsersPage() {
                         Fill in the details to create a new user account.
                     </DialogDescription>
                 </DialogHeader>
-                <UserForm />
+                <UserForm setOpen={setOpen} />
             </DialogContent>
         </Dialog>
       </div>
