@@ -10,16 +10,22 @@ export async function addUser(values: z.infer<typeof userFormSchema>) {
   const { email, password, status = 'active' } = values;
 
   try {
+    const connection = await pool.getConnection();
+
+    // Check if user exists
+    const [existing] = await connection.execute('SELECT email FROM users WHERE email = ?', [email]);
+    if ((existing as any[]).length > 0) {
+      connection.release();
+      return { success: false, message: 'User with this email already exists.' };
+    }
+
     const hashedPassword = await hashPassword(password);
     
-    // const connection = await pool.getConnection();
-    // const [result] = await connection.execute(
-    //   'INSERT INTO users (email, status, password) VALUES (?, ?, ?)',
-    //   [email, status, hashedPassword]
-    // );
-    // connection.release();
-
-    console.log('Adding user (simulation):', { email, status, hashedPassword });
+    const [result] = await connection.execute(
+      'INSERT INTO users (email, status, password_hash) VALUES (?, ?, ?)',
+      [email, status, hashedPassword]
+    );
+    connection.release();
 
     // Revalidate the users page to show the new user
     revalidatePath('/users');
@@ -27,6 +33,10 @@ export async function addUser(values: z.infer<typeof userFormSchema>) {
     return { success: true, message: 'User added successfully.' };
   } catch (error) {
     console.error('Database Error:', error);
+    // Check for specific database errors if needed
+    if ((error as any).code === 'ER_NO_SUCH_TABLE') {
+        return { success: false, message: 'Database table not found. Please run migrations.' };
+    }
     return { success: false, message: 'Failed to add user.' };
   }
 }
