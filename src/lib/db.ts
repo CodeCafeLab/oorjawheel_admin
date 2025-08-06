@@ -5,10 +5,7 @@ import mysql from 'mysql2/promise';
 // For example, using environment variables.
 
 const pool = mysql.createPool({
-    host: process.env.DB_HOST || '127.0.0.1',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'oorja_admin',
+    uri: process.env.DATABASE_URL || 'mysql://root:@127.0.0.1/oorja_admin',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
