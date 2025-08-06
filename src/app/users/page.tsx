@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import { UserForm } from './user-form';
 
 
 // Mock data fetching
@@ -52,8 +53,7 @@ export default async function UsersPage() {
                         Fill in the details to create a new user account.
                     </DialogDescription>
                 </DialogHeader>
-                {/* Form would go here */}
-                <p className="text-center text-muted-foreground py-8">User form will be here.</p>
+                <UserForm />
             </DialogContent>
         </Dialog>
       </div>
