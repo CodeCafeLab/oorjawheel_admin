@@ -7,7 +7,7 @@ export const userFormSchema = z.object({
   password: z.string().min(8, {
     message: 'Password must be at least 8 characters long.',
   }),
-  status: z.enum(['active', 'locked'], {
-    required_error: 'Please select a status.',
-  }),
+  status: z.enum(['active', 'locked']).optional(),
 });
+
+export type CreateUserInput = z.infer<typeof userFormSchema>;

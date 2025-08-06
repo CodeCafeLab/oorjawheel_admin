@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { hashPassword } from '@/lib/hash';
 
 export async function addUser(values: z.infer<typeof userFormSchema>) {
-  const { email, password, status } = values;
+  const { email, password, status = 'active' } = values;
 
   try {
     const hashedPassword = await hashPassword(password);
