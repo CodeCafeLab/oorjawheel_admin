@@ -4,21 +4,22 @@ import { z } from 'zod';
 import { userFormSchema } from './schemas';
 import pool from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { hashPassword } from '@/lib/hash';
 
 export async function addUser(values: z.infer<typeof userFormSchema>) {
-  // TODO: Add password hashing before saving to the database.
-  // For example, using bcrypt.
-  const { email, status } = values;
+  const { email, password, status } = values;
 
   try {
+    const hashedPassword = await hashPassword(password);
+    
     // const connection = await pool.getConnection();
     // const [result] = await connection.execute(
     //   'INSERT INTO users (email, status, password) VALUES (?, ?, ?)',
-    //   [email, status, 'hashed_password_placeholder'] // Replace with a real hashed password
+    //   [email, status, hashedPassword]
     // );
     // connection.release();
 
-    console.log('Adding user (simulation):', values);
+    console.log('Adding user (simulation):', { email, status, hashedPassword });
 
     // Revalidate the users page to show the new user
     revalidatePath('/users');

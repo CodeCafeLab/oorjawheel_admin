@@ -21,10 +21,12 @@ import { userFormSchema } from "@/actions/schemas"
 import { addUser } from "@/actions/users"
 
 export function UserForm({ setOpen }: { setOpen: (open: boolean) => void }) {
+  const { toast } = useToast()
   const form = useForm<z.infer<typeof userFormSchema>>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
       email: "",
+      password: "",
       status: "active",
     },
   })
@@ -60,6 +62,22 @@ export function UserForm({ setOpen }: { setOpen: (open: boolean) => void }) {
               </FormControl>
               <FormDescription>
                 The user's email address. They will use this to log in.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input type="password" {...field} />
+              </FormControl>
+              <FormDescription>
+                The user's password. Must be at least 8 characters.
               </FormDescription>
               <FormMessage />
             </FormItem>
