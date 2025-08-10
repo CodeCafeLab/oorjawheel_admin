@@ -16,35 +16,36 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { UserForm } from './user-form';
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 
 
 // Mock data fetching
 async function getUsers() {
-  // In a real app, you'd fetch this from your database.
-  const data = [
-    { id: "USER001", email: "super.admin@oorja.com", status: "active", firstLoginAt: "2024-01-15T10:00:00Z", devicesAssigned: ["DEV001", "DEV002", "DEV003"] },
-    { id: "USER002", email: "operator1@oorja.com", status: "active", firstLoginAt: "2024-02-20T11:30:00Z", devicesAssigned: ["DEV004", "DEV005"] },
-    { id: "USER003", email: "operator2@oorja.com", status: "locked", firstLoginAt: "2024-03-10T09:00:00Z", devicesAssigned: ["DEV006"] },
-    { id: "USER004", email: "test.user@oorja.com", status: "active", firstLoginAt: "2024-07-20T14:00:00Z", devicesAssigned: [] },
-  ];
-  return z.array(userSchema).parse(data);
-}
+    // In a real app, you'd fetch this from your database.
+    const data = [
+      { id: "1", email: "super.admin@oorja.com", status: "active", firstLoginAt: "2024-01-15T10:00:00Z", devicesAssigned: ["DEV001", "DEV002", "DEV003"] },
+      { id: "2", email: "operator1@oorja.com", status: "active", firstLoginAt: "2024-02-20T11:30:00Z", devicesAssigned: ["DEV004", "DEV005"] },
+      { id: "3", email: "operator2@oorja.com", status: "locked", firstLoginAt: "2024-03-10T09:00:00Z", devicesAssigned: ["DEV006"] },
+      { id: "4", email: "test.user@oorja.com", status: "active", firstLoginAt: "2024-07-20T14:00:00Z", devicesAssigned: [] },
+      { id: "5", email: "new.user@oorja.com", status: "active", firstLoginAt: null, devicesAssigned: [] },
+    ];
+    return z.array(userSchema).parse(data);
+  }
 
 export default function UsersPage() {
     const [users, setUsers] = React.useState<z.infer<typeof userSchema>[]>([]);
     const [open, setOpen] = React.useState(false);
+    const router = useRouter()
 
     React.useEffect(() => {
         getUsers().then(setUsers);
     }, []);
 
-    // This is a workaround to refresh the page data after a user is added.
-    // A more robust solution would use a state management library or server-side data fetching with revalidation.
-    React.useEffect(() => {
-      if (!open) {
-        getUsers().then(setUsers);
-      }
-    }, [open]);
+    const handleFormSuccess = () => {
+      setOpen(false)
+      // We call router.refresh() to refetch the data on the server and update the table.
+      router.refresh()
+    }
 
 
   return (
@@ -70,7 +71,7 @@ export default function UsersPage() {
                         Fill in the details to create a new user account.
                     </DialogDescription>
                 </DialogHeader>
-                <UserForm setOpen={setOpen} />
+                <UserForm onFormSuccess={handleFormSuccess} />
             </DialogContent>
         </Dialog>
       </div>

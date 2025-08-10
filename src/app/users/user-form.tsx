@@ -19,9 +19,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
 import { userFormSchema } from "@/actions/schemas"
 import { addUser } from "@/actions/users"
+import { useState } from "react"
 
-export function UserForm({ setOpen }: { setOpen: (open: boolean) => void }) {
+export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
   const { toast } = useToast()
+  const [loading, setLoading] = useState(false)
+
   const form = useForm<z.infer<typeof userFormSchema>>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
@@ -32,13 +35,17 @@ export function UserForm({ setOpen }: { setOpen: (open: boolean) => void }) {
   })
 
   async function onSubmit(data: z.infer<typeof userFormSchema>) {
+    setLoading(true)
     const result = await addUser(data)
+    setLoading(false)
+
     if (result.success) {
       toast({
         title: "User Added",
         description: "The new user has been created successfully.",
       })
-      setOpen(false)
+      onFormSuccess()
+      form.reset()
     } else {
       toast({
         variant: "destructive",
@@ -58,7 +65,7 @@ export function UserForm({ setOpen }: { setOpen: (open: boolean) => void }) {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="user@example.com" {...field} />
+                <Input placeholder="user@example.com" {...field} disabled={loading} />
               </FormControl>
               <FormDescription>
                 The user's email address. They will use this to log in.
@@ -74,7 +81,7 @@ export function UserForm({ setOpen }: { setOpen: (open: boolean) => void }) {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" {...field} />
+                <Input type="password" {...field} disabled={loading}/>
               </FormControl>
               <FormDescription>
                 The user's password. Must be at least 8 characters.
@@ -94,6 +101,7 @@ export function UserForm({ setOpen }: { setOpen: (open: boolean) => void }) {
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                   className="flex flex-col space-y-1"
+                  disabled={loading}
                 >
                   <FormItem className="flex items-center space-x-3 space-y-0">
                     <FormControl>
@@ -117,7 +125,7 @@ export function UserForm({ setOpen }: { setOpen: (open: boolean) => void }) {
             </FormItem>
           )}
         />
-        <Button type="submit">Create User</Button>
+        <Button type="submit" disabled={loading}>{loading ? 'Creating User...' : 'Create User'}</Button>
       </form>
     </Form>
   )

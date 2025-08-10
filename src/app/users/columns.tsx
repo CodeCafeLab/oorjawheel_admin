@@ -14,6 +14,80 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { User } from "./schema"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { deleteUser } from "@/actions/users"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
+
+const UserActions = ({ user }: { user: User }) => {
+    const { toast } = useToast()
+    const router = useRouter()
+  
+    const handleDelete = async () => {
+      const result = await deleteUser(user.id)
+      if (result.success) {
+        toast({
+          title: "User Deleted",
+          description: `User ${user.email} has been deleted.`,
+        })
+        router.refresh() // Refresh the page to show the updated list
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.message,
+        })
+      }
+    }
+  
+    return (
+      <AlertDialog>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem>View user activity</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              {user.status === 'active' ? 'Lock' : 'Unlock'}
+            </DropdownMenuItem>
+            <DropdownMenuItem>Reset password</DropdownMenuItem>
+             <AlertDialogTrigger asChild>
+                <DropdownMenuItem className="text-destructive">Delete User</DropdownMenuItem>
+             </AlertDialogTrigger>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user account
+              for <span className="font-bold">{user.email}</span> and remove their data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    )
+  }
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -72,7 +146,11 @@ export const columns: ColumnDef<User>[] = [
       </Button>
     ),
     cell: ({ row }) => {
-      const date = new Date(row.getValue("firstLoginAt"));
+        const value = row.getValue("firstLoginAt") as string | null;
+        if (!value) {
+            return "Never";
+        }
+      const date = new Date(value);
       return new Intl.DateTimeFormat("en-IN", { dateStyle: 'medium', timeStyle: 'short' }).format(date);
     },
   },
@@ -87,28 +165,7 @@ export const columns: ColumnDef<User>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      const user = row.original
- 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>View user activity</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              {user.status === 'active' ? 'Lock' : 'Unlock'}
-            </DropdownMenuItem>
-            <DropdownMenuItem>Reset password</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Force logout</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
+      return <UserActions user={row.original} />
     },
   },
 ]

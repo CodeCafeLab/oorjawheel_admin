@@ -48,7 +48,20 @@ export async function updateUser(id: string, values: z.infer<typeof userFormSche
 }
 
 export async function deleteUser(id: string) {
-    // TODO: Implement database logic to delete a user.
-    console.log(`Deleting user ${id}`);
-    return { success: true, message: 'User deleted successfully.' };
+    try {
+        const connection = await pool.getConnection();
+        const [result] = await connection.execute('DELETE FROM users WHERE id = ?', [id]);
+        connection.release();
+
+        if ((result as any).affectedRows === 0) {
+            return { success: false, message: 'User not found.' };
+        }
+
+        revalidatePath('/users');
+        return { success: true, message: 'User deleted successfully.' };
+
+    } catch (error) {
+        console.error('Database Error:', error);
+        return { success: false, message: 'Failed to delete user.' };
+    }
 }

@@ -4,7 +4,7 @@ export const userSchema = z.object({
   id: z.string(),
   email: z.string().email(),
   status: z.enum(["active", "locked"]),
-  firstLoginAt: z.string(),
+  firstLoginAt: z.string().nullable(),
   devicesAssigned: z.array(z.string()),
 })
 

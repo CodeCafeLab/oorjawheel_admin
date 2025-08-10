@@ -27,10 +27,10 @@ import type { ChartConfig } from "@/components/ui/chart"
 import { Users, Package, AlertTriangle, Terminal } from "lucide-react"
 
 const kpiData = [
-    { title: "Active Devices", value: "1,250", icon: Package, change: "+50 since last week" },
-    { title: "Total Users", value: "2,350", icon: Users, change: "+180 from last month" },
-    { title: "Commands Executed", value: "5,420", icon: Terminal, change: "Last 24h" },
-    { title: "Warranty Triggers", value: "15", icon: AlertTriangle, change: "This month" },
+    { title: "Active Devices", value: "1,250", icon: Package, change: "+50 since last week", color: "text-sky-500", bgColor: "bg-sky-500/10" },
+    { title: "Total Users", value: "2,350", icon: Users, change: "+180 from last month", color: "text-emerald-500", bgColor: "bg-emerald-500/10" },
+    { title: "Commands Executed", value: "5,420", icon: Terminal, change: "Last 24h", color: "text-amber-500", bgColor: "bg-amber-500/10" },
+    { title: "Warranty Triggers", value: "15", icon: AlertTriangle, change: "This month", color: "text-red-500", bgColor: "bg-red-500/10" },
   ];
 
 const commandVolumeData = [
@@ -67,10 +67,12 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-8">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {kpiData.map((kpi, index) => (
-          <Card key={index} className="shadow-md">
+          <Card key={index} className="shadow-md hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-              <kpi.icon className="h-4 w-4 text-muted-foreground" />
+              <div className={`p-1.5 rounded-md ${kpi.bgColor}`}>
+                <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{kpi.value}</div>
@@ -150,7 +152,7 @@ export default function DashboardPage() {
                         fill="white"
                         textAnchor={x > cx ? 'start' : 'end'}
                         dominantBaseline="central"
-                        className="text-xs"
+                        className="text-xs font-semibold"
                       >
                         {`${(percent * 100).toFixed(0)}%`}
                       </text>
