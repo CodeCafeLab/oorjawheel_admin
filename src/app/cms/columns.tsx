@@ -10,7 +10,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import Image from "next/image"
@@ -27,10 +26,7 @@ import {
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog"
 
-const PageActions = ({ page }: { page: Page }) => {
-    const handleDelete = () => {
-        console.log("Deleting page:", page.id)
-    }
+const PageActions = ({ page, onEdit, onDelete }: { page: Page, onEdit: (page: Page) => void, onDelete: (id: string) => void }) => {
 
     return (
         <AlertDialog>
@@ -43,7 +39,7 @@ const PageActions = ({ page }: { page: Page }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(page)}><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
                 <AlertDialogTrigger asChild>
                     <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
                 </AlertDialogTrigger>
@@ -58,14 +54,14 @@ const PageActions = ({ page }: { page: Page }) => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    <AlertDialogAction onClick={() => onDelete(page.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     )
 }
 
-export const columns: ColumnDef<Page>[] = [
+export const columns = (onEdit: (page: Page) => void, onDelete: (id: string) => void): ColumnDef<Page>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -130,7 +126,7 @@ export const columns: ColumnDef<Page>[] = [
     cell: ({ row }) => {
       return (
         <div className="text-right">
-            <PageActions page={row.original} />
+            <PageActions page={row.original} onEdit={onEdit} onDelete={onDelete} />
         </div>
       )
     },

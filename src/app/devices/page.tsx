@@ -23,6 +23,7 @@ import {
 import Image from 'next/image';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as React from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock data fetching
 async function getDevices(): Promise<Device[]> {
@@ -60,15 +61,20 @@ export default function DevicesPage() {
   const [selectedMaster, setSelectedMaster] = React.useState<DeviceMaster | null>(null);
   const [macAddress, setMacAddress] = React.useState('');
   const [passcode, setPasscode] = React.useState('Auto-generated');
+  const { toast } = useToast();
 
+
+  const fetchDevices = () => getDevices().then(setDevices);
+  const fetchDeviceMasters = () => getDeviceMasters().then(setDeviceMasters);
 
   React.useEffect(() => {
-    getDevices().then(setDevices);
-    getDeviceMasters().then(setDeviceMasters);
+    fetchDevices();
+    fetchDeviceMasters();
   }, []);
 
   const handleEditDevice = (device: Device) => {
     setSelectedDevice(device);
+    setMacAddress(device.macAddress);
     setIsSheetOpen(true);
   }
 
@@ -76,10 +82,26 @@ export default function DevicesPage() {
       setSelectedMaster(master);
       setIsMasterSheetOpen(true);
   }
+
+  const handleDeleteDevice = (id: string) => {
+    setDevices(prev => prev.filter(d => d.id !== id));
+    toast({ title: 'Device Deleted', description: `Device with ID ${id} has been deleted.` });
+  }
+
+  const handleDeleteMaster = (id: string) => {
+      setDeviceMasters(prev => prev.filter(m => m.id !== id));
+      toast({ title: 'Device Type Deleted', description: `Device Type with ID ${id} has been deleted.` });
+  }
   
   React.useEffect(() => {
+    if (!isSheetOpen) {
+        setMacAddress('');
+    }
+  }, [isSheetOpen]);
+
+  React.useEffect(() => {
     if (macAddress) {
-        const cleanedMac = macAddress.replace(/:/g, '');
+        const cleanedMac = macAddress.replace(/[^A-Za-z0-9]/g, '');
         if (cleanedMac.length >= 6) {
             setPasscode(cleanedMac.slice(-6).toUpperCase());
         } else {
@@ -89,6 +111,54 @@ export default function DevicesPage() {
         setPasscode('Auto-generated');
     }
   }, [macAddress]);
+
+  const handleDeviceSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const updatedDevice = {
+        id: selectedDevice?.id || `DEV${Date.now()}`,
+        deviceName: formData.get('device-name') as string,
+        macAddress: formData.get('mac-address') as string,
+        deviceType: formData.get('device-type') as string,
+        userId: formData.get('user-id') as string,
+        passcode: passcode,
+        status: selectedDevice?.status || 'never_used',
+    } as Device;
+
+    if (selectedDevice) {
+        setDevices(prev => prev.map(d => d.id === selectedDevice.id ? updatedDevice : d));
+        toast({ title: 'Device Updated', description: 'Device details have been updated.' });
+    } else {
+        setDevices(prev => [...prev, updatedDevice]);
+        toast({ title: 'Device Created', description: 'New device has been created.' });
+    }
+    setIsSheetOpen(false);
+    setSelectedDevice(null);
+  }
+
+  const handleMasterSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const updatedMaster = {
+        id: selectedMaster?.id || `DM${Date.now()}`,
+        deviceType: formData.get('device-type-name') as string,
+        btServe: formData.get('bt-serve') as string,
+        btChar: formData.get('bt-char') as string,
+        soundBtName: formData.get('sound-bt-name') as string,
+        status: selectedMaster?.status || 'active',
+    } as DeviceMaster;
+
+    if (selectedMaster) {
+        setDeviceMasters(prev => prev.map(m => m.id === selectedMaster.id ? updatedMaster : m));
+        toast({ title: 'Device Type Updated', description: 'Device type details have been updated.' });
+    } else {
+        setDeviceMasters(prev => [...prev, updatedMaster]);
+        toast({ title: 'Device Type Created', description: 'New device type has been created.' });
+    }
+    setIsMasterSheetOpen(false);
+    setSelectedMaster(null);
+  }
+
 
   return (
     <div className="space-y-6">
@@ -119,7 +189,7 @@ export default function DevicesPage() {
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <DataTable columns={deviceMasterColumns(handleEditMaster)} data={deviceMasters} filterColumnId='deviceType' filterPlaceholder='Filter by device type...'/>
+                    <DataTable columns={deviceMasterColumns(handleEditMaster, handleDeleteMaster)} data={deviceMasters} filterColumnId='deviceType' filterPlaceholder='Filter by device type...'/>
                 </CardContent>
             </Card>
         </TabsContent>
@@ -133,7 +203,7 @@ export default function DevicesPage() {
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <DataTable columns={columns(handleEditDevice)} data={devices} filterColumnId='deviceName' filterPlaceholder='Filter by device name...' />
+                    <DataTable columns={columns(handleEditDevice, handleDeleteDevice)} data={devices} filterColumnId='deviceName' filterPlaceholder='Filter by device name...' />
                 </CardContent>
             </Card>
         </TabsContent>
@@ -145,25 +215,27 @@ export default function DevicesPage() {
                   <SheetTitle>{selectedMaster ? 'Edit Device Type' : 'Add New Device Type'}</SheetTitle>
               </SheetHeader>
               <ScrollArea className="h-full">
+                <form onSubmit={handleMasterSubmit}>
                   <div className="grid gap-4 px-6 py-4">
                       <div className="space-y-2">
                           <Label htmlFor="device-type-name">Name</Label>
-                          <Input id="device-type-name" placeholder="e.g., OorjaWheel v3" defaultValue={selectedMaster?.deviceType}/>
+                          <Input name="device-type-name" id="device-type-name" placeholder="e.g., OorjaWheel v3" defaultValue={selectedMaster?.deviceType}/>
                       </div>
                       <div className="space-y-2">
                           <Label htmlFor="bt-serve">BT Serve</Label>
-                          <Input id="bt-serve" placeholder="Service UUID" defaultValue={selectedMaster?.btServe}/>
+                          <Input name="bt-serve" id="bt-serve" placeholder="Service UUID" defaultValue={selectedMaster?.btServe}/>
                       </div>
                       <div className="space-y-2">
                           <Label htmlFor="bt-char">BT Char</Label>
-                          <Input id="bt-char" placeholder="Characteristic UUID" defaultValue={selectedMaster?.btChar}/>
+                          <Input name="bt-char" id="bt-char" placeholder="Characteristic UUID" defaultValue={selectedMaster?.btChar}/>
                       </div>
                       <div className="space-y-2">
                           <Label htmlFor="sound-bt-name">Sound BT Name</Label>
-                          <Input id="sound-bt-name" placeholder="e.g., OorjaAudioV3" defaultValue={selectedMaster?.soundBtName}/>
+                          <Input name="sound-bt-name" id="sound-bt-name" placeholder="e.g., OorjaAudioV3" defaultValue={selectedMaster?.soundBtName}/>
                       </div>
-                      <Button>{selectedMaster ? 'Save Changes' : 'Save Device Type'}</Button>
+                      <Button type="submit">{selectedMaster ? 'Save Changes' : 'Save Device Type'}</Button>
                   </div>
+                </form>
               </ScrollArea>
           </SheetContent>
       </Sheet>
@@ -174,6 +246,7 @@ export default function DevicesPage() {
                   <SheetTitle>{selectedDevice ? 'Edit Device' : 'Create New Device'}</SheetTitle>
               </SheetHeader>
               <ScrollArea className="h-full">
+                <form onSubmit={handleDeviceSubmit}>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-6 py-4">
                       <div className="space-y-4">
                           <h3 className="font-semibold text-lg">Select Modal</h3>
@@ -192,11 +265,11 @@ export default function DevicesPage() {
                           <h3 className="font-semibold text-lg">Device Details</h3>
                           <div className="space-y-2">
                               <Label htmlFor="user-id">User ID</Label>
-                              <Input id="user-id" placeholder="Assign a user ID" defaultValue={selectedDevice?.userId || ''} />
+                              <Input name="user-id" id="user-id" placeholder="Assign a user ID" defaultValue={selectedDevice?.userId || ''} />
                           </div>
                           <div className="space-y-2">
                               <Label htmlFor="device-type">Device Type</Label>
-                              <Select defaultValue={selectedDevice?.deviceType}>
+                              <Select name="device-type" defaultValue={selectedDevice?.deviceType}>
                                   <SelectTrigger id="device-type">
                                       <SelectValue placeholder="Select a device type" />
                                   </SelectTrigger>
@@ -210,6 +283,7 @@ export default function DevicesPage() {
                           <div className="space-y-2">
                               <Label htmlFor="mac-address">MAC Address</Label>
                               <Input 
+                                name="mac-address"
                                 id="mac-address" 
                                 placeholder="00:1A:2B:3C:4D:5E" 
                                 defaultValue={selectedDevice?.macAddress} 
@@ -219,15 +293,16 @@ export default function DevicesPage() {
                           </div>
                           <div className="space-y-2">
                               <Label htmlFor="device-name">Device Name</Label>
-                              <Input id="device-name" placeholder="e.g., Living Room Wheel" defaultValue={selectedDevice?.deviceName} />
+                              <Input name="device-name" id="device-name" placeholder="e.g., Living Room Wheel" defaultValue={selectedDevice?.deviceName} />
                           </div>
                           <div className="space-y-2">
                               <Label htmlFor="passcode">Passcode</Label>
-                              <Input id="passcode" value={passcode} readOnly />
+                              <Input name="passcode" id="passcode" value={passcode} readOnly />
                           </div>
-                          <Button className="w-full">{selectedDevice ? 'Update Device' : 'Create Device'}</Button>
+                          <Button type="submit" className="w-full">{selectedDevice ? 'Update Device' : 'Create Device'}</Button>
                       </div>
                   </div>
+                </form>
               </ScrollArea>
           </SheetContent>
       </Sheet>

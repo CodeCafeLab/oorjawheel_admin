@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { columns } from './columns';
 import { DataTable } from './data-table';
-import { pageSchema } from './schema';
+import { pageSchema, Page } from './schema';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import {
@@ -30,9 +30,10 @@ import {
 import Image from 'next/image';
 import * as React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock data fetching
-async function getPages() {
+async function getPages(): Promise<Page[]> {
   const data = [
     { id: 'PAGE001', category: 'Lighting', image: 'https://placehold.co/100x100.png', title: 'Ambient Mood', command: 'L100,50,10' , description: 'Set a warm ambient light for evenings.' },
     { id: 'PAGE002', category: 'Wheel', image: 'https://placehold.co/100x100.png', title: 'Full Speed', command: 'S100', description: 'Run the wheel at maximum speed.' },
@@ -42,12 +43,60 @@ async function getPages() {
 }
 
 export default function CmsPage() {
-  const [pages, setPages] = React.useState<z.infer<typeof pageSchema>[]>([]);
+  const [pages, setPages] = React.useState<Page[]>([]);
   const [categories, setCategories] = React.useState(['Lighting', 'Wheel', 'Sound']);
+  const [isContentSheetOpen, setContentSheetOpen] = React.useState(false);
+  const [isCategorySheetOpen, setCategorySheetOpen] = React.useState(false);
+  const [selectedPage, setSelectedPage] = React.useState<Page | null>(null);
+  const { toast } = useToast();
 
   React.useEffect(() => {
     getPages().then(setPages);
   }, []);
+
+  const handleEdit = (page: Page) => {
+    setSelectedPage(page);
+    setContentSheetOpen(true);
+  }
+
+  const handleDelete = (id: string) => {
+    setPages(prev => prev.filter(p => p.id !== id));
+    toast({ title: 'Content Deleted', description: 'The content item has been deleted.' });
+  }
+
+  const handleCategorySubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const newCategory = formData.get('category-title') as string;
+    if (newCategory && !categories.includes(newCategory)) {
+        setCategories(prev => [...prev, newCategory]);
+        toast({ title: 'Category Added', description: `Category "${newCategory}" has been added.` });
+    }
+    setCategorySheetOpen(false);
+  }
+
+  const handleContentSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const newPage: Page = {
+        id: selectedPage?.id || `PAGE${Date.now()}`,
+        category: formData.get('content-category') as string,
+        image: selectedPage?.image || 'https://placehold.co/100x100.png', // Placeholder for image
+        title: formData.get('content-title') as string,
+        command: formData.get('content-command') as string,
+        description: formData.get('content-description') as string,
+    }
+
+    if (selectedPage) {
+        setPages(prev => prev.map(p => p.id === selectedPage.id ? newPage : p));
+        toast({ title: 'Content Updated', description: 'The content item has been updated.' });
+    } else {
+        setPages(prev => [...prev, newPage]);
+        toast({ title: 'Content Added', description: 'A new content item has been added.' });
+    }
+    setContentSheetOpen(false);
+    setSelectedPage(null);
+  }
 
   return (
     <div className="space-y-6">
@@ -112,7 +161,7 @@ export default function CmsPage() {
                       <CardDescription>Manage dynamic content for the mobile app.</CardDescription>
                   </div>
                   <div className='flex gap-2'>
-                    <Sheet>
+                    <Sheet open={isCategorySheetOpen} onOpenChange={setCategorySheetOpen}>
                         <SheetTrigger asChild>
                         <Button variant="outline">
                             <PlusCircle className="mr-2 h-4 w-4" />
@@ -124,32 +173,38 @@ export default function CmsPage() {
                                 <SheetTitle>Add New Category</SheetTitle>
                             </SheetHeader>
                             <ScrollArea className="h-full">
-                                <div className="grid gap-4 px-6 py-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="category-title">Category Title</Label>
-                                        <Input id="category-title" placeholder="e.g., Special Modes" />
+                                <form onSubmit={handleCategorySubmit}>
+                                    <div className="grid gap-4 px-6 py-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="category-title">Category Title</Label>
+                                            <Input name="category-title" id="category-title" placeholder="e.g., Special Modes" />
+                                        </div>
+                                        <Button type="submit">Save Category</Button>
                                     </div>
-                                    <Button>Save Category</Button>
-                                </div>
+                                </form>
                             </ScrollArea>
                         </SheetContent>
                     </Sheet>
-                    <Sheet>
+                    <Sheet open={isContentSheetOpen} onOpenChange={(isOpen) => {
+                        setContentSheetOpen(isOpen);
+                        if (!isOpen) setSelectedPage(null);
+                    }}>
                       <SheetTrigger asChild>
-                        <Button>
+                        <Button onClick={() => { setSelectedPage(null); setContentSheetOpen(true); }}>
                           <PlusCircle className="mr-2 h-4 w-4" />
                           Add Content
                         </Button>
                       </SheetTrigger>
                       <SheetContent>
                         <SheetHeader>
-                          <SheetTitle>Add New App Content</SheetTitle>
+                          <SheetTitle>{selectedPage ? 'Edit App Content' : 'Add New App Content'}</SheetTitle>
                         </SheetHeader>
                         <ScrollArea className="h-full">
+                            <form onSubmit={handleContentSubmit}>
                             <div className='space-y-4 px-6 py-4'>
                                 <div className="space-y-2">
                                     <Label htmlFor="content-category">Category</Label>
-                                    <Select>
+                                    <Select name="content-category" defaultValue={selectedPage?.category}>
                                         <SelectTrigger id="content-category">
                                             <SelectValue placeholder="Select a category" />
                                         </SelectTrigger>
@@ -160,29 +215,30 @@ export default function CmsPage() {
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="content-image">Image</Label>
-                                    <Input id="content-image" type="file" />
+                                    <Input name="content-image" id="content-image" type="file" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="content-title">Title</Label>
-                                    <Input id="content-title" placeholder="e.g., Party Mode" />
+                                    <Input name="content-title" id="content-title" placeholder="e.g., Party Mode" defaultValue={selectedPage?.title} />
                                 </div>
                                  <div className="space-y-2">
                                     <Label htmlFor="content-command">Command</Label>
-                                    <Input id="content-command" placeholder="e.g., L255,0,255" />
+                                    <Input name="content-command" id="content-command" placeholder="e.g., L255,0,255" defaultValue={selectedPage?.command} />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="content-description">Description</Label>
-                                    <Textarea id="content-description" placeholder="Describe what this content/command does." />
+                                    <Textarea name="content-description" id="content-description" placeholder="Describe what this content/command does." defaultValue={selectedPage?.description} />
                                 </div>
-                                <Button>Save Content</Button>
+                                <Button type="submit">{selectedPage ? 'Save Changes' : 'Save Content'}</Button>
                             </div>
+                            </form>
                         </ScrollArea>
                       </SheetContent>
                     </Sheet>
                   </div>
               </CardHeader>
               <CardContent>
-                  <DataTable columns={columns} data={pages} />
+                  <DataTable columns={columns(handleEdit, handleDelete)} data={pages} />
               </CardContent>
             </Card>
         </TabsContent>

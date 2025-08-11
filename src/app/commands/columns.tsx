@@ -26,12 +26,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-const CommandActions = ({ command }: { command: Command }) => {
-    const handleDelete = () => {
-        console.log("Deleting command:", command.id)
-        // Add delete logic here
-    }
-
+const CommandActions = ({ command, onEdit, onDelete }: { command: Command, onEdit: (command: Command) => void, onDelete: (id: string) => void }) => {
     return (
         <AlertDialog>
             <DropdownMenu>
@@ -43,7 +38,7 @@ const CommandActions = ({ command }: { command: Command }) => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onEdit(command)}><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
                     <AlertDialogTrigger asChild>
                         <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
                     </AlertDialogTrigger>
@@ -58,14 +53,14 @@ const CommandActions = ({ command }: { command: Command }) => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    <AlertDialogAction onClick={() => onDelete(command.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     )
 }
 
-export const columns: ColumnDef<Command>[] = [
+export const columns = (onEdit: (command: Command) => void, onDelete: (id: string) => void): ColumnDef<Command>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -123,7 +118,7 @@ export const columns: ColumnDef<Command>[] = [
     cell: ({ row }) => {
       return (
         <div className="text-right">
-            <CommandActions command={row.original} />
+            <CommandActions command={row.original} onEdit={onEdit} onDelete={onDelete} />
         </div>
       )
     },

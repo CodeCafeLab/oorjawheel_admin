@@ -27,10 +27,7 @@ import {
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog"
 
-const DeviceMasterActions = ({ deviceMaster, onEdit }: { deviceMaster: DeviceMaster, onEdit: (master: DeviceMaster) => void }) => {
-    const handleDelete = () => {
-        console.log("Deleting device master:", deviceMaster.id)
-    }
+const DeviceMasterActions = ({ deviceMaster, onEdit, onDelete }: { deviceMaster: DeviceMaster, onEdit: (master: DeviceMaster) => void, onDelete: (id: string) => void }) => {
 
     return (
         <AlertDialog>
@@ -58,17 +55,14 @@ const DeviceMasterActions = ({ deviceMaster, onEdit }: { deviceMaster: DeviceMas
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    <AlertDialogAction onClick={() => onDelete(deviceMaster.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     )
 }
 
-const DeviceActions = ({ device, onEdit }: { device: Device, onEdit: (device: Device) => void }) => {
-    const handleDelete = () => {
-        console.log("Deleting device:", device.id)
-    }
+const DeviceActions = ({ device, onEdit, onDelete }: { device: Device, onEdit: (device: Device) => void, onDelete: (id: string) => void }) => {
 
     const handlePrint = () => {
         window.print();
@@ -102,7 +96,7 @@ const DeviceActions = ({ device, onEdit }: { device: Device, onEdit: (device: De
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    <AlertDialogAction onClick={() => onDelete(device.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
@@ -110,7 +104,7 @@ const DeviceActions = ({ device, onEdit }: { device: Device, onEdit: (device: De
 }
 
 
-export const deviceMasterColumns = (onEdit: (master: DeviceMaster) => void): ColumnDef<DeviceMaster>[] => [
+export const deviceMasterColumns = (onEdit: (master: DeviceMaster) => void, onDelete: (id: string) => void): ColumnDef<DeviceMaster>[] => [
     {
       id: "select",
       header: ({ table }) => (
@@ -170,7 +164,7 @@ export const deviceMasterColumns = (onEdit: (master: DeviceMaster) => void): Col
         cell: ({ row }) => {
           return (
             <div className="text-right">
-                <DeviceMasterActions deviceMaster={row.original} onEdit={onEdit} />
+                <DeviceMasterActions deviceMaster={row.original} onEdit={onEdit} onDelete={onDelete} />
             </div>
           )
         },
@@ -178,7 +172,7 @@ export const deviceMasterColumns = (onEdit: (master: DeviceMaster) => void): Col
 ]
 
 
-export const columns = (onEdit: (device: Device) => void): ColumnDef<Device>[] => [
+export const columns = (onEdit: (device: Device) => void, onDelete: (id: string) => void): ColumnDef<Device>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -250,7 +244,7 @@ export const columns = (onEdit: (device: Device) => void): ColumnDef<Device>[] =
     cell: ({ row }) => {
       return (
         <div className="text-right">
-            <DeviceActions device={row.original} onEdit={onEdit} />
+            <DeviceActions device={row.original} onEdit={onEdit} onDelete={onDelete} />
         </div>
       )
     },
