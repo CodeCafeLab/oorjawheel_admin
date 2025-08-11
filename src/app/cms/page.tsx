@@ -123,7 +123,7 @@ export default function CmsPage() {
                                 <SheetTitle>Add New Category</SheetTitle>
                             </SheetHeader>
                             <ScrollArea className="h-full">
-                                <div className="grid gap-4 py-4 pr-4">
+                                <div className="grid gap-4 p-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="category-title">Category Title</Label>
                                         <Input id="category-title" placeholder="e.g., Special Modes" />
@@ -145,7 +145,7 @@ export default function CmsPage() {
                           <SheetTitle>Add New App Content</SheetTitle>
                         </SheetHeader>
                         <ScrollArea className="h-full">
-                            <div className='space-y-4 py-4 pr-4'>
+                            <div className='space-y-4 p-4'>
                                 <div className="space-y-2">
                                     <Label htmlFor="content-category">Category</Label>
                                     <Select>

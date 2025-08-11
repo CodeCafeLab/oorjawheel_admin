@@ -60,7 +60,7 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
                     </SheetDescription>
                 </SheetHeader>
                 <ScrollArea className="h-full">
-                    <div className="py-4 pr-4">
+                    <div className="p-4">
                         <UserForm onFormSuccess={handleFormSuccess} />
                     </div>
                 </ScrollArea>

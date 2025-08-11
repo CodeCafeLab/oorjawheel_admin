@@ -61,7 +61,7 @@ export default async function CustomersPage() {
                 </SheetHeader>
                 <ScrollArea className="h-full">
                     {/* Form would go here */}
-                    <p className="text-center text-muted-foreground py-8 pr-4">Customer form will be here.</p>
+                    <p className="text-center text-muted-foreground p-4">Customer form will be here.</p>
                 </ScrollArea>
             </SheetContent>
         </Sheet>

@@ -74,7 +74,7 @@ export default function CommandManagementPage() {
                             <SheetTitle>Create New Command</SheetTitle>
                         </SheetHeader>
                         <ScrollArea className="h-full">
-                            <Tabs defaultValue="manual" className="w-full pt-4 pr-4">
+                            <Tabs defaultValue="manual" className="w-full p-4">
                                 <TabsList className="grid w-full grid-cols-2">
                                     <TabsTrigger value="manual">Manual</TabsTrigger>
                                     <TabsTrigger value="auto">Auto</TabsTrigger>

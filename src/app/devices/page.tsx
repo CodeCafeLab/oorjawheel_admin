@@ -87,7 +87,7 @@ export default async function DevicesPage() {
                                 <SheetTitle>Add New Device Type</SheetTitle>
                             </SheetHeader>
                             <ScrollArea className="h-full">
-                                <div className="grid gap-4 py-4 pr-4">
+                                <div className="grid gap-4 p-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="device-type-name">Name</Label>
                                         <Input id="device-type-name" placeholder="e.g., OorjaWheel v3" />
@@ -131,7 +131,7 @@ export default async function DevicesPage() {
                                 <SheetTitle>Create New Device</SheetTitle>
                             </SheetHeader>
                             <ScrollArea className="h-full">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 pr-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
                                    <div className="space-y-4">
                                      <h3 className="font-semibold text-lg">Select Modal</h3>
                                      <div className="grid grid-cols-2 gap-4">
