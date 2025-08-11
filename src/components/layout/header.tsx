@@ -19,12 +19,11 @@ import Link from 'next/link'
 
 const navItems = [
     { href: '/', label: 'Dashboard' },
-    { href: '/users', label: 'Users' },
-    { href: '/devices', label: 'Devices' },
-    { href: '/cms', label: 'CMS Builder' },
-    { href: '/logs', label: 'Logs' },
-    { href: '/analytics', label: 'Analytics' },
-    { href: '/super-login', label: 'Super Login' },
+    { href: '/users', label: 'User Management' },
+    { href: '/devices', label: 'Device Master' },
+    { href: '/commands', label: 'Command Management' },
+    { href: '/cms', label: 'CMS' },
+    { href: '/notifications', label: 'Notifications' },
     { href: '/settings', label: 'Settings' },
 ]
 
@@ -72,7 +71,6 @@ export function Header() {
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <Link href="/settings" passHref><DropdownMenuItem>Settings</DropdownMenuItem></Link>
-                <DropdownMenuItem>Support</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Logout</DropdownMenuItem>
             </DropdownMenuContent>

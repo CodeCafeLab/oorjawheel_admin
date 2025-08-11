@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 import { columns } from './columns';
 import { DataTable } from './data-table';
@@ -19,14 +20,14 @@ async function getDevices() {
   return z.array(deviceSchema).parse(data);
 }
 
-export default async function DevicesPage() {
-  const devices = await getDevices();
+export default function DevicesPage() {
+  const devices = getDevices();
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-headline">Device Management</h1>
+          <h1 className="text-3xl font-headline">Device Master</h1>
           <p className="text-muted-foreground">
             Add, edit, and manage device settings.
           </p>

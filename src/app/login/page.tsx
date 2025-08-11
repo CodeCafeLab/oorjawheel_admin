@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -17,6 +18,7 @@ import { useToast } from "@/hooks/use-toast"
 import { login } from "@/actions/auth"
 import { z } from "zod"
 import { loginSchema } from "@/actions/schemas"
+import { Eye, EyeOff } from "lucide-react"
 
 const OorjaLogo = () => (
     <svg
@@ -45,6 +47,7 @@ export default function LoginPage() {
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [loading, setLoading] = React.useState(false)
+  const [showPassword, setShowPassword] = React.useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +89,7 @@ export default function LoginPage() {
                 <div className="flex justify-center mb-4">
                     <OorjaLogo />
                 </div>
-              <CardTitle className="text-2xl font-headline">Oorja Admin Login</CardTitle>
+              <CardTitle className="text-2xl font-headline">Oorja Wheel Admin</CardTitle>
               <CardDescription>Enter your credentials to access the panel</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
@@ -102,16 +105,28 @@ export default function LoginPage() {
                     disabled={loading}
                 />
               </div>
-              <div className="grid gap-2">
+              <div className="grid gap-2 relative">
                 <Label htmlFor="password">Password</Label>
                 <Input 
                     id="password" 
-                    type="password" 
+                    type={showPassword ? "text" : "password"} 
                     required 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
+                    className="pr-10"
                 />
+                 <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-7 h-7 w-7 text-muted-foreground"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    <span className="sr-only">{showPassword ? 'Hide password' : 'Show password'}</span>
+                </Button>
               </div>
             </CardContent>
             <CardFooter className="flex flex-col">

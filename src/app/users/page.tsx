@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from 'zod';
@@ -17,36 +18,54 @@ import { PlusCircle } from 'lucide-react';
 import { UserForm } from './user-form';
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import pool from '@/lib/db';
+import { revalidatePath } from 'next/cache';
 
 
-// Mock data fetching
 async function getUsers() {
-    // In a real app, you'd fetch this from your database.
-    const data = [
-      { id: "1", email: "super.admin@oorja.com", status: "active", firstLoginAt: "2024-01-15T10:00:00Z", devicesAssigned: ["DEV001", "DEV002", "DEV003"] },
-      { id: "2", email: "operator1@oorja.com", status: "active", firstLoginAt: "2024-02-20T11:30:00Z", devicesAssigned: ["DEV004", "DEV005"] },
-      { id: "3", email: "operator2@oorja.com", status: "locked", firstLoginAt: "2024-03-10T09:00:00Z", devicesAssigned: ["DEV006"] },
-      { id: "4", email: "test.user@oorja.com", status: "active", firstLoginAt: "2024-07-20T14:00:00Z", devicesAssigned: [] },
-      { id: "5", email: "new.user@oorja.com", status: "active", firstLoginAt: null, devicesAssigned: [] },
-    ];
-    return z.array(userSchema).parse(data);
-  }
+    try {
+        const connection = await pool.getConnection();
+        const [rows] = await connection.execute(
+            `SELECT id, email, status, created_at as firstLoginAt, '[]' as devicesAssigned 
+             FROM users 
+             ORDER BY created_at DESC`
+        );
+        connection.release();
+
+        // The devicesAssigned is mocked as an empty array string.
+        // The database query needs to be updated to fetch actual device assignments.
+        const users = (rows as any[]).map(user => ({
+            ...user,
+            devicesAssigned: JSON.parse(user.devicesAssigned)
+        }));
+
+        return z.array(userSchema).parse(users);
+    } catch (error) {
+        console.error('Failed to fetch users:', error);
+        // On error (e.g. table not found), return empty array
+        return [];
+    }
+}
 
 export default function UsersPage() {
     const [users, setUsers] = React.useState<z.infer<typeof userSchema>[]>([]);
     const [open, setOpen] = React.useState(false);
-    const router = useRouter()
+    const router = useRouter();
 
-    React.useEffect(() => {
-        getUsers().then(setUsers);
+    const fetchUsers = React.useCallback(async () => {
+        const fetchedUsers = await getUsers();
+        setUsers(fetchedUsers);
     }, []);
 
+    React.useEffect(() => {
+        fetchUsers();
+    }, [fetchUsers]);
+    
     const handleFormSuccess = () => {
       setOpen(false)
-      // We call router.refresh() to refetch the data on the server and update the table.
-      router.refresh()
+      fetchUsers()
+      revalidatePath('/users') // This might not be needed with client-side refresh, but good practice.
     }
-
 
   return (
     <div className="space-y-6">
