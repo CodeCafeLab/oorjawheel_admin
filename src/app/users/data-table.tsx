@@ -84,13 +84,21 @@ export function DataTable<TData, TValue>({
   return (
     <div className="space-y-4">
         <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-grow items-center gap-2">
+                <Input
+                    placeholder="Search by name..."
+                    value={(table.getColumn("fullName")?.getFilterValue() as string) ?? ""}
+                    onChange={(event) =>
+                        table.getColumn("fullName")?.setFilterValue(event.target.value)
+                    }
+                    className="h-10 w-full lg:w-[250px]"
+                />
                 <Popover>
                     <PopoverTrigger asChild>
                          <Button variant="outline" size="sm" className="h-10">
                             <SlidersHorizontal className="mr-2 h-4 w-4" />
                             Filter
-                            {isFiltered && <span className="ml-2 h-2 w-2 rounded-full bg-primary" />}
+                            {isFiltered && table.getColumn("status")?.getFilterValue() && <span className="ml-2 h-2 w-2 rounded-full bg-primary" />}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80" align="start">
@@ -102,18 +110,6 @@ export function DataTable<TData, TValue>({
                                 </p>
                             </div>
                             <div className="grid gap-2">
-                                <div className="grid grid-cols-3 items-center gap-4">
-                                    <Label htmlFor="fullName">Full Name</Label>
-                                    <Input
-                                        id="fullName"
-                                        placeholder="Search by name..."
-                                        value={(table.getColumn("fullName")?.getFilterValue() as string) ?? ""}
-                                        onChange={(event) =>
-                                            table.getColumn("fullName")?.setFilterValue(event.target.value)
-                                        }
-                                        className="col-span-2 h-8"
-                                    />
-                                </div>
                                 <div className="grid grid-cols-3 items-center gap-4">
                                     <Label htmlFor="status">Status</Label>
                                     <Select
@@ -145,10 +141,11 @@ export function DataTable<TData, TValue>({
                         </div>
                     </PopoverContent>
                 </Popover>
-
-                <DropdownMenu>
+            </div>
+            <div className="flex items-center gap-2">
+                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm" className="ml-auto h-10">
+                        <Button variant="outline" size="sm" className="h-10">
                         Columns
                         </Button>
                     </DropdownMenuTrigger>
@@ -174,11 +171,9 @@ export function DataTable<TData, TValue>({
                         })}
                     </DropdownMenuContent>
                 </DropdownMenu>
-            </div>
-            <div className="flex w-full sm:w-auto sm:ml-auto gap-2">
                  <Button variant="outline" size="sm" className="h-10" disabled={table.getFilteredSelectedRowModel().rows.length === 0}>
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Selected ({table.getFilteredSelectedRowModel().rows.length})
+                    Delete ({table.getFilteredSelectedRowModel().rows.length})
                 </Button>
                 <Button variant="outline" size="sm" className="h-10">
                     <Download className="mr-2 h-4 w-4" />
