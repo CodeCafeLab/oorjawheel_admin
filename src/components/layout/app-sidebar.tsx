@@ -57,34 +57,9 @@ const OorjaLogo = () => (
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/analytics', label: 'Analytics', icon: LineChart },
     { href: '/users', label: 'User Management', icon: Users },
-    {
-      href: '/devices',
-      label: 'Device Management',
-      icon: Smartphone,
-      items: [
-        { href: '/devices#master', label: 'Device Master' },
-        { href: '/devices#devices', label: 'Devices' },
-      ],
-    },
+    { href: '/devices', label: 'Device Management', icon: Smartphone },
     { href: '/commands', label: 'Command Management', icon: Terminal },
-    {
-      href: '/cms',
-      label: 'CMS',
-      icon: FileText,
-      items: [
-          {
-              label: 'Web',
-              href: '/cms#web',
-              items: [
-                  { href: '/cms#privacy', label: 'Privacy Policy' },
-                  { href: '/cms#terms', label: 'Terms & Conditions' },
-                  { href: '/cms#shipping', label: 'Shipping & Returns' },
-                  { href: '/cms#payment', label: 'Payment Terms' },
-              ]
-          },
-          { href: '/cms#app', label: 'App' }
-      ],
-    },
+    { href: '/cms', label: 'CMS', icon: FileText },
     { href: '/notifications', label: 'Notifications', icon: Bell },
     { href: '/logs', label: 'Logs', icon: GitBranch },
     { href: '/settings', label: 'Settings', icon: Settings },
@@ -94,96 +69,25 @@ const OorjaLogo = () => (
 const NavItem = ({ item }: { item: any }) => {
     const pathname = usePathname()
     const { state } = useSidebar();
-    const [isOpen, setIsOpen] = React.useState(false);
 
     const isActive = (href: string) => {
         if (!href) return false;
-        // Ignore hash for base path matching
         const baseHref = href.split('#')[0];
         return pathname === baseHref;
     }
-
-    // Check if any sub-item is active
-    const isSubActive = React.useMemo(() => {
-        if (!item.items) return false;
-        const checkActive = (items: any[]): boolean => {
-            return items.some(subItem => {
-                if (subItem.href && isActive(subItem.href)) {
-                    return true;
-                }
-                if (subItem.items) {
-                    return checkActive(subItem.items);
-                }
-                return false;
-            });
-        };
-        return (item.href && isActive(item.href)) || checkActive(item.items);
-    }, [item, pathname]);
-
-    React.useEffect(() => {
-        if (isSubActive) {
-            setIsOpen(true);
-        }
-    }, [isSubActive]);
-
-    if (!item.items) {
-      return (
-        <SidebarMenuItem>
-          <Link href={item.href}>
-            <SidebarMenuButton
-              isActive={isActive(item.href)}
-              tooltip={{ children: item.label, side: 'right' }}
-            >
-              <item.icon />
-              <span>{item.label}</span>
-            </SidebarMenuButton>
-          </Link>
-        </SidebarMenuItem>
-      )
-    }
-
-    const renderSubItems = (items: any[], isNested: boolean = false) => {
-        return items.map((subItem: any, index: number) => (
-            <SidebarMenuSubItem key={index} className={isNested ? 'ml-4' : ''}>
-                {subItem.items ? (
-                    <>
-                        <h4 className="font-semibold text-xs text-muted-foreground my-2 ml-2">{subItem.label}</h4>
-                        <SidebarMenuSub>
-                            {renderSubItems(subItem.items, true)}
-                        </SidebarMenuSub>
-                    </>
-                ) : (
-                    <SidebarMenuSubButton asChild isActive={isActive(subItem.href)}>
-                        <Link href={subItem.href} passHref>
-                           {subItem.label}
-                        </Link>
-                    </SidebarMenuSubButton>
-                )}
-            </SidebarMenuSubItem>
-        ));
-    };
-    
+  
     return (
-        <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
-            <CollapsibleTrigger asChild>
-                <SidebarMenuButton
-                    isActive={isSubActive}
-                    className="w-full justify-between"
-                    tooltip={{ children: item.label, side: 'right' }}
-                >
-                    <div className="flex items-center gap-2">
-                        <item.icon />
-                        <span className={state === 'collapsed' ? 'hidden' : 'inline'}>{item.label}</span>
-                    </div>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""} ${state === 'collapsed' ? 'hidden' : 'inline'}`} />
-                </SidebarMenuButton>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-                <SidebarMenuSub>
-                    {renderSubItems(item.items)}
-                </SidebarMenuSub>
-            </CollapsibleContent>
-      </Collapsible>
+      <SidebarMenuItem>
+        <Link href={item.href}>
+          <SidebarMenuButton
+            isActive={isActive(item.href)}
+            tooltip={{ children: item.label, side: 'right' }}
+          >
+            <item.icon />
+            <span>{item.label}</span>
+          </SidebarMenuButton>
+        </Link>
+      </SidebarMenuItem>
     )
   }
 

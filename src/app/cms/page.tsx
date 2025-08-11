@@ -51,7 +51,7 @@ export default async function CmsPage() {
         </TabsList>
         <TabsContent value="privacy">
             <Card>
-                <CardHeader><CardTitle>Privacy Policy</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="font-headline">Privacy Policy</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                     <Textarea placeholder="Enter your privacy policy content here..." rows={15} />
                     <Button>Save Privacy Policy</Button>
@@ -60,7 +60,7 @@ export default async function CmsPage() {
         </TabsContent>
         <TabsContent value="terms">
             <Card>
-                <CardHeader><CardTitle>Terms & Conditions</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="font-headline">Terms & Conditions</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                     <Textarea placeholder="Enter your terms and conditions content here..." rows={15} />
                     <Button>Save Terms & Conditions</Button>
@@ -69,7 +69,7 @@ export default async function CmsPage() {
         </TabsContent>
         <TabsContent value="shipping">
             <Card>
-                <CardHeader><CardTitle>Shipping & Returns</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="font-headline">Shipping & Returns</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                     <Textarea placeholder="Enter your shipping and returns content here..." rows={15} />
                     <Button>Save Shipping & Returns</Button>
@@ -78,7 +78,7 @@ export default async function CmsPage() {
         </TabsContent>
          <TabsContent value="payment">
             <Card>
-                <CardHeader><CardTitle>Payment Terms</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="font-headline">Payment Terms</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                     <Textarea placeholder="Enter your payment terms content here..." rows={15} />
                     <Button>Save Payment Terms</Button>
@@ -89,7 +89,7 @@ export default async function CmsPage() {
             <Card>
               <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div>
-                      <CardTitle>App Pages</CardTitle>
+                      <CardTitle className="font-headline">App Pages</CardTitle>
                       <CardDescription>Manage dynamic pages for the mobile app.</CardDescription>
                   </div>
                   <Dialog>
