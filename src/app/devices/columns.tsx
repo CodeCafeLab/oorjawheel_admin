@@ -27,7 +27,7 @@ import {
     AlertDialogTrigger,
   } from "@/components/ui/alert-dialog"
 
-const DeviceMasterActions = ({ deviceMaster }: { deviceMaster: DeviceMaster }) => {
+const DeviceMasterActions = ({ deviceMaster, onEdit }: { deviceMaster: DeviceMaster, onEdit: (master: DeviceMaster) => void }) => {
     const handleDelete = () => {
         console.log("Deleting device master:", deviceMaster.id)
     }
@@ -43,7 +43,7 @@ const DeviceMasterActions = ({ deviceMaster }: { deviceMaster: DeviceMaster }) =
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(deviceMaster)}><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
                 <AlertDialogTrigger asChild>
                     <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
                 </AlertDialogTrigger>
@@ -65,7 +65,7 @@ const DeviceMasterActions = ({ deviceMaster }: { deviceMaster: DeviceMaster }) =
     )
 }
 
-const DeviceActions = ({ device }: { device: Device }) => {
+const DeviceActions = ({ device, onEdit }: { device: Device, onEdit: (device: Device) => void }) => {
     const handleDelete = () => {
         console.log("Deleting device:", device.id)
     }
@@ -85,7 +85,7 @@ const DeviceActions = ({ device }: { device: Device }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(device)}><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
                 <DropdownMenuItem onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Print Welcome Kit</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <AlertDialogTrigger asChild>
@@ -110,7 +110,7 @@ const DeviceActions = ({ device }: { device: Device }) => {
 }
 
 
-export const deviceMasterColumns: ColumnDef<DeviceMaster>[] = [
+export const deviceMasterColumns = (onEdit: (master: DeviceMaster) => void): ColumnDef<DeviceMaster>[] => [
     {
       id: "select",
       header: ({ table }) => (
@@ -170,7 +170,7 @@ export const deviceMasterColumns: ColumnDef<DeviceMaster>[] = [
         cell: ({ row }) => {
           return (
             <div className="text-right">
-                <DeviceMasterActions deviceMaster={row.original} />
+                <DeviceMasterActions deviceMaster={row.original} onEdit={onEdit} />
             </div>
           )
         },
@@ -178,7 +178,7 @@ export const deviceMasterColumns: ColumnDef<DeviceMaster>[] = [
 ]
 
 
-export const columns: ColumnDef<Device>[] = [
+export const columns = (onEdit: (device: Device) => void): ColumnDef<Device>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -250,7 +250,7 @@ export const columns: ColumnDef<Device>[] = [
     cell: ({ row }) => {
       return (
         <div className="text-right">
-            <DeviceActions device={row.original} />
+            <DeviceActions device={row.original} onEdit={onEdit} />
         </div>
       )
     },
