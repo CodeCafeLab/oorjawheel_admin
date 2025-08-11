@@ -16,7 +16,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
 
 // Mock data fetching
 async function getPages() {
@@ -55,7 +54,7 @@ export default async function CmsPage() {
             </CardHeader>
             <CardContent>
                 <Tabs defaultValue="privacy" className="w-full flex flex-col md:flex-row gap-6">
-                    <TabsList className="flex-col h-auto items-start bg-transparent border-r-0 md:border-r pr-4">
+                    <TabsList className="flex-col h-auto items-start bg-transparent border-r-0 md:border-r pr-4 shrink-0">
                         <TabsTrigger value="privacy" className="w-full justify-start">Privacy Policy</TabsTrigger>
                         <TabsTrigger value="terms" className="w-full justify-start">Terms & Conditions</TabsTrigger>
                         <TabsTrigger value="shipping" className="w-full justify-start">Shipping & Returns</TabsTrigger>
