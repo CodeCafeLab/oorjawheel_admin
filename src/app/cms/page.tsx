@@ -28,6 +28,7 @@ import {
   } from "@/components/ui/select"
 import Image from 'next/image';
 import * as React from 'react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Mock data fetching
 async function getPages() {
@@ -118,16 +119,18 @@ export default function CmsPage() {
                         </Button>
                         </SheetTrigger>
                         <SheetContent>
-                        <SheetHeader>
-                            <SheetTitle>Add New Category</SheetTitle>
-                        </SheetHeader>
-                        <div className="grid gap-4 py-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="category-title">Category Title</Label>
-                                <Input id="category-title" placeholder="e.g., Special Modes" />
-                            </div>
-                            <Button>Save Category</Button>
-                        </div>
+                            <SheetHeader>
+                                <SheetTitle>Add New Category</SheetTitle>
+                            </SheetHeader>
+                            <ScrollArea className="h-full">
+                                <div className="grid gap-4 py-4 pr-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="category-title">Category Title</Label>
+                                        <Input id="category-title" placeholder="e.g., Special Modes" />
+                                    </div>
+                                    <Button>Save Category</Button>
+                                </div>
+                            </ScrollArea>
                         </SheetContent>
                     </Sheet>
                     <Sheet>
@@ -141,36 +144,38 @@ export default function CmsPage() {
                         <SheetHeader>
                           <SheetTitle>Add New App Content</SheetTitle>
                         </SheetHeader>
-                        <div className='space-y-4 py-4'>
-                            <div className="space-y-2">
-                                <Label htmlFor="content-category">Category</Label>
-                                <Select>
-                                    <SelectTrigger id="content-category">
-                                        <SelectValue placeholder="Select a category" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
+                        <ScrollArea className="h-full">
+                            <div className='space-y-4 py-4 pr-4'>
+                                <div className="space-y-2">
+                                    <Label htmlFor="content-category">Category</Label>
+                                    <Select>
+                                        <SelectTrigger id="content-category">
+                                            <SelectValue placeholder="Select a category" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="content-image">Image</Label>
+                                    <Input id="content-image" type="file" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="content-title">Title</Label>
+                                    <Input id="content-title" placeholder="e.g., Party Mode" />
+                                </div>
+                                 <div className="space-y-2">
+                                    <Label htmlFor="content-command">Command</Label>
+                                    <Input id="content-command" placeholder="e.g., L255,0,255" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="content-description">Description</Label>
+                                    <Textarea id="content-description" placeholder="Describe what this content/command does." />
+                                </div>
+                                <Button>Save Content</Button>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="content-image">Image</Label>
-                                <Input id="content-image" type="file" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="content-title">Title</Label>
-                                <Input id="content-title" placeholder="e.g., Party Mode" />
-                            </div>
-                             <div className="space-y-2">
-                                <Label htmlFor="content-command">Command</Label>
-                                <Input id="content-command" placeholder="e.g., L255,0,255" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="content-description">Description</Label>
-                                <Textarea id="content-description" placeholder="Describe what this content/command does." />
-                            </div>
-                            <Button>Save Content</Button>
-                        </div>
+                        </ScrollArea>
                       </SheetContent>
                     </Sheet>
                   </div>

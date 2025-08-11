@@ -19,6 +19,7 @@ import {
     SelectValue,
   } from "@/components/ui/select"
 import Image from 'next/image';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Mock data fetching
 async function getDevices() {
@@ -85,25 +86,27 @@ export default async function DevicesPage() {
                             <SheetHeader>
                                 <SheetTitle>Add New Device Type</SheetTitle>
                             </SheetHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="device-type-name">Name</Label>
-                                    <Input id="device-type-name" placeholder="e.g., OorjaWheel v3" />
+                            <ScrollArea className="h-full">
+                                <div className="grid gap-4 py-4 pr-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="device-type-name">Name</Label>
+                                        <Input id="device-type-name" placeholder="e.g., OorjaWheel v3" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bt-serve">BT Serve</Label>
+                                        <Input id="bt-serve" placeholder="Service UUID" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bt-char">BT Char</Label>
+                                        <Input id="bt-char" placeholder="Characteristic UUID" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sound-bt-name">Sound BT Name</Label>
+                                        <Input id="sound-bt-name" placeholder="e.g., OorjaAudioV3" />
+                                    </div>
+                                    <Button>Save Device Type</Button>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="bt-serve">BT Serve</Label>
-                                    <Input id="bt-serve" placeholder="Service UUID" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="bt-char">BT Char</Label>
-                                    <Input id="bt-char" placeholder="Characteristic UUID" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="sound-bt-name">Sound BT Name</Label>
-                                    <Input id="sound-bt-name" placeholder="e.g., OorjaAudioV3" />
-                                </div>
-                                <Button>Save Device Type</Button>
-                            </div>
+                            </ScrollArea>
                         </SheetContent>
                     </Sheet>
                 </CardHeader>
@@ -127,54 +130,56 @@ export default async function DevicesPage() {
                             <SheetHeader>
                                 <SheetTitle>Create New Device</SheetTitle>
                             </SheetHeader>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-                               <div className="space-y-4">
-                                 <h3 className="font-semibold text-lg">Select Modal</h3>
-                                 <div className="grid grid-cols-2 gap-4">
-                                    {modals.map(modal => (
-                                        <Card key={modal.id} className="cursor-pointer hover:border-primary">
-                                            <CardContent className="p-4 space-y-2">
-                                                 <Image src={modal.image} alt={modal.title} width={200} height={200} className="rounded-md w-full" data-ai-hint={modal.dataAiHint} />
-                                                <h4 className="font-semibold text-center">{modal.title}</h4>
-                                            </CardContent>
-                                        </Card>
-                                    ))}
-                                 </div>
-                               </div>
-                               <div className="space-y-4">
-                                    <h3 className="font-semibold text-lg">Device Details</h3>
-                                     <div className="space-y-2">
-                                        <Label htmlFor="user-id">User ID</Label>
-                                        <Input id="user-id" placeholder="Assign a user ID" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="device-type">Device Type</Label>
-                                        <Select>
-                                            <SelectTrigger id="device-type">
-                                                <SelectValue placeholder="Select a device type" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="OorjaWheel v2">OorjaWheel v2</SelectItem>
-                                                <SelectItem value="OorjaLight">OorjaLight</SelectItem>
-                                                <SelectItem value="OorjaWheel v1">OorjaWheel v1</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="mac-address">MAC Address</Label>
-                                        <Input id="mac-address" placeholder="00:1A:2B:3C:4D:5E" />
-                                    </div>
-                                     <div className="space-y-2">
-                                        <Label htmlFor="device-name">Device Name</Label>
-                                        <Input id="device-name" placeholder="e.g., Living Room Wheel" />
-                                    </div>
-                                     <div className="space-y-2">
-                                        <Label htmlFor="passcode">Passcode</Label>
-                                        <Input id="passcode" value="Auto-generated" readOnly disabled />
-                                    </div>
-                                     <Button className="w-full">Create Device</Button>
-                               </div>
-                            </div>
+                            <ScrollArea className="h-full">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 pr-4">
+                                   <div className="space-y-4">
+                                     <h3 className="font-semibold text-lg">Select Modal</h3>
+                                     <div className="grid grid-cols-2 gap-4">
+                                        {modals.map(modal => (
+                                            <Card key={modal.id} className="cursor-pointer hover:border-primary">
+                                                <CardContent className="p-4 space-y-2">
+                                                     <Image src={modal.image} alt={modal.title} width={200} height={200} className="rounded-md w-full" data-ai-hint={modal.dataAiHint} />
+                                                    <h4 className="font-semibold text-center">{modal.title}</h4>
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                     </div>
+                                   </div>
+                                   <div className="space-y-4">
+                                        <h3 className="font-semibold text-lg">Device Details</h3>
+                                         <div className="space-y-2">
+                                            <Label htmlFor="user-id">User ID</Label>
+                                            <Input id="user-id" placeholder="Assign a user ID" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="device-type">Device Type</Label>
+                                            <Select>
+                                                <SelectTrigger id="device-type">
+                                                    <SelectValue placeholder="Select a device type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="OorjaWheel v2">OorjaWheel v2</SelectItem>
+                                                    <SelectItem value="OorjaLight">OorjaLight</SelectItem>
+                                                    <SelectItem value="OorjaWheel v1">OorjaWheel v1</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="mac-address">MAC Address</Label>
+                                            <Input id="mac-address" placeholder="00:1A:2B:3C:4D:5E" />
+                                        </div>
+                                         <div className="space-y-2">
+                                            <Label htmlFor="device-name">Device Name</Label>
+                                            <Input id="device-name" placeholder="e.g., Living Room Wheel" />
+                                        </div>
+                                         <div className="space-y-2">
+                                            <Label htmlFor="passcode">Passcode</Label>
+                                            <Input id="passcode" value="Auto-generated" readOnly disabled />
+                                        </div>
+                                         <Button className="w-full">Create Device</Button>
+                                   </div>
+                                </div>
+                            </ScrollArea>
                         </SheetContent>
                     </Sheet>
                 </CardHeader>

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sheet"
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 // Mock data fetching
@@ -58,8 +59,10 @@ export default async function CustomersPage() {
                         Fill in the details to add a new customer.
                     </SheetDescription>
                 </SheetHeader>
-                {/* Form would go here */}
-                <p className="text-center text-muted-foreground py-8">Customer form will be here.</p>
+                <ScrollArea className="h-full">
+                    {/* Form would go here */}
+                    <p className="text-center text-muted-foreground py-8 pr-4">Customer form will be here.</p>
+                </ScrollArea>
             </SheetContent>
         </Sheet>
       </div>

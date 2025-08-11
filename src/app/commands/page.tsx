@@ -33,6 +33,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { DataTable } from "./data-table"
 import { columns } from "./columns"
 import { commandSchema } from "./schema"
+import { ScrollArea } from "@/components/ui/scroll-area"
   
   // Mock data fetching
 async function getCommands() {
@@ -72,47 +73,49 @@ export default function CommandManagementPage() {
                         <SheetHeader>
                             <SheetTitle>Create New Command</SheetTitle>
                         </SheetHeader>
-                        <Tabs defaultValue="manual" className="w-full pt-4">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="manual">Manual</TabsTrigger>
-                                <TabsTrigger value="auto">Auto</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="manual">
-                                <div className="space-y-4 py-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="command-type">Type</Label>
-                                        <Select>
-                                            <SelectTrigger id="command-type">
-                                                <SelectValue placeholder="Select command type" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="wheel">Wheel</SelectItem>
-                                                <SelectItem value="sound">Sound</SelectItem>
-                                                <SelectItem value="light">Light</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                        <ScrollArea className="h-full">
+                            <Tabs defaultValue="manual" className="w-full pt-4 pr-4">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="manual">Manual</TabsTrigger>
+                                    <TabsTrigger value="auto">Auto</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="manual">
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="command-type">Type</Label>
+                                            <Select>
+                                                <SelectTrigger id="command-type">
+                                                    <SelectValue placeholder="Select command type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="wheel">Wheel</SelectItem>
+                                                    <SelectItem value="sound">Sound</SelectItem>
+                                                    <SelectItem value="light">Light</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="command-string">Command</Label>
+                                            <Input id="command-string" placeholder="e.g., S20" />
+                                        </div>
+                                        <Button>Save Manual Command</Button>
                                     </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="command-string">Command</Label>
-                                        <Input id="command-string" placeholder="e.g., S20" />
+                                </TabsContent>
+                                <TabsContent value="auto">
+                                    <div className="space-y-4 py-4">
+                                         <div className="space-y-2">
+                                            <Label htmlFor="auto-command-title">Title</Label>
+                                            <Input id="auto-command-title" placeholder="e.g., Evening Mode" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="command-json">JSON</Label>
+                                            <Textarea id="command-json" placeholder='{ "light": "on", "speed": "15" }' rows={5} />
+                                        </div>
+                                        <Button>Save Auto Command</Button>
                                     </div>
-                                    <Button>Save Manual Command</Button>
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="auto">
-                                <div className="space-y-4 py-4">
-                                     <div className="space-y-2">
-                                        <Label htmlFor="auto-command-title">Title</Label>
-                                        <Input id="auto-command-title" placeholder="e.g., Evening Mode" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="command-json">JSON</Label>
-                                        <Textarea id="command-json" placeholder='{ "light": "on", "speed": "15" }' rows={5} />
-                                    </div>
-                                    <Button>Save Auto Command</Button>
-                                </div>
-                            </TabsContent>
-                        </Tabs>
+                                </TabsContent>
+                            </Tabs>
+                        </ScrollArea>
                     </SheetContent>
                 </Sheet>
             </div>

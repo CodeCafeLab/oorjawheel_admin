@@ -18,6 +18,7 @@ import { PlusCircle } from 'lucide-react';
 import { UserForm } from './user-form';
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
     const [users, setUsers] = React.useState<User[]>(initialUsers);
@@ -58,9 +59,11 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
                         Fill in the details to create a new user account.
                     </SheetDescription>
                 </SheetHeader>
-                <div className="py-4">
-                  <UserForm onFormSuccess={handleFormSuccess} />
-                </div>
+                <ScrollArea className="h-full">
+                    <div className="py-4 pr-4">
+                        <UserForm onFormSuccess={handleFormSuccess} />
+                    </div>
+                </ScrollArea>
             </SheetContent>
         </Sheet>
       </div>
