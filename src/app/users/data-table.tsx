@@ -45,6 +45,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import { Label } from "@/components/ui/label"
+import { User } from "./schema"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -81,6 +82,38 @@ export function DataTable<TData, TValue>({
 
   const isFiltered = table.getState().columnFilters.length > 0
 
+  const handleExport = () => {
+    const rows = table.getFilteredRowModel().rows;
+    const dataToExport = rows.map(row => row.original as User);
+
+    const headers = ["ID", "Full Name", "Email", "Contact Number", "Address", "Country", "Status"];
+    const csvContent = [
+      headers.join(","),
+      ...dataToExport.map(user => [
+        user.id,
+        `"${user.fullName?.replace(/"/g, '""')}"`,
+        user.email,
+        user.contactNumber,
+        `"${user.address?.replace(/"/g, '""')}"`,
+        user.country,
+        user.status
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "users.csv");
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
+
   return (
     <div className="space-y-4">
         <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -98,7 +131,7 @@ export function DataTable<TData, TValue>({
                          <Button variant="outline" size="sm" className="h-10">
                             <SlidersHorizontal className="mr-2 h-4 w-4" />
                             Filter
-                            {isFiltered && table.getColumn("status")?.getFilterValue() && <span className="ml-2 h-2 w-2 rounded-full bg-primary" />}
+                            {isFiltered && <span className="ml-2 h-2 w-2 rounded-full bg-primary" />}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-80" align="start">
@@ -175,7 +208,7 @@ export function DataTable<TData, TValue>({
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete ({table.getFilteredSelectedRowModel().rows.length})
                 </Button>
-                <Button variant="outline" size="sm" className="h-10">
+                <Button variant="outline" size="sm" className="h-10" onClick={handleExport}>
                     <Download className="mr-2 h-4 w-4" />
                     Export
                 </Button>
