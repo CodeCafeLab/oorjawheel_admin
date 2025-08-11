@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -74,7 +75,7 @@ export default function CommandManagementPage() {
                             <SheetTitle>Create New Command</SheetTitle>
                         </SheetHeader>
                         <ScrollArea className="h-full">
-                            <Tabs defaultValue="manual" className="w-full p-4">
+                            <Tabs defaultValue="manual" className="w-full px-6 py-4">
                                 <TabsList className="grid w-full grid-cols-2">
                                     <TabsTrigger value="manual">Manual</TabsTrigger>
                                     <TabsTrigger value="auto">Auto</TabsTrigger>

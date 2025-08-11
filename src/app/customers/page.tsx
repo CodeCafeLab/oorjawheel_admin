@@ -1,4 +1,5 @@
 
+
 import { promises as fs } from 'fs';
 import path from 'path';
 import { z } from 'zod';
@@ -61,7 +62,7 @@ export default async function CustomersPage() {
                 </SheetHeader>
                 <ScrollArea className="h-full">
                     {/* Form would go here */}
-                    <p className="text-center text-muted-foreground p-4">Customer form will be here.</p>
+                    <p className="text-center text-muted-foreground px-6 py-4">Customer form will be here.</p>
                 </ScrollArea>
             </SheetContent>
         </Sheet>

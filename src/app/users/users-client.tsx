@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { z } from 'zod';
@@ -60,7 +61,7 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
                     </SheetDescription>
                 </SheetHeader>
                 <ScrollArea className="h-full">
-                    <div className="p-4">
+                    <div className="px-6 py-4">
                         <UserForm onFormSuccess={handleFormSuccess} />
                     </div>
                 </ScrollArea>
