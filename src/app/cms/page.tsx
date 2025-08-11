@@ -13,6 +13,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
+  SheetTrigger,
 } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,6 +62,11 @@ export default function CmsPage() {
   const handleDelete = (id: string) => {
     setPages(prev => prev.filter(p => p.id !== id));
     toast({ title: 'Content Deleted', description: 'The content item has been deleted.' });
+  }
+
+  const handleDeleteSelected = (ids: string[]) => {
+    setPages(prev => prev.filter(p => !ids.includes(p.id)));
+    toast({ title: 'Content Deleted', description: `${ids.length} content items have been deleted.` });
   }
 
   const handleCategorySubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -237,7 +243,13 @@ export default function CmsPage() {
                   </div>
               </CardHeader>
               <CardContent>
-                  <DataTable columns={columns(handleEdit, handleDelete)} data={pages} categories={categories} onDelete={handleDelete} />
+                  <DataTable 
+                    columns={columns(handleEdit, handleDelete)} 
+                    data={pages} 
+                    categories={categories}
+                    onDelete={handleDelete}
+                    onDeleteSelected={handleDeleteSelected}
+                  />
               </CardContent>
             </Card>
         </TabsContent>
