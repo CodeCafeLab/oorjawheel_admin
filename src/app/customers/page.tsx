@@ -18,21 +18,18 @@ import { PlusCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as React from 'react';
 import { useToast } from '@/hooks/use-toast';
-import pool from '@/lib/db';
 import { deleteCustomer } from '@/actions/customers';
 import { CustomerForm } from './customer-form';
 
 async function getCustomers(): Promise<Customer[]> {
-  try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute('SELECT * FROM customers');
-    connection.release();
-    const customers = (rows as any[]).map(c => ({...c, id: c.id.toString()}));
-    return z.array(customerSchema).parse(customers);
-  } catch (error) {
-    console.error('Failed to fetch customers:', error);
-    return [];
-  }
+    // MOCK DATA
+    const data = [
+        { id: '1', name: 'Aarav Sharma', email: 'aarav.sharma@example.com', totalSpent: 5500, orders: 2, status: 'active' },
+        { id: '2', name: 'Diya Patel', email: 'diya.patel@example.com', totalSpent: 12000, orders: 5, status: 'active' },
+        { id: '3', name: 'Rohan Mehta', email: 'rohan.mehta@example.com', totalSpent: 2500, orders: 1, status: 'inactive' },
+        { id: '4', name: 'Priya Singh', email: 'priya.singh@example.com', totalSpent: 8900, orders: 3, status: 'active' },
+    ];
+    return z.array(customerSchema).parse(data);
 }
 
 export default function CustomersPage() {

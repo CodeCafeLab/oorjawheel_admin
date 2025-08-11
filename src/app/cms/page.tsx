@@ -31,32 +31,22 @@ import * as React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { addCategory, addPage, deletePage, updatePage } from '@/actions/cms';
-import pool from '@/lib/db';
+
 
 async function getPages(): Promise<Page[]> {
-  try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute('SELECT * FROM cms_pages');
-    connection.release();
-    const pages = (rows as any[]).map(p => ({ ...p, id: p.id.toString() }));
-    return z.array(pageSchema).parse(pages);
-  } catch (error) {
-    console.error("Failed to fetch pages", error);
-    return [];
-  }
+    // MOCK DATA
+    const data = [
+        { id: '1', category: 'Special Modes', image: 'https://placehold.co/100x100.png', title: 'Party Mode', command: 'L255,0,255', description: 'Cycles through a vibrant color palette.' },
+        { id: '2', category: 'Ambiance', image: 'https://placehold.co/100x100.png', title: 'Reading Light', command: 'L255,240,220', description: 'A soft, warm light for reading.' },
+        { id: '3', category: 'Special Modes', image: 'https://placehold.co/100x100.png', title: 'Focus Mode', command: 'L200,220,255', description: 'A cool, blueish light to enhance focus.' },
+    ];
+    return z.array(pageSchema).parse(data);
 }
 
 async function getCategories(): Promise<string[]> {
-    try {
-      const connection = await pool.getConnection();
-      const [rows] = await connection.execute('SELECT title FROM cms_categories ORDER BY title');
-      connection.release();
-      return (rows as any[]).map(r => r.title);
-    } catch (error) {
-      console.error("Failed to fetch categories", error);
-      return [];
-    }
-  }
+    // MOCK DATA
+    return ['Special Modes', 'Ambiance', 'Wellness'];
+}
 
 
 export default function CmsPage() {

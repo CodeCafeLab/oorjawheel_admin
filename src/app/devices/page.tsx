@@ -23,33 +23,27 @@ import Image from 'next/image';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as React from 'react';
 import { useToast } from '@/hooks/use-toast';
-import pool from '@/lib/db';
 import { addDevice, updateDevice, deleteDevice, addDeviceMaster, updateDeviceMaster, deleteDeviceMaster } from '@/actions/devices';
 
 async function getDevices(): Promise<Device[]> {
-  try {
-    const connection = await pool.getConnection();
-    const [rows] = await connection.execute('SELECT * FROM devices');
-    connection.release();
-    const devices = (rows as any[]).map(d => ({ ...d, id: d.id.toString()}));
-    return z.array(deviceSchema).parse(devices);
-  } catch (error) {
-    console.error("Failed to fetch devices", error);
-    return [];
-  }
+    // MOCK DATA
+    const data = [
+        { id: '1', deviceName: 'Living Room Wheel', macAddress: '00:1A:2B:3C:4D:5E', deviceType: 'OorjaWheel v2', userId: '101', passcode: '3C4D5E', status: 'active' },
+        { id: '2', deviceName: 'Bedroom Lamp', macAddress: 'F0:9A:8B:7C:6D:5E', deviceType: 'OorjaLight', userId: '102', passcode: '7C6D5E', status: 'active' },
+        { id: '3', deviceName: 'Kitchen Speaker', macAddress: 'A1:B2:C3:D4:E5:F6', deviceType: 'OorjaSound', userId: null, passcode: 'D4E5F6', status: 'never_used' },
+        { id: '4', deviceName: 'Office Wheel', macAddress: '11:22:33:44:55:66', deviceType: 'OorjaWheel v2', userId: '101', passcode: '445566', status: 'disabled' },
+    ];
+    return z.array(deviceSchema).parse(data);
 }
 
 async function getDeviceMasters(): Promise<DeviceMaster[]> {
-    try {
-      const connection = await pool.getConnection();
-      const [rows] = await connection.execute('SELECT * FROM device_masters');
-      connection.release();
-      const masters = (rows as any[]).map(m => ({ ...m, id: m.id.toString()}));
-      return z.array(deviceMasterSchema).parse(masters);
-    } catch(error) {
-      console.error("Failed to fetch device masters", error);
-      return [];
-    }
+    // MOCK DATA
+    const data = [
+        { id: '1', deviceType: 'OorjaWheel v2', btServe: 'service_uuid_wheel', btChar: 'char_uuid_wheel', soundBtName: 'OorjaAudioV2', status: 'active' },
+        { id: '2', deviceType: 'OorjaLight', btServe: 'service_uuid_light', btChar: 'char_uuid_light', soundBtName: '', status: 'active' },
+        { id: '3', deviceType: 'OorjaSound', btServe: 'service_uuid_sound', btChar: 'char_uuid_sound', soundBtName: 'OorjaAudio', status: 'inactive' },
+    ];
+    return z.array(deviceMasterSchema).parse(data);
 }
 
 const modals = [
@@ -126,15 +120,25 @@ export default function DevicesPage() {
   }
   
   React.useEffect(() => {
-    if (!isSheetOpen) {
+    if (isSheetOpen) {
+        setMacAddress(selectedDevice?.macAddress || '');
+        setPasscode(selectedDevice?.passcode || 'Auto-generated');
+    } else {
         setMacAddress('');
         setPasscode('Auto-generated');
+        setSelectedDevice(null);
     }
-  }, [isSheetOpen]);
+  }, [isSheetOpen, selectedDevice]);
+
+  React.useEffect(() => {
+    if (!isMasterSheetOpen) {
+        setSelectedMaster(null);
+    }
+  }, [isMasterSheetOpen]);
 
   React.useEffect(() => {
     if (macAddress) {
-        const cleanedMac = macAddress.replace(/[^A-Za-z0-9]/g, '');
+        const cleanedMac = macAddress.replace(/[^A-Fa-f0-9]/g, '');
         if (cleanedMac.length >= 6) {
             setPasscode(cleanedMac.slice(-6).toUpperCase());
         } else {
@@ -165,7 +169,6 @@ export default function DevicesPage() {
         toast({ title: selectedDevice ? 'Device Updated' : 'Device Created', description: result.message });
         refreshData();
         setIsSheetOpen(false);
-        setSelectedDevice(null);
     } else {
         toast({ variant: 'destructive', title: 'Error', description: result.message });
     }
@@ -190,7 +193,6 @@ export default function DevicesPage() {
         toast({ title: selectedMaster ? 'Device Type Updated' : 'Device Type Created', description: result.message });
         refreshData();
         setIsMasterSheetOpen(false);
-        setSelectedMaster(null);
     } else {
         toast({ variant: 'destructive', title: 'Error', description: result.message });
     }
@@ -221,11 +223,11 @@ export default function DevicesPage() {
                         <CardDescription>Manage device types, services, and firmware.</CardDescription>
                     </div>
                      <Sheet open={isMasterSheetOpen} onOpenChange={(isOpen) => {
-                        setIsMasterSheetOpen(isOpen);
-                        if (!isOpen) setSelectedMaster(null);
-                    }}>
+                        setIsMasterSheetOpen(isOpen)
+                        if (!isOpen) setSelectedMaster(null)
+                     }}>
                         <SheetTrigger asChild>
-                            <Button onClick={() => { setSelectedMaster(null); setIsMasterSheetOpen(true); }}>
+                            <Button onClick={() => { setSelectedMaster(null); setIsMasterSheetOpen(true);}}>
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 Add Device Type
                             </Button>
@@ -255,7 +257,7 @@ export default function DevicesPage() {
                                     </div>
                                      <div className="space-y-2">
                                         <Label htmlFor="status">Status</Label>
-                                        <Select name="status" defaultValue={selectedMaster?.status}>
+                                        <Select name="status" defaultValue={selectedMaster?.status || 'active'}>
                                             <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="active">Active</SelectItem>
@@ -299,11 +301,11 @@ export default function DevicesPage() {
                         <CardDescription>Manage all provisioned devices.</CardDescription>
                     </div>
                      <Sheet open={isSheetOpen} onOpenChange={(isOpen) => {
-                        setIsSheetOpen(isOpen);
-                        if (!isOpen) setSelectedDevice(null);
-                    }}>
+                         setIsSheetOpen(isOpen)
+                         if (!isOpen) setSelectedDevice(null)
+                     }}>
                         <SheetTrigger asChild>
-                            <Button onClick={() => { setSelectedDevice(null); setIsSheetOpen(true); }}>
+                            <Button onClick={() => { setSelectedDevice(null); setIsSheetOpen(true);}}>
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 Add Device
                             </Button>

@@ -35,24 +35,17 @@ import { columns } from "./columns"
 import { commandSchema, Command } from "./schema"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/hooks/use-toast"
-import pool from "@/lib/db"
 import { addCommand, updateCommand, deleteCommand } from "@/actions/commands"
   
 async function getCommands(): Promise<Command[]> {
-    try {
-        const connection = await pool.getConnection();
-        const [rows] = await connection.execute('SELECT * FROM commands');
-        connection.release();
-        const commands = (rows as any[]).map(c => ({
-            ...c,
-            id: c.id.toString(),
-            details: JSON.parse(c.details)
-        }));
-        return z.array(commandSchema).parse(commands);
-    } catch(error) {
-        console.error("Failed to fetch commands", error);
-        return [];
-    }
+    // MOCK DATA
+    const data = [
+        { id: '1', type: 'manual', status: 'active', details: { type: 'light', command: 'L255,0,0' } },
+        { id: '2', type: 'manual', status: 'active', details: { type: 'sound', command: 'S15' } },
+        { id: '3', type: 'auto', status: 'inactive', details: { title: 'Sunset Mode', json: '{ "light": "L255,100,0", "sound": "S5" }' } },
+        { id: '4', type: 'manual', status: 'active', details: { type: 'wheel', command: 'W50' } },
+    ];
+    return z.array(commandSchema).parse(data);
 }
 
 
@@ -217,7 +210,7 @@ export default function CommandManagementPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="command-json">JSON</Label>
-                                            <Textarea name="command-json" id="command-json" placeholder='{ "light": "on", "speed": "15" }' rows={5} defaultValue={selectedCommand?.type === 'auto' ? selectedCommand.details.json : ''}/>
+                                            <Textarea name="command-json" id="command-json" placeholder='{ "light": "on", "speed": "15" }' rows={5} defaultValue={selectedCommand?.type === 'auto' ? JSON.stringify(selectedCommand.details.json, null, 2) : ''}/>
                                         </div>
                                         <Button type="submit">{selectedCommand ? 'Save Changes' : 'Save Auto Command'}</Button>
                                     </div>
