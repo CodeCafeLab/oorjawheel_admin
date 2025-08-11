@@ -148,7 +148,7 @@ export function DataTable<TData, TValue>({
     }
   }
   
-  const handleDeleteSelected = () => {
+  const handleDeleteSelectedItems = () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
     const idsToDelete = selectedRows.map(row => (row.original as Device | DeviceMaster).id);
     onDeleteSelected(idsToDelete);
@@ -266,7 +266,7 @@ export function DataTable<TData, TValue>({
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteSelected} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                            <AlertDialogAction onClick={handleDeleteSelectedItems} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>

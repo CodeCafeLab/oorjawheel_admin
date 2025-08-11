@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import * as React from "react"
@@ -18,6 +17,7 @@ import {
     SheetContent,
     SheetHeader,
     SheetTitle,
+    SheetTrigger,
 } from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
@@ -35,15 +35,24 @@ import { columns } from "./columns"
 import { commandSchema, Command } from "./schema"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/hooks/use-toast"
+import pool from "@/lib/db"
+import { addCommand, updateCommand, deleteCommand } from "@/actions/commands"
   
-  // Mock data fetching
 async function getCommands(): Promise<Command[]> {
-    const data = [
-      { id: "CMD001", type: "manual", status: "active", details: { type: "wheel", command: "S20"} },
-      { id: "CMD002", type: "auto", status: "active", details: { title: "Evening Mode", json: '{ "light": "on", "speed": "15" }'} },
-      { id: "CMD003", type: "manual", status: "inactive", details: { type: "light", command: "L100,50,10" } },
-    ]
-    return z.array(commandSchema).parse(data)
+    try {
+        const connection = await pool.getConnection();
+        const [rows] = await connection.execute('SELECT * FROM commands');
+        connection.release();
+        const commands = (rows as any[]).map(c => ({
+            ...c,
+            id: c.id.toString(),
+            details: JSON.parse(c.details)
+        }));
+        return z.array(commandSchema).parse(commands);
+    } catch(error) {
+        console.error("Failed to fetch commands", error);
+        return [];
+    }
 }
 
 
@@ -54,9 +63,13 @@ export default function CommandManagementPage() {
     const [activeTab, setActiveTab] = React.useState("manual");
     const { toast } = useToast();
 
+    const refreshCommands = () => {
+        getCommands().then(setCommands);
+    };
+
     React.useEffect(() => {
-        getCommands().then(setCommands)
-    }, [])
+        refreshCommands();
+    }, []);
 
     React.useEffect(() => {
         if (selectedCommand) {
@@ -71,16 +84,28 @@ export default function CommandManagementPage() {
         setIsSheetOpen(true);
     }
     
-    const handleDelete = (id: string) => {
-        setCommands(prev => prev.filter(c => c.id !== id));
-        toast({ title: 'Command Deleted', description: `Command ${id} has been deleted.` });
+    const handleDelete = async (id: string) => {
+        const result = await deleteCommand(id);
+        if (result.success) {
+            toast({ title: 'Command Deleted', description: `Command ${id} has been deleted.` });
+            refreshCommands();
+        } else {
+            toast({ variant: "destructive", title: "Error", description: result.message });
+        }
     }
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleDeleteSelected = (ids: string[]) => {
+        Promise.all(ids.map(id => deleteCommand(id))).then(() => {
+            toast({ title: 'Bulk Delete Complete', description: `${ids.length} commands deleted.` });
+            refreshCommands();
+        });
+    }
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         
-        let newCommand: Command;
+        let commandData;
 
         if (activeTab === 'manual') {
             const manualType = formData.get('manual-command-type') as 'wheel' | 'sound' | 'light' | null;
@@ -91,14 +116,10 @@ export default function CommandManagementPage() {
                 return;
             }
 
-            newCommand = {
-                id: selectedCommand?.id || `CMD${Date.now()}`,
-                type: 'manual',
-                status: 'active',
-                details: {
-                    type: manualType,
-                    command: commandString
-                }
+            commandData = {
+                type: 'manual' as const,
+                status: 'active' as const,
+                details: { type: manualType, command: commandString }
             };
         } else {
             const autoTitle = formData.get('auto-command-title') as string | null;
@@ -108,28 +129,32 @@ export default function CommandManagementPage() {
                 toast({ variant: "destructive", title: "Missing fields", description: "Please fill all required fields for auto command." });
                 return;
             }
+            try {
+                JSON.parse(commandJson);
+            } catch (error) {
+                toast({ variant: "destructive", title: "Invalid JSON", description: "The provided JSON for the auto command is not valid." });
+                return;
+            }
 
-            newCommand = {
-                id: selectedCommand?.id || `CMD${Date.now()}`,
-                type: 'auto',
-                status: 'active',
-                details: {
-                    title: autoTitle,
-                    json: commandJson
-                }
+            commandData = {
+                type: 'auto' as const,
+                status: 'active' as const,
+                details: { title: autoTitle, json: commandJson }
             };
         }
+        
+        const result = selectedCommand
+            ? await updateCommand(selectedCommand.id, commandData)
+            : await addCommand(commandData);
 
-        if (selectedCommand) {
-            setCommands(prev => prev.map(c => c.id === selectedCommand.id ? newCommand : c));
-            toast({ title: 'Command Updated', description: `Command ${newCommand.id} updated.` });
+        if (result.success) {
+            toast({ title: selectedCommand ? 'Command Updated' : 'Command Created', description: result.message });
+            refreshCommands();
+            setIsSheetOpen(false);
+            setSelectedCommand(null);
         } else {
-            setCommands(prev => [...prev, newCommand]);
-            toast({ title: 'Command Created', description: `New command ${newCommand.id} created.` });
+            toast({ variant: "destructive", title: "Error", description: result.message });
         }
-
-        setIsSheetOpen(false);
-        setSelectedCommand(null);
     }
 
     return (
@@ -141,10 +166,67 @@ export default function CommandManagementPage() {
                         Create and manage manual and automated device commands.
                     </p>
                 </div>
-                <Button onClick={() => { setSelectedCommand(null); setIsSheetOpen(true); }}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Command
-                </Button>
+                <Sheet open={isSheetOpen} onOpenChange={(isOpen) => {
+                    setIsSheetOpen(isOpen);
+                    if (!isOpen) setSelectedCommand(null);
+                }}>
+                    <SheetTrigger asChild>
+                        <Button onClick={() => { setSelectedCommand(null); setIsSheetOpen(true); }}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Command
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent className='md:max-w-xl'>
+                        <SheetHeader>
+                            <SheetTitle>{selectedCommand ? 'Edit Command' : 'Create New Command'}</SheetTitle>
+                        </SheetHeader>
+                        <ScrollArea className="h-full">
+                            <form onSubmit={handleSubmit}>
+                            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full px-6 py-4">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="manual" disabled={!!(selectedCommand && selectedCommand.type !== 'manual')}>Manual</TabsTrigger>
+                                    <TabsTrigger value="auto" disabled={!!(selectedCommand && selectedCommand.type !== 'auto')}>Auto</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="manual">
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="manual-command-type">Type</Label>
+                                            <Select name="manual-command-type" defaultValue={selectedCommand?.type === 'manual' ? selectedCommand.details.type : undefined}>
+                                                <SelectTrigger id="manual-command-type">
+                                                    <SelectValue placeholder="Select command type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="wheel">Wheel</SelectItem>
+                                                    <SelectItem value="sound">Sound</SelectItem>
+                                                    <SelectItem value="light">Light</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="command-string">Command</Label>
+                                            <Input name="command-string" id="command-string" placeholder="e.g., S20" defaultValue={selectedCommand?.type === 'manual' ? selectedCommand.details.command : ''}/>
+                                        </div>
+                                        <Button type="submit">{selectedCommand ? 'Save Changes' : 'Save Manual Command'}</Button>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="auto">
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="auto-command-title">Title</Label>
+                                            <Input name="auto-command-title" id="auto-command-title" placeholder="e.g., Evening Mode" defaultValue={selectedCommand?.type === 'auto' ? selectedCommand.details.title : ''} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="command-json">JSON</Label>
+                                            <Textarea name="command-json" id="command-json" placeholder='{ "light": "on", "speed": "15" }' rows={5} defaultValue={selectedCommand?.type === 'auto' ? selectedCommand.details.json : ''}/>
+                                        </div>
+                                        <Button type="submit">{selectedCommand ? 'Save Changes' : 'Save Auto Command'}</Button>
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
+                            </form>
+                        </ScrollArea>
+                    </SheetContent>
+                </Sheet>
             </div>
             <Card>
                 <CardHeader>
@@ -154,65 +236,9 @@ export default function CommandManagementPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <DataTable columns={columns(handleEdit, handleDelete)} data={commands} onDelete={handleDelete} />
+                    <DataTable columns={columns(handleEdit, handleDelete)} data={commands} onDelete={handleDelete} onDeleteSelected={handleDeleteSelected} />
                 </CardContent>
             </Card>
-
-             <Sheet open={isSheetOpen} onOpenChange={(isOpen) => {
-                setIsSheetOpen(isOpen);
-                if (!isOpen) setSelectedCommand(null);
-            }}>
-                <SheetContent>
-                    <SheetHeader>
-                        <SheetTitle>{selectedCommand ? 'Edit Command' : 'Create New Command'}</SheetTitle>
-                    </SheetHeader>
-                    <ScrollArea className="h-full">
-                        <form onSubmit={handleSubmit}>
-                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full px-6 py-4">
-                            <TabsList className="grid w-full grid-cols-2">
-                                <TabsTrigger value="manual" disabled={!!(selectedCommand && selectedCommand.type !== 'manual')}>Manual</TabsTrigger>
-                                <TabsTrigger value="auto" disabled={!!(selectedCommand && selectedCommand.type !== 'auto')}>Auto</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="manual">
-                                <div className="space-y-4 py-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="manual-command-type">Type</Label>
-                                        <Select name="manual-command-type" defaultValue={selectedCommand?.type === 'manual' ? selectedCommand.details.type : undefined}>
-                                            <SelectTrigger id="manual-command-type">
-                                                <SelectValue placeholder="Select command type" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="wheel">Wheel</SelectItem>
-                                                <SelectItem value="sound">Sound</SelectItem>
-                                                <SelectItem value="light">Light</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="command-string">Command</Label>
-                                        <Input name="command-string" id="command-string" placeholder="e.g., S20" defaultValue={selectedCommand?.type === 'manual' ? selectedCommand.details.command : ''}/>
-                                    </div>
-                                    <Button type="submit">{selectedCommand ? 'Save Changes' : 'Save Manual Command'}</Button>
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="auto">
-                                <div className="space-y-4 py-4">
-                                     <div className="space-y-2">
-                                        <Label htmlFor="auto-command-title">Title</Label>
-                                        <Input name="auto-command-title" id="auto-command-title" placeholder="e.g., Evening Mode" defaultValue={selectedCommand?.type === 'auto' ? selectedCommand.details.title : ''} />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="command-json">JSON</Label>
-                                        <Textarea name="command-json" id="command-json" placeholder='{ "light": "on", "speed": "15" }' rows={5} defaultValue={selectedCommand?.type === 'auto' ? selectedCommand.details.json : ''}/>
-                                    </div>
-                                    <Button type="submit">{selectedCommand ? 'Save Changes' : 'Save Auto Command'}</Button>
-                                </div>
-                            </TabsContent>
-                        </Tabs>
-                        </form>
-                    </ScrollArea>
-                </SheetContent>
-            </Sheet>
         </div>
     )
 }

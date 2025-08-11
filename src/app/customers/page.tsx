@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { z } from 'zod';
@@ -19,34 +18,63 @@ import { PlusCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as React from 'react';
 import { useToast } from '@/hooks/use-toast';
+import pool from '@/lib/db';
+import { deleteCustomer } from '@/actions/customers';
+import { CustomerForm } from './customer-form';
 
-// Mock data fetching
 async function getCustomers(): Promise<Customer[]> {
-  // In a real app, you'd fetch this from your database.
-  const data = [
-    { id: "CUST001", name: "Rohan Sharma", email: "rohan.sharma@example.com", totalSpent: 50000, orders: 5, status: "active" },
-    { id: "CUST002", name: "Priya Patel", email: "priya.patel@example.com", totalSpent: 75000, orders: 8, status: "active" },
-    { id: "CUST003", name: "Amit Singh", email: "amit.singh@example.com", totalSpent: 22000, orders: 3, status: "inactive" },
-    { id: "CUST004", name: "Sunita Gupta", email: "sunita.gupta@example.com", totalSpent: 120000, orders: 12, status: "active" },
-    { id: "CUST005", name: "Vikram Kumar", email: "vikram.kumar@example.com", totalSpent: 15000, orders: 2, status: "active" },
-    { id: "CUST006", name: "Anjali Mehta", email: "anjali.mehta@example.com", totalSpent: 98000, orders: 10, status: "active" },
-    { id: "CUST007", name: "Sanjay Verma", email: "sanjay.verma@example.com", totalSpent: 0, orders: 0, status: "inactive" },
-  ];
-  return z.array(customerSchema).parse(data);
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute('SELECT * FROM customers');
+    connection.release();
+    const customers = (rows as any[]).map(c => ({...c, id: c.id.toString()}));
+    return z.array(customerSchema).parse(customers);
+  } catch (error) {
+    console.error('Failed to fetch customers:', error);
+    return [];
+  }
 }
 
 export default function CustomersPage() {
   const [customers, setCustomers] = React.useState<Customer[]>([]);
+  const [isSheetOpen, setSheetOpen] = React.useState(false);
+  const [selectedCustomer, setSelectedCustomer] = React.useState<Customer | null>(null);
   const { toast } = useToast();
 
-  React.useEffect(() => {
+  const refreshData = () => {
     getCustomers().then(setCustomers);
+  };
+
+  React.useEffect(() => {
+    refreshData();
   }, []);
 
-  // Placeholder for delete action
-  const handleDelete = (id: string) => {
-    setCustomers(prev => prev.filter(p => p.id !== id));
-    toast({ title: 'Customer Deleted', description: 'The customer has been deleted.' });
+  const handleEdit = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setSheetOpen(true);
+  }
+
+  const handleDelete = async (id: string) => {
+    const result = await deleteCustomer(id);
+    if (result.success) {
+      toast({ title: 'Customer Deleted', description: 'The customer has been deleted.' });
+      refreshData();
+    } else {
+      toast({ variant: 'destructive', title: 'Error', description: result.message });
+    }
+  }
+
+  const handleDeleteSelected = (ids: string[]) => {
+    Promise.all(ids.map(id => deleteCustomer(id))).then(() => {
+      toast({ title: 'Customers Deleted', description: `${ids.length} customers have been deleted.` });
+      refreshData();
+    });
+  }
+
+  const handleFormSuccess = () => {
+    setSheetOpen(false);
+    setSelectedCustomer(null);
+    refreshData();
   }
 
   return (
@@ -58,30 +86,32 @@ export default function CustomersPage() {
             Manage your customers and view their details.
           </p>
         </div>
-        <Sheet>
+        <Sheet open={isSheetOpen} onOpenChange={(isOpen) => {
+            setSheetOpen(isOpen);
+            if (!isOpen) setSelectedCustomer(null);
+        }}>
             <SheetTrigger asChild>
-                <Button>
+                <Button onClick={() => { setSelectedCustomer(null); setSheetOpen(true); }}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Customer
                 </Button>
             </SheetTrigger>
-            <SheetContent>
+            <SheetContent className='md:max-w-xl'>
                 <SheetHeader>
-                    <SheetTitle>Add New Customer</SheetTitle>
+                    <SheetTitle>{selectedCustomer ? 'Edit Customer' : 'Add New Customer'}</SheetTitle>
                     <SheetDescription>
-                        Fill in the details to add a new customer.
+                        Fill in the details for the customer.
                     </SheetDescription>
                 </SheetHeader>
                 <ScrollArea className="h-full">
                   <div className="py-4 px-6">
-                    {/* Form would go here */}
-                    <p className="text-center text-muted-foreground">Customer form will be here.</p>
+                    <CustomerForm onFormSuccess={handleFormSuccess} customer={selectedCustomer} />
                   </div>
                 </ScrollArea>
             </SheetContent>
         </Sheet>
       </div>
-      <DataTable columns={columns} data={customers} onDelete={handleDelete} />
+      <DataTable columns={columns(handleEdit, handleDelete)} data={customers} onDelete={handleDelete} onDeleteSelected={handleDeleteSelected} />
     </div>
   );
 }

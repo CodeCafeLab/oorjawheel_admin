@@ -1,5 +1,4 @@
 
-
 "use client"
 import { z } from 'zod';
 import { columns } from './columns';
@@ -31,27 +30,50 @@ import Image from 'next/image';
 import * as React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { addCategory, addPage, deletePage, updatePage } from '@/actions/cms';
+import pool from '@/lib/db';
 
-// Mock data fetching
 async function getPages(): Promise<Page[]> {
-  const data = [
-    { id: 'PAGE001', category: 'Lighting', image: 'https://placehold.co/100x100.png', title: 'Ambient Mood', command: 'L100,50,10' , description: 'Set a warm ambient light for evenings.' },
-    { id: 'PAGE002', category: 'Wheel', image: 'https://placehold.co/100x100.png', title: 'Full Speed', command: 'S100', description: 'Run the wheel at maximum speed.' },
-    { id: 'PAGE003', category: 'Sound', image: 'https://placehold.co/100x100.png', title: 'Nature Sounds', command: 'P_NATURE', description: 'Play soothing nature sounds.' },
-  ];
-  return z.array(pageSchema).parse(data);
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute('SELECT * FROM cms_pages');
+    connection.release();
+    const pages = (rows as any[]).map(p => ({ ...p, id: p.id.toString() }));
+    return z.array(pageSchema).parse(pages);
+  } catch (error) {
+    console.error("Failed to fetch pages", error);
+    return [];
+  }
 }
+
+async function getCategories(): Promise<string[]> {
+    try {
+      const connection = await pool.getConnection();
+      const [rows] = await connection.execute('SELECT title FROM cms_categories ORDER BY title');
+      connection.release();
+      return (rows as any[]).map(r => r.title);
+    } catch (error) {
+      console.error("Failed to fetch categories", error);
+      return [];
+    }
+  }
+
 
 export default function CmsPage() {
   const [pages, setPages] = React.useState<Page[]>([]);
-  const [categories, setCategories] = React.useState(['Lighting', 'Wheel', 'Sound']);
+  const [categories, setCategories] = React.useState<string[]>([]);
   const [isContentSheetOpen, setContentSheetOpen] = React.useState(false);
   const [isCategorySheetOpen, setCategorySheetOpen] = React.useState(false);
   const [selectedPage, setSelectedPage] = React.useState<Page | null>(null);
   const { toast } = useToast();
 
-  React.useEffect(() => {
+  const refreshData = () => {
     getPages().then(setPages);
+    getCategories().then(setCategories);
+  }
+
+  React.useEffect(() => {
+    refreshData();
   }, []);
 
   const handleEdit = (page: Page) => {
@@ -59,48 +81,60 @@ export default function CmsPage() {
     setContentSheetOpen(true);
   }
 
-  const handleDelete = (id: string) => {
-    setPages(prev => prev.filter(p => p.id !== id));
-    toast({ title: 'Content Deleted', description: 'The content item has been deleted.' });
+  const handleDelete = async (id: string) => {
+    const result = await deletePage(id);
+    if (result.success) {
+      toast({ title: 'Content Deleted', description: 'The content item has been deleted.' });
+      refreshData();
+    } else {
+      toast({ variant: 'destructive', title: 'Error', description: result.message });
+    }
   }
 
   const handleDeleteSelected = (ids: string[]) => {
-    setPages(prev => prev.filter(p => !ids.includes(p.id)));
-    toast({ title: 'Content Deleted', description: `${ids.length} content items have been deleted.` });
+    Promise.all(ids.map(id => deletePage(id))).then(() => {
+        toast({ title: 'Content Deleted', description: `${ids.length} content items have been deleted.` });
+        refreshData();
+    });
   }
 
-  const handleCategorySubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCategorySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const newCategory = formData.get('category-title') as string;
-    if (newCategory && !categories.includes(newCategory)) {
-        setCategories(prev => [...prev, newCategory]);
-        toast({ title: 'Category Added', description: `Category "${newCategory}" has been added.` });
+    const title = formData.get('category-title') as string;
+    const result = await addCategory({ title });
+
+    if (result.success) {
+        toast({ title: 'Category Added', description: `Category "${title}" has been added.` });
+        refreshData();
+        setCategorySheetOpen(false);
+    } else {
+        toast({ variant: 'destructive', title: 'Error', description: result.message });
     }
-    setCategorySheetOpen(false);
   }
 
-  const handleContentSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleContentSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const newPage: Page = {
-        id: selectedPage?.id || `PAGE${Date.now()}`,
+    const data = {
         category: formData.get('content-category') as string,
-        image: selectedPage?.image || 'https://placehold.co/100x100.png', // Placeholder for image
         title: formData.get('content-title') as string,
         command: formData.get('content-command') as string,
         description: formData.get('content-description') as string,
-    }
+    };
 
-    if (selectedPage) {
-        setPages(prev => prev.map(p => p.id === selectedPage.id ? newPage : p));
-        toast({ title: 'Content Updated', description: 'The content item has been updated.' });
+    const result = selectedPage
+        ? await updatePage(selectedPage.id, data)
+        : await addPage(data);
+    
+    if (result.success) {
+        toast({ title: selectedPage ? 'Content Updated' : 'Content Added', description: result.message });
+        refreshData();
+        setContentSheetOpen(false);
+        setSelectedPage(null);
     } else {
-        setPages(prev => [...prev, newPage]);
-        toast({ title: 'Content Added', description: 'A new content item has been added.' });
+        toast({ variant: 'destructive', title: 'Error', description: result.message });
     }
-    setContentSheetOpen(false);
-    setSelectedPage(null);
   }
 
   return (
@@ -200,7 +234,7 @@ export default function CmsPage() {
                           Add Content
                         </Button>
                       </SheetTrigger>
-                      <SheetContent>
+                      <SheetContent className='md:max-w-xl'>
                         <SheetHeader>
                           <SheetTitle>{selectedPage ? 'Edit App Content' : 'Add New App Content'}</SheetTitle>
                         </SheetHeader>

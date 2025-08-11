@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { z } from 'zod';
@@ -8,7 +7,7 @@ import { DataTable } from './data-table';
 import { deviceSchema, deviceMasterSchema, Device, DeviceMaster } from './schema';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -24,26 +23,33 @@ import Image from 'next/image';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as React from 'react';
 import { useToast } from '@/hooks/use-toast';
+import pool from '@/lib/db';
+import { addDevice, updateDevice, deleteDevice, addDeviceMaster, updateDeviceMaster, deleteDeviceMaster } from '@/actions/devices';
 
-// Mock data fetching
 async function getDevices(): Promise<Device[]> {
-  // In a real app, you'd fetch this from your database.
-  const data = [
-    { id: "DEV001", deviceName: "Living Room Wheel", macAddress: "00:1A:2B:3C:4D:5E", deviceType: "OorjaWheel v2", userId: 'USR001', passcode: "123456", status: "active" },
-    { id: "DEV002", deviceName: "Bedroom Wheel", macAddress: "00:1A:2B:3C:4D:5F", deviceType: "OorjaWheel v2", userId: 'USR002', passcode: "654321", status: "active" },
-    { id: "DEV003", deviceName: "Kitchen Light", macAddress: "00:1A:2B:3C:4D:6A", deviceType: "OorjaLight", userId: null, passcode: "789012", status: "never_used" },
-    { id: "DEV004", deviceName: "Old Study Wheel", macAddress: "00:1A:2B:3C:4D:6B", deviceType: "OorjaWheel v1", userId: 'USR004', passcode: "210987", status: "disabled" },
-  ];
-  return z.array(deviceSchema).parse(data);
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute('SELECT * FROM devices');
+    connection.release();
+    const devices = (rows as any[]).map(d => ({ ...d, id: d.id.toString()}));
+    return z.array(deviceSchema).parse(devices);
+  } catch (error) {
+    console.error("Failed to fetch devices", error);
+    return [];
+  }
 }
 
 async function getDeviceMasters(): Promise<DeviceMaster[]> {
-    const data = [
-        { id: "DM001", deviceType: "OorjaWheel v2", btServe: "Wheel-Service-A", btChar: "Wheel-Char-A", soundBtName: "OorjaAudioV2", status: "active" },
-        { id: "DM002", deviceType: "OorjaLight", btServe: "Light-Service-B", btChar: "Light-Char-B", soundBtName: "N/A", status: "active" },
-        { id: "DM003", deviceType: "OorjaWheel v1", btServe: "Wheel-Service-Old", btChar: "Wheel-Char-Old", soundBtName: "OorjaAudioV1", status: "inactive" },
-    ]
-    return z.array(deviceMasterSchema).parse(data);
+    try {
+      const connection = await pool.getConnection();
+      const [rows] = await connection.execute('SELECT * FROM device_masters');
+      connection.release();
+      const masters = (rows as any[]).map(m => ({ ...m, id: m.id.toString()}));
+      return z.array(deviceMasterSchema).parse(masters);
+    } catch(error) {
+      console.error("Failed to fetch device masters", error);
+      return [];
+    }
 }
 
 const modals = [
@@ -64,17 +70,19 @@ export default function DevicesPage() {
   const { toast } = useToast();
 
 
-  const fetchDevices = () => getDevices().then(setDevices);
-  const fetchDeviceMasters = () => getDeviceMasters().then(setDeviceMasters);
+  const refreshData = () => {
+    getDevices().then(setDevices);
+    getDeviceMasters().then(setDeviceMasters);
+  }
 
   React.useEffect(() => {
-    fetchDevices();
-    fetchDeviceMasters();
+    refreshData();
   }, []);
 
   const handleEditDevice = (device: Device) => {
     setSelectedDevice(device);
     setMacAddress(device.macAddress);
+    setPasscode(device.passcode);
     setIsSheetOpen(true);
   }
 
@@ -83,29 +91,44 @@ export default function DevicesPage() {
       setIsMasterSheetOpen(true);
   }
 
-  const handleDeleteDevice = (id: string) => {
-    setDevices(prev => prev.filter(d => d.id !== id));
-    toast({ title: 'Device Deleted', description: `Device with ID ${id} has been deleted.` });
+  const handleDeleteDevice = async (id: string) => {
+    const result = await deleteDevice(id);
+    if(result.success){
+        toast({ title: 'Device Deleted', description: result.message });
+        refreshData();
+    } else {
+        toast({ variant: 'destructive', title: 'Error', description: result.message });
+    }
   }
 
-  const handleDeleteMaster = (id: string) => {
-      setDeviceMasters(prev => prev.filter(m => m.id !== id));
-      toast({ title: 'Device Type Deleted', description: `Device Type with ID ${id} has been deleted.` });
+  const handleDeleteMaster = async (id: string) => {
+      const result = await deleteDeviceMaster(id);
+      if(result.success){
+        toast({ title: 'Device Type Deleted', description: result.message });
+        refreshData();
+    } else {
+        toast({ variant: 'destructive', title: 'Error', description: result.message });
+    }
   }
 
   const handleDeleteSelectedDevices = (ids: string[]) => {
-    setDevices(prev => prev.filter(d => !ids.includes(d.id)));
-    toast({ title: 'Devices Deleted', description: `${ids.length} devices have been deleted.` });
+    Promise.all(ids.map(id => deleteDevice(id))).then(() => {
+        toast({ title: 'Devices Deleted', description: `${ids.length} devices have been deleted.` });
+        refreshData();
+    })
   }
 
   const handleDeleteSelectedMasters = (ids: string[]) => {
-      setDeviceMasters(prev => prev.filter(m => !ids.includes(m.id)));
-      toast({ title: 'Device Types Deleted', description: `${ids.length} device types have been deleted.` });
+    Promise.all(ids.map(id => deleteDeviceMaster(id))).then(() => {
+        toast({ title: 'Device Types Deleted', description: `${ids.length} device types have been deleted.` });
+        refreshData();
+    })
   }
   
   React.useEffect(() => {
     if (!isSheetOpen) {
         setMacAddress('');
+        setPasscode('Auto-generated');
     }
   }, [isSheetOpen]);
 
@@ -122,51 +145,55 @@ export default function DevicesPage() {
     }
   }, [macAddress]);
 
-  const handleDeviceSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleDeviceSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const updatedDevice = {
-        id: selectedDevice?.id || `DEV${Date.now()}`,
+    const deviceData = {
         deviceName: formData.get('device-name') as string,
         macAddress: formData.get('mac-address') as string,
         deviceType: formData.get('device-type') as string,
-        userId: formData.get('user-id') as string,
+        userId: (formData.get('user-id') as string) || null,
         passcode: passcode,
-        status: selectedDevice?.status || 'never_used',
-    } as Device;
+        status: (formData.get('status') as 'never_used' | 'active' | 'disabled') || (selectedDevice?.status || 'never_used'),
+    };
 
-    if (selectedDevice) {
-        setDevices(prev => prev.map(d => d.id === selectedDevice.id ? updatedDevice : d));
-        toast({ title: 'Device Updated', description: 'Device details have been updated.' });
+    const result = selectedDevice 
+        ? await updateDevice(selectedDevice.id, deviceData) 
+        : await addDevice(deviceData);
+
+    if (result.success) {
+        toast({ title: selectedDevice ? 'Device Updated' : 'Device Created', description: result.message });
+        refreshData();
+        setIsSheetOpen(false);
+        setSelectedDevice(null);
     } else {
-        setDevices(prev => [...prev, updatedDevice]);
-        toast({ title: 'Device Created', description: 'New device has been created.' });
+        toast({ variant: 'destructive', title: 'Error', description: result.message });
     }
-    setIsSheetOpen(false);
-    setSelectedDevice(null);
   }
 
-  const handleMasterSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleMasterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const updatedMaster = {
-        id: selectedMaster?.id || `DM${Date.now()}`,
+    const masterData = {
         deviceType: formData.get('device-type-name') as string,
         btServe: formData.get('bt-serve') as string,
         btChar: formData.get('bt-char') as string,
         soundBtName: formData.get('sound-bt-name') as string,
-        status: selectedMaster?.status || 'active',
-    } as DeviceMaster;
+        status: (formData.get('status') as 'active' | 'inactive') || (selectedMaster?.status || 'active'),
+    };
 
-    if (selectedMaster) {
-        setDeviceMasters(prev => prev.map(m => m.id === selectedMaster.id ? updatedMaster : m));
-        toast({ title: 'Device Type Updated', description: 'Device type details have been updated.' });
+    const result = selectedMaster
+        ? await updateDeviceMaster(selectedMaster.id, masterData)
+        : await addDeviceMaster(masterData);
+
+    if (result.success) {
+        toast({ title: selectedMaster ? 'Device Type Updated' : 'Device Type Created', description: result.message });
+        refreshData();
+        setIsMasterSheetOpen(false);
+        setSelectedMaster(null);
     } else {
-        setDeviceMasters(prev => [...prev, updatedMaster]);
-        toast({ title: 'Device Type Created', description: 'New device type has been created.' });
+        toast({ variant: 'destructive', title: 'Error', description: result.message });
     }
-    setIsMasterSheetOpen(false);
-    setSelectedMaster(null);
   }
 
 
@@ -193,10 +220,55 @@ export default function DevicesPage() {
                         <CardTitle>Device Master List</CardTitle>
                         <CardDescription>Manage device types, services, and firmware.</CardDescription>
                     </div>
-                    <Button onClick={() => { setSelectedMaster(null); setIsMasterSheetOpen(true); }}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Device Type
-                    </Button>
+                     <Sheet open={isMasterSheetOpen} onOpenChange={(isOpen) => {
+                        setIsMasterSheetOpen(isOpen);
+                        if (!isOpen) setSelectedMaster(null);
+                    }}>
+                        <SheetTrigger asChild>
+                            <Button onClick={() => { setSelectedMaster(null); setIsMasterSheetOpen(true); }}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Add Device Type
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent className='md:max-w-xl'>
+                            <SheetHeader>
+                                <SheetTitle>{selectedMaster ? 'Edit Device Type' : 'Add New Device Type'}</SheetTitle>
+                            </SheetHeader>
+                            <ScrollArea className="h-full">
+                                <form onSubmit={handleMasterSubmit}>
+                                <div className="grid gap-4 px-6 py-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="device-type-name">Name</Label>
+                                        <Input name="device-type-name" id="device-type-name" placeholder="e.g., OorjaWheel v3" defaultValue={selectedMaster?.deviceType}/>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bt-serve">BT Serve</Label>
+                                        <Input name="bt-serve" id="bt-serve" placeholder="Service UUID" defaultValue={selectedMaster?.btServe}/>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bt-char">BT Char</Label>
+                                        <Input name="bt-char" id="bt-char" placeholder="Characteristic UUID" defaultValue={selectedMaster?.btChar}/>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="sound-bt-name">Sound BT Name</Label>
+                                        <Input name="sound-bt-name" id="sound-bt-name" placeholder="e.g., OorjaAudioV3" defaultValue={selectedMaster?.soundBtName}/>
+                                    </div>
+                                     <div className="space-y-2">
+                                        <Label htmlFor="status">Status</Label>
+                                        <Select name="status" defaultValue={selectedMaster?.status}>
+                                            <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="active">Active</SelectItem>
+                                                <SelectItem value="inactive">Inactive</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <Button type="submit">{selectedMaster ? 'Save Changes' : 'Save Device Type'}</Button>
+                                </div>
+                                </form>
+                            </ScrollArea>
+                        </SheetContent>
+                    </Sheet>
                 </CardHeader>
                 <CardContent>
                     <DataTable 
@@ -226,10 +298,93 @@ export default function DevicesPage() {
                         <CardTitle>All Devices</CardTitle>
                         <CardDescription>Manage all provisioned devices.</CardDescription>
                     </div>
-                    <Button onClick={() => { setSelectedDevice(null); setIsSheetOpen(true); }}>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Device
-                    </Button>
+                     <Sheet open={isSheetOpen} onOpenChange={(isOpen) => {
+                        setIsSheetOpen(isOpen);
+                        if (!isOpen) setSelectedDevice(null);
+                    }}>
+                        <SheetTrigger asChild>
+                            <Button onClick={() => { setSelectedDevice(null); setIsSheetOpen(true); }}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Add Device
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent className='md:max-w-4xl'>
+                            <SheetHeader>
+                                <SheetTitle>{selectedDevice ? 'Edit Device' : 'Create New Device'}</SheetTitle>
+                            </SheetHeader>
+                            <ScrollArea className="h-full">
+                                <form onSubmit={handleDeviceSubmit}>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-6 py-4">
+                                    <div className="space-y-4">
+                                        <h3 className="font-semibold text-lg">Select Modal</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            {modals.map(modal => (
+                                                <Card key={modal.id} className="cursor-pointer hover:border-primary">
+                                                    <CardContent className="p-4 space-y-2">
+                                                        <Image src={modal.image} alt={modal.title} width={200} height={200} className="rounded-md w-full" data-ai-hint={modal.dataAiHint} />
+                                                        <h4 className="font-semibold text-center">{modal.title}</h4>
+                                                    </CardContent>
+                                                </Card>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <h3 className="font-semibold text-lg">Device Details</h3>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="user-id">User ID</Label>
+                                            <Input name="user-id" id="user-id" placeholder="Assign a user ID" defaultValue={selectedDevice?.userId || ''} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="device-type">Device Type</Label>
+                                            <Select name="device-type" defaultValue={selectedDevice?.deviceType}>
+                                                <SelectTrigger id="device-type">
+                                                    <SelectValue placeholder="Select a device type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {deviceMasters.filter(dm => dm.status === 'active').map(master => (
+                                                        <SelectItem key={master.id} value={master.deviceType}>{master.deviceType}</SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="mac-address">MAC Address</Label>
+                                            <Input 
+                                                name="mac-address"
+                                                id="mac-address" 
+                                                placeholder="00:1A:2B:3C:4D:5E" 
+                                                value={macAddress}
+                                                onChange={(e) => setMacAddress(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="device-name">Device Name</Label>
+                                            <Input name="device-name" id="device-name" placeholder="e.g., Living Room Wheel" defaultValue={selectedDevice?.deviceName} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="passcode">Passcode</Label>
+                                            <Input name="passcode" id="passcode" value={passcode} readOnly />
+                                        </div>
+                                        {selectedDevice && (
+                                            <div className="space-y-2">
+                                                <Label htmlFor="status">Status</Label>
+                                                <Select name="status" defaultValue={selectedDevice?.status}>
+                                                    <SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="never_used">Never Used</SelectItem>
+                                                        <SelectItem value="active">Active</SelectItem>
+                                                        <SelectItem value="disabled">Disabled</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </div>
+                                        )}
+                                        <Button type="submit" className="w-full">{selectedDevice ? 'Update Device' : 'Create Device'}</Button>
+                                    </div>
+                                </div>
+                                </form>
+                            </ScrollArea>
+                        </SheetContent>
+                    </Sheet>
                 </CardHeader>
                 <CardContent>
                     <DataTable 
@@ -261,111 +416,6 @@ export default function DevicesPage() {
             </Card>
         </TabsContent>
       </Tabs>
-
-      <Sheet open={isMasterSheetOpen} onOpenChange={(isOpen) => {
-            setIsMasterSheetOpen(isOpen);
-            if (!isOpen) setSelectedMaster(null);
-      }}>
-          <SheetContent>
-              <SheetHeader>
-                  <SheetTitle>{selectedMaster ? 'Edit Device Type' : 'Add New Device Type'}</SheetTitle>
-              </SheetHeader>
-              <ScrollArea className="h-full">
-                <form onSubmit={handleMasterSubmit}>
-                  <div className="grid gap-4 px-6 py-4">
-                      <div className="space-y-2">
-                          <Label htmlFor="device-type-name">Name</Label>
-                          <Input name="device-type-name" id="device-type-name" placeholder="e.g., OorjaWheel v3" defaultValue={selectedMaster?.deviceType}/>
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="bt-serve">BT Serve</Label>
-                          <Input name="bt-serve" id="bt-serve" placeholder="Service UUID" defaultValue={selectedMaster?.btServe}/>
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="bt-char">BT Char</Label>
-                          <Input name="bt-char" id="bt-char" placeholder="Characteristic UUID" defaultValue={selectedMaster?.btChar}/>
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="sound-bt-name">Sound BT Name</Label>
-                          <Input name="sound-bt-name" id="sound-bt-name" placeholder="e.g., OorjaAudioV3" defaultValue={selectedMaster?.soundBtName}/>
-                      </div>
-                      <Button type="submit">{selectedMaster ? 'Save Changes' : 'Save Device Type'}</Button>
-                  </div>
-                </form>
-              </ScrollArea>
-          </SheetContent>
-      </Sheet>
-
-      <Sheet open={isSheetOpen} onOpenChange={(isOpen) => {
-          setIsSheetOpen(isOpen);
-          if (!isOpen) setSelectedDevice(null);
-      }}>
-          <SheetContent>
-              <SheetHeader>
-                  <SheetTitle>{selectedDevice ? 'Edit Device' : 'Create New Device'}</SheetTitle>
-              </SheetHeader>
-              <ScrollArea className="h-full">
-                <form onSubmit={handleDeviceSubmit}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-6 py-4">
-                      <div className="space-y-4">
-                          <h3 className="font-semibold text-lg">Select Modal</h3>
-                          <div className="grid grid-cols-2 gap-4">
-                              {modals.map(modal => (
-                                  <Card key={modal.id} className="cursor-pointer hover:border-primary">
-                                      <CardContent className="p-4 space-y-2">
-                                          <Image src={modal.image} alt={modal.title} width={200} height={200} className="rounded-md w-full" data-ai-hint={modal.dataAiHint} />
-                                          <h4 className="font-semibold text-center">{modal.title}</h4>
-                                      </CardContent>
-                                  </Card>
-                              ))}
-                          </div>
-                      </div>
-                      <div className="space-y-4">
-                          <h3 className="font-semibold text-lg">Device Details</h3>
-                          <div className="space-y-2">
-                              <Label htmlFor="user-id">User ID</Label>
-                              <Input name="user-id" id="user-id" placeholder="Assign a user ID" defaultValue={selectedDevice?.userId || ''} />
-                          </div>
-                          <div className="space-y-2">
-                              <Label htmlFor="device-type">Device Type</Label>
-                              <Select name="device-type" defaultValue={selectedDevice?.deviceType}>
-                                  <SelectTrigger id="device-type">
-                                      <SelectValue placeholder="Select a device type" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      {deviceMasters.map(master => (
-                                          <SelectItem key={master.id} value={master.deviceType}>{master.deviceType}</SelectItem>
-                                      ))}
-                                  </SelectContent>
-                              </Select>
-                          </div>
-                          <div className="space-y-2">
-                              <Label htmlFor="mac-address">MAC Address</Label>
-                              <Input 
-                                name="mac-address"
-                                id="mac-address" 
-                                placeholder="00:1A:2B:3C:4D:5E" 
-                                defaultValue={selectedDevice?.macAddress} 
-                                value={macAddress}
-                                onChange={(e) => setMacAddress(e.target.value)}
-                              />
-                          </div>
-                          <div className="space-y-2">
-                              <Label htmlFor="device-name">Device Name</Label>
-                              <Input name="device-name" id="device-name" placeholder="e.g., Living Room Wheel" defaultValue={selectedDevice?.deviceName} />
-                          </div>
-                          <div className="space-y-2">
-                              <Label htmlFor="passcode">Passcode</Label>
-                              <Input name="passcode" id="passcode" value={passcode} readOnly />
-                          </div>
-                          <Button type="submit" className="w-full">{selectedDevice ? 'Update Device' : 'Create Device'}</Button>
-                      </div>
-                  </div>
-                </form>
-              </ScrollArea>
-          </SheetContent>
-      </Sheet>
-
     </div>
   );
 }
