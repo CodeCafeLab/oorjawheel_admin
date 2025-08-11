@@ -1,26 +1,8 @@
 
-"use client";
-
 import { z } from 'zod';
-import { columns } from './columns';
-import { DataTable } from './data-table';
 import { userSchema } from './schema';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
-import { UserForm } from './user-form';
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import pool from '@/lib/db';
-import { revalidatePath } from 'next/cache';
-
+import { UsersClient } from './users-client';
 
 async function getUsers() {
     try {
@@ -36,7 +18,9 @@ async function getUsers() {
         // The database query needs to be updated to fetch actual device assignments.
         const users = (rows as any[]).map(user => ({
             ...user,
-            devicesAssigned: JSON.parse(user.devicesAssigned)
+            devicesAssigned: JSON.parse(user.devicesAssigned),
+            // Convert created_at to a serializable format (ISO string)
+            firstLoginAt: user.created_at ? new Date(user.created_at).toISOString() : null,
         }));
 
         return z.array(userSchema).parse(users);
@@ -47,54 +31,8 @@ async function getUsers() {
     }
 }
 
-export default function UsersPage() {
-    const [users, setUsers] = React.useState<z.infer<typeof userSchema>[]>([]);
-    const [open, setOpen] = React.useState(false);
-    const router = useRouter();
+export default async function UsersPage() {
+    const users = await getUsers();
 
-    const fetchUsers = React.useCallback(async () => {
-        const fetchedUsers = await getUsers();
-        setUsers(fetchedUsers);
-    }, []);
-
-    React.useEffect(() => {
-        fetchUsers();
-    }, [fetchUsers]);
-    
-    const handleFormSuccess = () => {
-      setOpen(false)
-      fetchUsers()
-      revalidatePath('/users') // This might not be needed with client-side refresh, but good practice.
-    }
-
-  return (
-    <div className="space-y-6">
-       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-headline">User Management</h1>
-          <p className="text-muted-foreground">
-            Manage operators and their assigned devices.
-          </p>
-        </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add User
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Add New User</DialogTitle>
-                    <DialogDescription>
-                        Fill in the details to create a new user account.
-                    </DialogDescription>
-                </DialogHeader>
-                <UserForm onFormSuccess={handleFormSuccess} />
-            </DialogContent>
-        </Dialog>
-      </div>
-      <DataTable columns={columns} data={users} />
-    </div>
-  );
+    return <UsersClient initialUsers={users} />;
 }
