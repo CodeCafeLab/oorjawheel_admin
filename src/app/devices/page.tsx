@@ -126,7 +126,7 @@ export default async function DevicesPage() {
                                 Add Device
                             </Button>
                         </SheetTrigger>
-                        <SheetContent className="max-w-3xl sm:max-w-2xl">
+                        <SheetContent>
                             <SheetHeader>
                                 <SheetTitle>Create New Device</SheetTitle>
                             </SheetHeader>
