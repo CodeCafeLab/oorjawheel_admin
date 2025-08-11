@@ -7,7 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { hashPassword } from '@/lib/hash';
 
 export async function addUser(values: z.infer<typeof userFormSchema>) {
-  const { email, password, status = 'active' } = values;
+  const { fullName, email, contactNumber, address, country, password, status = 'active' } = values;
 
   try {
     const connection = await pool.getConnection();
@@ -21,21 +21,25 @@ export async function addUser(values: z.infer<typeof userFormSchema>) {
 
     const hashedPassword = await hashPassword(password);
     
+    // Note: You might need to alter your `users` table to include the new columns
+    // ALTER TABLE users ADD COLUMN fullName VARCHAR(255), ADD COLUMN contactNumber VARCHAR(255), ADD COLUMN address TEXT, ADD COLUMN country VARCHAR(255);
     const [result] = await connection.execute(
-      'INSERT INTO users (email, status, password_hash) VALUES (?, ?, ?)',
-      [email, status, hashedPassword]
+      'INSERT INTO users (fullName, email, contactNumber, address, country, status, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [fullName, email, contactNumber, address, country, status, hashedPassword]
     );
     connection.release();
 
-    // Revalidate the users page to show the new user
     revalidatePath('/users');
 
     return { success: true, message: 'User added successfully.' };
   } catch (error) {
     console.error('Database Error:', error);
-    // Check for specific database errors if needed
     if ((error as any).code === 'ER_NO_SUCH_TABLE') {
         return { success: false, message: 'Database table not found. Please run migrations.' };
+    }
+    // Handle missing columns error
+    if ((error as any).code === 'ER_BAD_FIELD_ERROR') {
+        return { success: false, message: 'Database schema mismatch. Please alter your users table to include the new fields.' };
     }
     return { success: false, message: 'Failed to add user.' };
   }

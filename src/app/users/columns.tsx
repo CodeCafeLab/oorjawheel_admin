@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, ArrowUpDown } from "lucide-react"
+import { MoreHorizontal, ArrowUpDown, Mail, MessageSquare, List } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -11,6 +11,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { User } from "./schema"
@@ -34,7 +38,7 @@ const UserActions = ({ user }: { user: User }) => {
     const router = useRouter()
   
     const handleDelete = async () => {
-      const result = await deleteUser(user.id)
+      const result = await deleteUser(user.id.toString())
       if (result.success) {
         toast({
           title: "User Deleted",
@@ -61,14 +65,33 @@ const UserActions = ({ user }: { user: User }) => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>View user activity</DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuItem>Edit</DropdownMenuItem>
             <DropdownMenuItem>
-              {user.status === 'active' ? 'Lock' : 'Unlock'}
+              <Mail className="mr-2 h-4 w-4" />
+              Send Email
             </DropdownMenuItem>
-            <DropdownMenuItem>Reset password</DropdownMenuItem>
+             <DropdownMenuItem>
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Send Whatsapp
+            </DropdownMenuItem>
+            <DropdownMenuSub>
+                <DropdownMenuSubTrigger>
+                    <List className="mr-2 h-4 w-4" />
+                    Manage OW
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                    <DropdownMenuSubContent>
+                        {user.devicesAssigned && user.devicesAssigned.length > 0 ? (
+                             user.devicesAssigned.map(device => <DropdownMenuItem key={device}>{device}</DropdownMenuItem>)
+                        ): (
+                            <DropdownMenuItem disabled>No devices assigned</DropdownMenuItem>
+                        )}
+                    </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
              <AlertDialogTrigger asChild>
-                <DropdownMenuItem className="text-destructive">Delete User</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
              </AlertDialogTrigger>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -113,18 +136,34 @@ export const columns: ColumnDef<User>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "email",
+    accessorKey: "fullName",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Email
+          Full Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+  },
+  {
+    accessorKey: "contactNumber",
+    header: "Contact Number",
+  },
+  {
+    accessorKey: "address",
+    header: "Address",
+  },
+  {
+    accessorKey: "country",
+    header: "Country",
   },
   {
     accessorKey: "status",
@@ -133,34 +172,6 @@ export const columns: ColumnDef<User>[] = [
         const status = row.getValue("status") as string;
         return <Badge variant={status === 'active' ? 'default' : 'destructive'}>{status}</Badge>
     }
-  },
-  {
-    accessorKey: "firstLoginAt",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        First Login
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-        const value = row.getValue("firstLoginAt") as string | null;
-        if (!value) {
-            return "Never";
-        }
-      const date = new Date(value);
-      return new Intl.DateTimeFormat("en-IN", { dateStyle: 'medium', timeStyle: 'short' }).format(date);
-    },
-  },
-  {
-    accessorKey: "devicesAssigned",
-    header: () => <div className="text-right">Devices</div>,
-    cell: ({ row }) => {
-        const devices = row.getValue("devicesAssigned") as string[];
-        return <div className="text-right">{devices.length}</div>;
-    },
   },
   {
     id: "actions",

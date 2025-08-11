@@ -20,6 +20,14 @@ import { useToast } from "@/hooks/use-toast"
 import { userFormSchema } from "@/actions/schemas"
 import { addUser } from "@/actions/users"
 import { useState } from "react"
+import { Textarea } from "@/components/ui/textarea"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select"
 
 export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
   const { toast } = useToast()
@@ -28,7 +36,11 @@ export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
   const form = useForm<z.infer<typeof userFormSchema>>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
+      fullName: "",
       email: "",
+      contactNumber: "",
+      address: "",
+      country: "",
       password: "",
       status: "active",
     },
@@ -57,7 +69,20 @@ export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="fullName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Name</FormLabel>
+              <FormControl>
+                <Input placeholder="John Doe" {...field} disabled={loading} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="email"
@@ -67,12 +92,58 @@ export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
               <FormControl>
                 <Input placeholder="user@example.com" {...field} disabled={loading} />
               </FormControl>
-              <FormDescription>
-                The user's email address. They will use this to log in.
-              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
+        />
+        <FormField
+          control={form.control}
+          name="contactNumber"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Contact Number</FormLabel>
+              <FormControl>
+                <Input placeholder="+91 12345 67890" {...field} disabled={loading} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+          control={form.control}
+          name="address"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Address</FormLabel>
+              <FormControl>
+                <Textarea placeholder="123 Main St, Anytown..." {...field} disabled={loading} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+         <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Country</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loading}>
+                    <FormControl>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a country" />
+                    </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                    {/* In a real app, this would be a dynamic list */}
+                    <SelectItem value="India">India</SelectItem>
+                    <SelectItem value="USA">United States</SelectItem>
+                    <SelectItem value="UK">United Kingdom</SelectItem>
+                    </SelectContent>
+                </Select>
+                <FormMessage />
+                </FormItem>
+            )}
         />
         <FormField
           control={form.control}
@@ -94,16 +165,16 @@ export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
           control={form.control}
           name="status"
           render={({ field }) => (
-            <FormItem className="space-y-3">
+            <FormItem className="space-y-2">
               <FormLabel>Status</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
                   defaultValue={field.value}
-                  className="flex flex-col space-y-1"
+                  className="flex items-center space-x-4"
                   disabled={loading}
                 >
-                  <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormItem className="flex items-center space-x-2 space-y-0">
                     <FormControl>
                       <RadioGroupItem value="active" />
                     </FormControl>
@@ -111,7 +182,7 @@ export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
                       Active
                     </FormLabel>
                   </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0">
+                  <FormItem className="flex items-center space-x-2 space-y-0">
                     <FormControl>
                       <RadioGroupItem value="locked" />
                     </FormControl>
