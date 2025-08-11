@@ -1,7 +1,7 @@
 
 'use client'
 
-import { Search, Bell } from 'lucide-react'
+import { Search, Bell, GitBranch, LineChart } from 'lucide-react'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,16 +16,27 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import {
+  LayoutDashboard,
+  Users,
+  Settings,
+  Smartphone,
+  FileText,
+  Terminal,
+} from 'lucide-react'
 
 const navItems = [
-    { href: '/', label: 'Dashboard' },
-    { href: '/users', label: 'User Management' },
-    { href: '/devices', label: 'Device Master' },
-    { href: '/commands', label: 'Command Management' },
-    { href: '/cms', label: 'CMS' },
-    { href: '/notifications', label: 'Notifications' },
-    { href: '/settings', label: 'Settings' },
-]
+    { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/analytics', label: 'Analytics', icon: LineChart },
+    { href: '/users', label: 'User Management', icon: Users },
+    { href: '/devices', label: 'Device Management', icon: Smartphone },
+    { href: '/commands', label: 'Command Management', icon: Terminal },
+    { href: '/cms', label: 'CMS', icon: FileText },
+    { href: '/notifications', label: 'Notifications', icon: Bell },
+    { href: '/logs', label: 'Logs', icon: GitBranch },
+    { href: '/settings', label: 'Settings', icon: Settings },
+  ]
+  
 
 export function Header() {
   const pathname = usePathname()

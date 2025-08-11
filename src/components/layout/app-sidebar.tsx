@@ -27,6 +27,8 @@ import {
   Terminal,
   Bell,
   ChevronDown,
+  LineChart,
+  GitBranch,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -51,34 +53,42 @@ const OorjaLogo = () => (
     </svg>
   )
 
-const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/users', label: 'User Management', icon: Users },
-  {
-    label: 'Device Management',
-    icon: Smartphone,
-    items: [
-      { href: '/devices', label: 'Device Master' },
-      { href: '/devices/list', label: 'Devices' },
-    ],
-  },
-  { href: '/commands', label: 'Command Management', icon: Terminal },
-  {
-    label: 'CMS',
-    icon: FileText,
-    items: [
-        { label: 'Web', items: [
-            { href: '/cms/web/privacy', label: 'Privacy Policy' },
-            { href: '/cms/web/terms', label: 'Terms & Conditions' },
-            { href: '/cms/web/shipping', label: 'Shipping & Returns' },
-            { href: '/cms/web/payment', label: 'Payment Terms' },
-        ]},
-        { href: '/cms/app', label: 'App' }
-    ],
-  },
-  { href: '/notifications', label: 'Notifications', icon: Bell },
-  { href: '/settings', label: 'Settings', icon: Settings },
-]
+  const navItems = [
+    { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/analytics', label: 'Analytics', icon: LineChart },
+    { href: '/users', label: 'User Management', icon: Users },
+    {
+      href: '/devices',
+      label: 'Device Management',
+      icon: Smartphone,
+      items: [
+        { href: '/devices#master', label: 'Device Master' },
+        { href: '/devices#devices', label: 'Devices' },
+      ],
+    },
+    { href: '/commands', label: 'Command Management', icon: Terminal },
+    {
+      href: '/cms',
+      label: 'CMS',
+      icon: FileText,
+      items: [
+          { 
+              label: 'Web', 
+              items: [
+                  { href: '/cms#privacy', label: 'Privacy Policy' },
+                  { href: '/cms#terms', label: 'Terms & Conditions' },
+                  { href: '/cms#shipping', label: 'Shipping & Returns' },
+                  { href: '/cms#payment', label: 'Payment Terms' },
+              ]
+          },
+          { href: '/cms#app', label: 'App' }
+      ],
+    },
+    { href: '/notifications', label: 'Notifications', icon: Bell },
+    { href: '/logs', label: 'Logs', icon: GitBranch },
+    { href: '/settings', label: 'Settings', icon: Settings },
+  ]
+  
 
 const NavItem = ({ item }: { item: any }) => {
     const pathname = usePathname()
@@ -87,7 +97,9 @@ const NavItem = ({ item }: { item: any }) => {
 
     const isActive = (href: string) => {
         if (!href) return false;
-        return pathname === href || (href !== '/' && pathname.startsWith(href));
+        // Ignore hash for base path matching
+        const baseHref = href.split('#')[0];
+        return pathname === baseHref;
     }
     
     // Check if any sub-item is active
@@ -104,8 +116,9 @@ const NavItem = ({ item }: { item: any }) => {
                 return false;
             });
         };
-        return checkActive(item.items);
-    }, [item.items, pathname]);
+        // Also check the main href of the collapsible item itself
+        return (item.href && isActive(item.href)) || checkActive(item.items);
+    }, [item.items, item.href, pathname]);
 
     React.useEffect(() => {
         if (isSubActive) {
@@ -132,17 +145,19 @@ const NavItem = ({ item }: { item: any }) => {
     return (
         <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
             <CollapsibleTrigger asChild>
-                <SidebarMenuButton 
-                    isActive={isSubActive}
-                    className="w-full justify-between"
-                    tooltip={{ children: item.label, side: 'right' }}
-                >
-                    <div className="flex items-center gap-2">
-                        <item.icon />
-                        <span className={state === 'collapsed' ? 'hidden' : 'inline'}>{item.label}</span>
-                    </div>
-                   <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""} ${state === 'collapsed' ? 'hidden' : 'inline'}`} />
-                </SidebarMenuButton>
+                 <Link href={item.href || '#'} passHref>
+                    <SidebarMenuButton 
+                        isActive={isSubActive}
+                        className="w-full justify-between"
+                        tooltip={{ children: item.label, side: 'right' }}
+                    >
+                        <div className="flex items-center gap-2">
+                            <item.icon />
+                            <span className={state === 'collapsed' ? 'hidden' : 'inline'}>{item.label}</span>
+                        </div>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""} ${state === 'collapsed' ? 'hidden' : 'inline'}`} />
+                    </SidebarMenuButton>
+                 </Link>
             </CollapsibleTrigger>
             <CollapsibleContent>
                 <SidebarMenuSub>
@@ -155,7 +170,7 @@ const NavItem = ({ item }: { item: any }) => {
                                  {subItem.items.map((nestedItem: any, nestedIndex: number) => (
                                      <li key={nestedIndex}>
                                          <Link href={nestedItem.href} passHref>
-                                             <SidebarMenuSubButton isActive={isActive(nestedItem.href)}>
+                                             <SidebarMenuSubButton isActive={pathname === nestedItem.href.split('#')[0]}>
                                                 <span>{nestedItem.label}</span>
                                             </SidebarMenuSubButton>
                                          </Link>
@@ -165,7 +180,7 @@ const NavItem = ({ item }: { item: any }) => {
                                 </>
                             ) : (
                                 <Link href={subItem.href} passHref>
-                                    <SidebarMenuSubButton isActive={isActive(subItem.href)}>
+                                    <SidebarMenuSubButton isActive={pathname === subItem.href.split('#')[0]}>
                                         <span>{subItem.label}</span>
                                     </SidebarMenuSubButton>
                                 </Link>

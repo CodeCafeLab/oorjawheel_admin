@@ -6,6 +6,8 @@ import { deviceSchema } from './schema';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 // Mock data fetching
 async function getDevices() {
@@ -20,16 +22,16 @@ async function getDevices() {
   return z.array(deviceSchema).parse(data);
 }
 
-export default function DevicesPage() {
-  const devices = getDevices();
+export default async function DevicesPage() {
+  const devices = await getDevices();
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-headline">Device Master</h1>
+          <h1 className="text-3xl font-headline">Device Management</h1>
           <p className="text-muted-foreground">
-            Add, edit, and manage device settings.
+            Manage device masters and individual device settings.
           </p>
         </div>
         <Dialog>
@@ -51,7 +53,38 @@ export default function DevicesPage() {
             </DialogContent>
         </Dialog>
       </div>
-      <DataTable columns={columns} data={devices} />
+      
+      <Tabs defaultValue="master" className="w-full">
+        <TabsList>
+          <TabsTrigger value="master">Device Master</TabsTrigger>
+          <TabsTrigger value="devices">Devices</TabsTrigger>
+        </TabsList>
+        <TabsContent value="master">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Device Master List</CardTitle>
+                    <CardDescription>Add, edit, and manage device settings and firmware.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <DataTable columns={columns} data={devices} />
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="devices">
+             <Card>
+                <CardHeader>
+                    <CardTitle>All Devices</CardTitle>
+                    <CardDescription>View and manage all registered devices.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-center text-muted-foreground py-8">
+                        Device list under construction.
+                    </p>
+                </CardContent>
+            </Card>
+        </TabsContent>
+      </Tabs>
+
     </div>
   );
 }
