@@ -27,11 +27,15 @@ import { Input } from "@/components/ui/input"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  filterColumnId: string
+  filterPlaceholder: string
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  filterColumnId,
+  filterPlaceholder,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -58,10 +62,10 @@ export function DataTable<TData, TValue>({
     <div>
         <div className="flex items-center py-4">
             <Input
-            placeholder="Filter by BT Name..."
-            value={(table.getColumn("btName")?.getFilterValue() as string) ?? ""}
+            placeholder={filterPlaceholder}
+            value={(table.getColumn(filterColumnId)?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
-                table.getColumn("btName")?.setFilterValue(event.target.value)
+                table.getColumn(filterColumnId)?.setFilterValue(event.target.value)
             }
             className="max-w-sm"
             />
