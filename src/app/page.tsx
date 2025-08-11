@@ -117,8 +117,8 @@ export default function DashboardPage() {
             <CardTitle className="font-headline">Device Status</CardTitle>
              <CardDescription>Current distribution of device statuses.</CardDescription>
           </CardHeader>
-          <CardContent className="flex justify-center">
-            <ChartContainer config={deviceStatusChartConfig} className="min-h-[300px] max-h-[300px] w-full">
+          <CardContent className="flex justify-center items-center">
+            <ChartContainer config={deviceStatusChartConfig} className="min-h-[300px] max-h-[300px] w-full aspect-square">
               <PieChart accessibilityLayer>
                 <ChartTooltip
                   cursor={false}

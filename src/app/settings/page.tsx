@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
 
 export default function SettingsPage() {
   return (
@@ -26,7 +25,7 @@ export default function SettingsPage() {
       </div>
       <Separator />
       <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 md:w-[600px]">
+        <TabsList className="grid w-full grid-cols-2 md:w-[600px] lg:grid-cols-4">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="password">Password</TabsTrigger>

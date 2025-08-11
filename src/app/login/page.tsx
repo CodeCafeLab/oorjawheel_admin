@@ -82,7 +82,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background font-body">
+    <div className="flex items-center justify-center min-h-screen bg-background font-body px-4">
        <Card className="w-full max-w-sm">
         <form onSubmit={handleLogin}>
             <CardHeader className="space-y-1 text-center">

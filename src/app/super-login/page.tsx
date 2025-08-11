@@ -16,7 +16,7 @@ import { KeyRound } from "lucide-react"
 
 export default function SuperLoginPage() {
   return (
-    <div className="flex items-center justify-center h-full">
+    <div className="flex items-center justify-center min-h-full px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
             <div className="flex justify-center mb-4">

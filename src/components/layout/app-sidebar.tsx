@@ -14,8 +14,8 @@ import {
   SidebarFooter,
   SidebarMenuSub,
   SidebarMenuSubButton,
-  SidebarMenuSubItem,
   useSidebar,
+  SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
 import {
   LayoutDashboard,
@@ -74,6 +74,7 @@ const OorjaLogo = () => (
       items: [
           {
               label: 'Web',
+              href: '/cms#web',
               items: [
                   { href: '/cms#privacy', label: 'Privacy Policy' },
                   { href: '/cms#terms', label: 'Terms & Conditions' },
@@ -116,9 +117,8 @@ const NavItem = ({ item }: { item: any }) => {
                 return false;
             });
         };
-        // Also check the main href of the collapsible item itself
         return (item.href && isActive(item.href)) || checkActive(item.items);
-    }, [item.items, item.href, pathname]);
+    }, [item, pathname]);
 
     React.useEffect(() => {
         if (isSubActive) {
@@ -142,51 +142,45 @@ const NavItem = ({ item }: { item: any }) => {
       )
     }
 
+    const renderSubItems = (items: any[], isNested: boolean = false) => {
+        return items.map((subItem: any, index: number) => (
+            <SidebarMenuSubItem key={index} className={isNested ? 'ml-4' : ''}>
+                {subItem.items ? (
+                    <>
+                        <h4 className="font-semibold text-xs text-muted-foreground my-2 ml-2">{subItem.label}</h4>
+                        <SidebarMenuSub>
+                            {renderSubItems(subItem.items, true)}
+                        </SidebarMenuSub>
+                    </>
+                ) : (
+                    <SidebarMenuSubButton asChild isActive={isActive(subItem.href)}>
+                        <Link href={subItem.href} passHref>
+                           {subItem.label}
+                        </Link>
+                    </SidebarMenuSubButton>
+                )}
+            </SidebarMenuSubItem>
+        ));
+    };
+    
     return (
         <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
             <CollapsibleTrigger asChild>
-                 <Link href={item.href || '#'} passHref>
-                    <SidebarMenuButton
-                        isActive={isSubActive}
-                        className="w-full justify-between"
-                        tooltip={{ children: item.label, side: 'right' }}
-                    >
-                        <div className="flex items-center gap-2">
-                            <item.icon />
-                            <span className={state === 'collapsed' ? 'hidden' : 'inline'}>{item.label}</span>
-                        </div>
+                <SidebarMenuButton
+                    isActive={isSubActive}
+                    className="w-full justify-between"
+                    tooltip={{ children: item.label, side: 'right' }}
+                >
+                    <div className="flex items-center gap-2">
+                        <item.icon />
+                        <span className={state === 'collapsed' ? 'hidden' : 'inline'}>{item.label}</span>
+                    </div>
                     <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""} ${state === 'collapsed' ? 'hidden' : 'inline'}`} />
-                    </SidebarMenuButton>
-                 </Link>
+                </SidebarMenuButton>
             </CollapsibleTrigger>
             <CollapsibleContent>
                 <SidebarMenuSub>
-                    {item.items.map((subItem: any, index: number) => (
-                        <SidebarMenuSubItem key={index}>
-                            {subItem.items ? (
-                                <>
-                                 <h4 className="font-semibold text-xs text-muted-foreground my-2 ml-2">{subItem.label}</h4>
-                                 <ul className="flex flex-col gap-1 ml-4">
-                                 {subItem.items.map((nestedItem: any, nestedIndex: number) => (
-                                     <li key={nestedIndex}>
-                                        <SidebarMenuSubButton asChild isActive={pathname === nestedItem.href.split('#')[0]}>
-                                            <Link href={nestedItem.href} passHref>
-                                                <span>{nestedItem.label}</span>
-                                            </Link>
-                                        </SidebarMenuSubButton>
-                                     </li>
-                                 ))}
-                                 </ul>
-                                </>
-                            ) : (
-                                <SidebarMenuSubButton asChild isActive={pathname === subItem.href.split('#')[0]}>
-                                    <Link href={subItem.href} passHref>
-                                        <span>{subItem.label}</span>
-                                    </Link>
-                                </SidebarMenuSubButton>
-                            )}
-                        </SidebarMenuSubItem>
-                    ))}
+                    {renderSubItems(item.items)}
                 </SidebarMenuSub>
             </CollapsibleContent>
       </Collapsible>

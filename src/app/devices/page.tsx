@@ -27,43 +27,45 @@ export default async function DevicesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-headline">Device Management</h1>
           <p className="text-muted-foreground">
             Manage device masters and individual device settings.
           </p>
         </div>
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Device
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Add New Device</DialogTitle>
-                    <DialogDescription>
-                        Fill in the details to register a new device.
-                    </DialogDescription>
-                </DialogHeader>
-                 {/* Form would go here */}
-                 <p className="text-center text-muted-foreground py-8">Device form will be here.</p>
-            </DialogContent>
-        </Dialog>
       </div>
       
       <Tabs defaultValue="master" className="w-full">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
           <TabsTrigger value="master">Device Master</TabsTrigger>
           <TabsTrigger value="devices">Devices</TabsTrigger>
         </TabsList>
         <TabsContent value="master">
             <Card>
-                <CardHeader>
-                    <CardTitle>Device Master List</CardTitle>
-                    <CardDescription>Add, edit, and manage device settings and firmware.</CardDescription>
+                <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div>
+                        <CardTitle>Device Master List</CardTitle>
+                        <CardDescription>Add, edit, and manage device settings and firmware.</CardDescription>
+                    </div>
+                     <Dialog>
+                        <DialogTrigger asChild>
+                            <Button>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Add Device
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Add New Device</DialogTitle>
+                                <DialogDescription>
+                                    Fill in the details to register a new device.
+                                </DialogDescription>
+                            </DialogHeader>
+                             {/* Form would go here */}
+                             <p className="text-center text-muted-foreground py-8">Device form will be here.</p>
+                        </DialogContent>
+                    </Dialog>
                 </CardHeader>
                 <CardContent>
                     <DataTable columns={columns} data={devices} />
@@ -77,9 +79,7 @@ export default async function DevicesPage() {
                     <CardDescription>View and manage all registered devices.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-center text-muted-foreground py-8">
-                        Device list under construction.
-                    </p>
+                    <DataTable columns={columns} data={devices} />
                 </CardContent>
             </Card>
         </TabsContent>
