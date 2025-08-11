@@ -13,7 +13,6 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -238,7 +237,7 @@ export default function CmsPage() {
                   </div>
               </CardHeader>
               <CardContent>
-                  <DataTable columns={columns(handleEdit, handleDelete)} data={pages} />
+                  <DataTable columns={columns(handleEdit, handleDelete)} data={pages} categories={categories} onDelete={handleDelete} />
               </CardContent>
             </Card>
         </TabsContent>

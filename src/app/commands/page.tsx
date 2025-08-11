@@ -18,7 +18,6 @@ import {
     SheetContent,
     SheetHeader,
     SheetTitle,
-    SheetTrigger,
 } from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
@@ -52,11 +51,20 @@ export default function CommandManagementPage() {
     const [commands, setCommands] = React.useState<Command[]>([])
     const [isSheetOpen, setIsSheetOpen] = React.useState(false);
     const [selectedCommand, setSelectedCommand] = React.useState<Command | null>(null);
+    const [activeTab, setActiveTab] = React.useState("manual");
     const { toast } = useToast();
 
     React.useEffect(() => {
         getCommands().then(setCommands)
     }, [])
+
+    React.useEffect(() => {
+        if (selectedCommand) {
+            setActiveTab(selectedCommand.type);
+        } else {
+            setActiveTab("manual");
+        }
+    }, [selectedCommand]);
 
     const handleEdit = (command: Command) => {
         setSelectedCommand(command);
@@ -71,28 +79,43 @@ export default function CommandManagementPage() {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        const commandType = formData.get('command-tab') as 'manual' | 'auto';
         
         let newCommand: Command;
 
-        if (commandType === 'manual') {
+        if (activeTab === 'manual') {
+            const manualType = formData.get('manual-command-type') as 'wheel' | 'sound' | 'light' | null;
+            const commandString = formData.get('command-string') as string | null;
+
+            if (!manualType || !commandString) {
+                toast({ variant: "destructive", title: "Missing fields", description: "Please fill all required fields for manual command." });
+                return;
+            }
+
             newCommand = {
                 id: selectedCommand?.id || `CMD${Date.now()}`,
                 type: 'manual',
                 status: 'active',
                 details: {
-                    type: formData.get('manual-command-type') as 'wheel' | 'sound' | 'light',
-                    command: formData.get('command-string') as string
+                    type: manualType,
+                    command: commandString
                 }
             };
         } else {
+            const autoTitle = formData.get('auto-command-title') as string | null;
+            const commandJson = formData.get('command-json') as string | null;
+
+            if (!autoTitle || !commandJson) {
+                toast({ variant: "destructive", title: "Missing fields", description: "Please fill all required fields for auto command." });
+                return;
+            }
+
             newCommand = {
                 id: selectedCommand?.id || `CMD${Date.now()}`,
                 type: 'auto',
                 status: 'active',
                 details: {
-                    title: formData.get('auto-command-title') as string,
-                    json: formData.get('command-json') as string
+                    title: autoTitle,
+                    json: commandJson
                 }
             };
         }
@@ -131,7 +154,7 @@ export default function CommandManagementPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <DataTable columns={columns(handleEdit, handleDelete)} data={commands} />
+                    <DataTable columns={columns(handleEdit, handleDelete)} data={commands} onDelete={handleDelete} />
                 </CardContent>
             </Card>
 
@@ -145,8 +168,7 @@ export default function CommandManagementPage() {
                     </SheetHeader>
                     <ScrollArea className="h-full">
                         <form onSubmit={handleSubmit}>
-                        <Tabs defaultValue={selectedCommand?.type || "manual"} className="w-full px-6 py-4">
-                            <input type="hidden" name="command-tab" value={selectedCommand?.type || "manual"} />
+                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full px-6 py-4">
                             <TabsList className="grid w-full grid-cols-2">
                                 <TabsTrigger value="manual" disabled={!!(selectedCommand && selectedCommand.type !== 'manual')}>Manual</TabsTrigger>
                                 <TabsTrigger value="auto" disabled={!!(selectedCommand && selectedCommand.type !== 'auto')}>Auto</TabsTrigger>

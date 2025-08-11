@@ -1,11 +1,11 @@
 
 
-import { promises as fs } from 'fs';
-import path from 'path';
+"use client"
+
 import { z } from 'zod';
 import { columns } from './columns';
 import { DataTable } from './data-table';
-import { customerSchema } from './schema';
+import { customerSchema, Customer } from './schema';
 import {
   Sheet,
   SheetContent,
@@ -17,10 +17,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
+import * as React from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 // Mock data fetching
-async function getCustomers() {
+async function getCustomers(): Promise<Customer[]> {
   // In a real app, you'd fetch this from your database.
   const data = [
     { id: "CUST001", name: "Rohan Sharma", email: "rohan.sharma@example.com", totalSpent: 50000, orders: 5, status: "active" },
@@ -34,8 +35,19 @@ async function getCustomers() {
   return z.array(customerSchema).parse(data);
 }
 
-export default async function CustomersPage() {
-  const customers = await getCustomers();
+export default function CustomersPage() {
+  const [customers, setCustomers] = React.useState<Customer[]>([]);
+  const { toast } = useToast();
+
+  React.useEffect(() => {
+    getCustomers().then(setCustomers);
+  }, []);
+
+  // Placeholder for delete action
+  const handleDelete = (id: string) => {
+    setCustomers(prev => prev.filter(p => p.id !== id));
+    toast({ title: 'Customer Deleted', description: 'The customer has been deleted.' });
+  }
 
   return (
     <div className="space-y-6">
@@ -61,13 +73,15 @@ export default async function CustomersPage() {
                     </SheetDescription>
                 </SheetHeader>
                 <ScrollArea className="h-full">
+                  <div className="py-4 px-6">
                     {/* Form would go here */}
-                    <p className="text-center text-muted-foreground px-6 py-4">Customer form will be here.</p>
+                    <p className="text-center text-muted-foreground">Customer form will be here.</p>
+                  </div>
                 </ScrollArea>
             </SheetContent>
         </Sheet>
       </div>
-      <DataTable columns={columns} data={customers} />
+      <DataTable columns={columns} data={customers} onDelete={handleDelete} />
     </div>
   );
 }

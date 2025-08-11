@@ -8,7 +8,7 @@ import { DataTable } from './data-table';
 import { deviceSchema, deviceMasterSchema, Device, DeviceMaster } from './schema';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -91,6 +91,16 @@ export default function DevicesPage() {
   const handleDeleteMaster = (id: string) => {
       setDeviceMasters(prev => prev.filter(m => m.id !== id));
       toast({ title: 'Device Type Deleted', description: `Device Type with ID ${id} has been deleted.` });
+  }
+
+  const handleDeleteSelectedDevices = (ids: string[]) => {
+    setDevices(prev => prev.filter(d => !ids.includes(d.id)));
+    toast({ title: 'Devices Deleted', description: `${ids.length} devices have been deleted.` });
+  }
+
+  const handleDeleteSelectedMasters = (ids: string[]) => {
+      setDeviceMasters(prev => prev.filter(m => !ids.includes(m.id)));
+      toast({ title: 'Device Types Deleted', description: `${ids.length} device types have been deleted.` });
   }
   
   React.useEffect(() => {
@@ -189,27 +199,73 @@ export default function DevicesPage() {
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <DataTable columns={deviceMasterColumns(handleEditMaster, handleDeleteMaster)} data={deviceMasters} filterColumnId='deviceType' filterPlaceholder='Filter by device type...'/>
+                    <DataTable 
+                        columns={deviceMasterColumns(handleEditMaster, handleDeleteMaster)} 
+                        data={deviceMasters} 
+                        filterColumnId='deviceType' 
+                        filterPlaceholder='Filter by device type...'
+                        onDelete={handleDeleteMaster}
+                        onDeleteSelected={handleDeleteSelectedMasters}
+                        exportFileName='device-masters'
+                        filters={[{
+                            id: 'status',
+                            title: 'Status',
+                            options: [
+                                { value: 'active', label: 'Active' },
+                                { value: 'inactive', label: 'Inactive' },
+                            ]
+                        }]}
+                    />
                 </CardContent>
             </Card>
         </TabsContent>
         <TabsContent value="devices">
              <Card>
                 <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                    <CardTitle>All Devices</CardTitle>
+                    <div>
+                        <CardTitle>All Devices</CardTitle>
+                        <CardDescription>Manage all provisioned devices.</CardDescription>
+                    </div>
                     <Button onClick={() => { setSelectedDevice(null); setIsSheetOpen(true); }}>
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Device
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <DataTable columns={columns(handleEditDevice, handleDeleteDevice)} data={devices} filterColumnId='deviceName' filterPlaceholder='Filter by device name...' />
+                    <DataTable 
+                        columns={columns(handleEditDevice, handleDeleteDevice)} 
+                        data={devices} 
+                        filterColumnId='deviceName' 
+                        filterPlaceholder='Filter by device name...'
+                        onDelete={handleDeleteDevice}
+                        onDeleteSelected={handleDeleteSelectedDevices}
+                        exportFileName='devices'
+                        filters={[
+                            {
+                                id: 'status',
+                                title: 'Status',
+                                options: [
+                                    { value: 'active', label: 'Active' },
+                                    { value: 'never_used', label: 'Never Used' },
+                                    { value: 'disabled', label: 'Disabled' },
+                                ]
+                            },
+                            {
+                                id: 'deviceType',
+                                title: 'Type',
+                                options: deviceMasters.map(dm => ({ value: dm.deviceType, label: dm.deviceType }))
+                            }
+                        ]}
+                    />
                 </CardContent>
             </Card>
         </TabsContent>
       </Tabs>
 
-      <Sheet open={isMasterSheetOpen} onOpenChange={setIsMasterSheetOpen}>
+      <Sheet open={isMasterSheetOpen} onOpenChange={(isOpen) => {
+            setIsMasterSheetOpen(isOpen);
+            if (!isOpen) setSelectedMaster(null);
+      }}>
           <SheetContent>
               <SheetHeader>
                   <SheetTitle>{selectedMaster ? 'Edit Device Type' : 'Add New Device Type'}</SheetTitle>
@@ -240,7 +296,10 @@ export default function DevicesPage() {
           </SheetContent>
       </Sheet>
 
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+      <Sheet open={isSheetOpen} onOpenChange={(isOpen) => {
+          setIsSheetOpen(isOpen);
+          if (!isOpen) setSelectedDevice(null);
+      }}>
           <SheetContent>
               <SheetHeader>
                   <SheetTitle>{selectedDevice ? 'Edit Device' : 'Create New Device'}</SheetTitle>
