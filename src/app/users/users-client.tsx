@@ -6,13 +6,13 @@ import { columns } from './columns';
 import { DataTable } from './data-table';
 import { userSchema, User } from './schema';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { UserForm } from './user-form';
@@ -44,23 +44,25 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
             Manage operators and their assigned devices.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+        <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add User
                 </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Add New User</DialogTitle>
-                    <DialogDescription>
+            </SheetTrigger>
+            <SheetContent>
+                <SheetHeader>
+                    <SheetTitle>Add New User</SheetTitle>
+                    <SheetDescription>
                         Fill in the details to create a new user account.
-                    </DialogDescription>
-                </DialogHeader>
-                <UserForm onFormSuccess={handleFormSuccess} />
-            </DialogContent>
-        </Dialog>
+                    </SheetDescription>
+                </SheetHeader>
+                <div className="py-4">
+                  <UserForm onFormSuccess={handleFormSuccess} />
+                </div>
+            </SheetContent>
+        </Sheet>
       </div>
       <DataTable columns={columns} data={users} />
     </div>

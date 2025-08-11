@@ -7,13 +7,13 @@ import { pageSchema } from './schema';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -59,7 +59,7 @@ export default function CmsPage() {
       </div>
       
       <Tabs defaultValue="app" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 md:w-auto">
           <TabsTrigger value="privacy">Privacy Policy</TabsTrigger>
           <TabsTrigger value="terms">Terms & Conditions</TabsTrigger>
           <TabsTrigger value="shipping">Shipping & Returns</TabsTrigger>
@@ -110,17 +110,17 @@ export default function CmsPage() {
                       <CardDescription>Manage dynamic content for the mobile app.</CardDescription>
                   </div>
                   <div className='flex gap-2'>
-                    <Dialog>
-                        <DialogTrigger asChild>
+                    <Sheet>
+                        <SheetTrigger asChild>
                         <Button variant="outline">
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Add Category
                         </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Add New Category</DialogTitle>
-                        </DialogHeader>
+                        </SheetTrigger>
+                        <SheetContent>
+                        <SheetHeader>
+                            <SheetTitle>Add New Category</SheetTitle>
+                        </SheetHeader>
                         <div className="grid gap-4 py-4">
                             <div className="space-y-2">
                                 <Label htmlFor="category-title">Category Title</Label>
@@ -128,19 +128,19 @@ export default function CmsPage() {
                             </div>
                             <Button>Save Category</Button>
                         </div>
-                        </DialogContent>
-                    </Dialog>
-                    <Dialog>
-                      <DialogTrigger asChild>
+                        </SheetContent>
+                    </Sheet>
+                    <Sheet>
+                      <SheetTrigger asChild>
                         <Button>
                           <PlusCircle className="mr-2 h-4 w-4" />
                           Add Content
                         </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-lg">
-                        <DialogHeader>
-                          <DialogTitle>Add New App Content</DialogTitle>
-                        </DialogHeader>
+                      </SheetTrigger>
+                      <SheetContent>
+                        <SheetHeader>
+                          <SheetTitle>Add New App Content</SheetTitle>
+                        </SheetHeader>
                         <div className='space-y-4 py-4'>
                             <div className="space-y-2">
                                 <Label htmlFor="content-category">Category</Label>
@@ -171,8 +171,8 @@ export default function CmsPage() {
                             </div>
                             <Button>Save Content</Button>
                         </div>
-                      </DialogContent>
-                    </Dialog>
+                      </SheetContent>
+                    </Sheet>
                   </div>
               </CardHeader>
               <CardContent>

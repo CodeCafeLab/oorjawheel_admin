@@ -6,7 +6,7 @@ import { DataTable } from './data-table';
 import { deviceSchema, deviceMasterSchema } from './schema';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -74,38 +74,38 @@ export default async function DevicesPage() {
                         <CardTitle>Device Master List</CardTitle>
                         <CardDescription>Manage device types, services, and firmware.</CardDescription>
                     </div>
-                     <Dialog>
-                        <DialogTrigger asChild>
+                     <Sheet>
+                        <SheetTrigger asChild>
                             <Button>
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 Add Device Type
                             </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Add New Device Type</DialogTitle>
-                            </DialogHeader>
+                        </SheetTrigger>
+                        <SheetContent>
+                            <SheetHeader>
+                                <SheetTitle>Add New Device Type</SheetTitle>
+                            </SheetHeader>
                             <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="device-type-name" className="text-right">Name</Label>
-                                    <Input id="device-type-name" placeholder="e.g., OorjaWheel v3" className="col-span-3" />
+                                <div className="space-y-2">
+                                    <Label htmlFor="device-type-name">Name</Label>
+                                    <Input id="device-type-name" placeholder="e.g., OorjaWheel v3" />
                                 </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="bt-serve" className="text-right">BT Serve</Label>
-                                    <Input id="bt-serve" placeholder="Service UUID" className="col-span-3" />
+                                <div className="space-y-2">
+                                    <Label htmlFor="bt-serve">BT Serve</Label>
+                                    <Input id="bt-serve" placeholder="Service UUID" />
                                 </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="bt-char" className="text-right">BT Char</Label>
-                                    <Input id="bt-char" placeholder="Characteristic UUID" className="col-span-3" />
+                                <div className="space-y-2">
+                                    <Label htmlFor="bt-char">BT Char</Label>
+                                    <Input id="bt-char" placeholder="Characteristic UUID" />
                                 </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="sound-bt-name" className="text-right">Sound BT Name</Label>
-                                    <Input id="sound-bt-name" placeholder="e.g., OorjaAudioV3" className="col-span-3" />
+                                <div className="space-y-2">
+                                    <Label htmlFor="sound-bt-name">Sound BT Name</Label>
+                                    <Input id="sound-bt-name" placeholder="e.g., OorjaAudioV3" />
                                 </div>
                                 <Button>Save Device Type</Button>
                             </div>
-                        </DialogContent>
-                    </Dialog>
+                        </SheetContent>
+                    </Sheet>
                 </CardHeader>
                 <CardContent>
                     <DataTable columns={deviceMasterColumns} data={deviceMasters} filterColumnId='deviceType' filterPlaceholder='Filter by device type...'/>
@@ -116,17 +116,17 @@ export default async function DevicesPage() {
              <Card>
                 <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <CardTitle>All Devices</CardTitle>
-                    <Dialog>
-                        <DialogTrigger asChild>
+                    <Sheet>
+                        <SheetTrigger asChild>
                              <Button>
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 Add Device
                             </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl">
-                            <DialogHeader>
-                                <DialogTitle>Create New Device</DialogTitle>
-                            </DialogHeader>
+                        </SheetTrigger>
+                        <SheetContent className="max-w-3xl sm:max-w-2xl">
+                            <SheetHeader>
+                                <SheetTitle>Create New Device</SheetTitle>
+                            </SheetHeader>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                                <div className="space-y-4">
                                  <h3 className="font-semibold text-lg">Select Modal</h3>
@@ -175,8 +175,8 @@ export default async function DevicesPage() {
                                      <Button className="w-full">Create Device</Button>
                                </div>
                             </div>
-                        </DialogContent>
-                    </Dialog>
+                        </SheetContent>
+                    </Sheet>
                 </CardHeader>
                 <CardContent>
                     <DataTable columns={columns} data={devices} filterColumnId='deviceName' filterPlaceholder='Filter by device name...' />

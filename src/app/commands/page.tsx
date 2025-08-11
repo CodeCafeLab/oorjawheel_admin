@@ -13,13 +13,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog"
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -62,18 +61,18 @@ export default function CommandManagementPage() {
                         Create and manage manual and automated device commands.
                     </p>
                 </div>
-                <Dialog>
-                    <DialogTrigger asChild>
+                <Sheet>
+                    <SheetTrigger asChild>
                         <Button>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Add Command
                         </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Create New Command</DialogTitle>
-                        </DialogHeader>
-                        <Tabs defaultValue="manual" className="w-full">
+                    </SheetTrigger>
+                    <SheetContent>
+                        <SheetHeader>
+                            <SheetTitle>Create New Command</SheetTitle>
+                        </SheetHeader>
+                        <Tabs defaultValue="manual" className="w-full pt-4">
                             <TabsList className="grid w-full grid-cols-2">
                                 <TabsTrigger value="manual">Manual</TabsTrigger>
                                 <TabsTrigger value="auto">Auto</TabsTrigger>
@@ -114,8 +113,8 @@ export default function CommandManagementPage() {
                                 </div>
                             </TabsContent>
                         </Tabs>
-                    </DialogContent>
-                </Dialog>
+                    </SheetContent>
+                </Sheet>
             </div>
             <Card>
                 <CardHeader>

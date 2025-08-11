@@ -1,3 +1,4 @@
+
 import { promises as fs } from 'fs';
 import path from 'path';
 import { z } from 'zod';
@@ -5,13 +6,13 @@ import { columns } from './columns';
 import { DataTable } from './data-table';
 import { customerSchema } from './schema';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 
@@ -43,24 +44,24 @@ export default async function CustomersPage() {
             Manage your customers and view their details.
           </p>
         </div>
-        <Dialog>
-            <DialogTrigger asChild>
+        <Sheet>
+            <SheetTrigger asChild>
                 <Button>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Customer
                 </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Add New Customer</DialogTitle>
-                    <DialogDescription>
+            </SheetTrigger>
+            <SheetContent>
+                <SheetHeader>
+                    <SheetTitle>Add New Customer</SheetTitle>
+                    <SheetDescription>
                         Fill in the details to add a new customer.
-                    </DialogDescription>
-                </DialogHeader>
+                    </SheetDescription>
+                </SheetHeader>
                 {/* Form would go here */}
                 <p className="text-center text-muted-foreground py-8">Customer form will be here.</p>
-            </DialogContent>
-        </Dialog>
+            </SheetContent>
+        </Sheet>
       </div>
       <DataTable columns={columns} data={customers} />
     </div>
