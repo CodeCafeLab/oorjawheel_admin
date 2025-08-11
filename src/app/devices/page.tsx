@@ -1,6 +1,5 @@
 
 
-
 import { z } from 'zod';
 import { columns, deviceMasterColumns } from './columns';
 import { DataTable } from './data-table';
