@@ -2,7 +2,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, ArrowUpDown } from "lucide-react"
+import { MoreHorizontal, ArrowUpDown, Edit, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -10,13 +10,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import Image from "next/image"
-import { Page } from "./schema"
+import { Badge } from "@/components/ui/badge"
+import { Command } from "./schema"
 
-export const columns: ColumnDef<Page>[] = [
+export const columns: ColumnDef<Command>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -40,41 +39,34 @@ export const columns: ColumnDef<Page>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "image",
-    header: "Image",
-    cell: ({ row }) => {
-        const imageUrl = row.getValue("image") as string;
-        return <Image src={imageUrl} alt="content image" width={40} height={40} className="rounded-md" data-ai-hint="product image" />
-    }
-  },
-  {
-    accessorKey: "title",
+    accessorKey: "id",
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Title
+          ID
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       )
     },
   },
   {
-    accessorKey: "category",
-    header: "Category",
-  },
-  {
-    accessorKey: "command",
-    header: "Command",
+    accessorKey: "type",
+    header: "Type",
     cell: ({ row }) => {
-        return <code className="font-mono text-sm">{row.getValue("command")}</code>
+        const type = row.getValue("type") as string;
+        return <Badge variant={'outline'} className="capitalize">{type}</Badge>
     }
   },
   {
-    accessorKey: "description",
-    header: "Description",
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+        const status = row.getValue("status") as string;
+        return <Badge variant={status === 'active' ? 'default' : 'secondary'} className="capitalize">{status}</Badge>
+    }
   },
   {
     id: "actions",
@@ -90,8 +82,8 @@ export const columns: ColumnDef<Page>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>Edit</DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+            <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         </div>

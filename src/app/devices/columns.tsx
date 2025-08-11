@@ -1,7 +1,8 @@
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, ArrowUpDown } from "lucide-react"
+import { MoreHorizontal, ArrowUpDown, Trash2, Edit, Printer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -13,7 +14,87 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Device } from "./schema"
+import { Device, DeviceMaster } from "./schema"
+
+export const deviceMasterColumns: ColumnDef<DeviceMaster>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "deviceType",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Device Type
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+    },
+    {
+        accessorKey: "btServe",
+        header: "BT Serve"
+    },
+    {
+        accessorKey: "btChar",
+        header: "BT Char"
+    },
+    {
+        accessorKey: "soundBtName",
+        header: "Sound BT Name"
+    },
+    {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => {
+            const status = row.getValue("status") as string;
+            return <Badge variant={status === 'active' ? 'default' : 'secondary'} className="capitalize">{status}</Badge>
+        }
+    },
+    {
+        id: "actions",
+        cell: ({ row }) => {
+          return (
+            <div className="text-right">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            </div>
+          )
+        },
+      },
+]
+
 
 export const columns: ColumnDef<Device>[] = [
   {
@@ -39,20 +120,36 @@ export const columns: ColumnDef<Device>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "btName",
+    accessorKey: "deviceName",
     header: ({ column }) => (
       <Button
         variant="ghost"
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
       >
-        BT Name
+        Device Name
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
   },
   {
+    accessorKey: "userId",
+    header: "User ID/Password",
+    cell: ({ row }) => {
+        const userId = row.getValue("userId") as string;
+        return userId ? `•••••••` : 'Unassigned';
+    }
+  },
+  {
+    accessorKey: "deviceType",
+    header: "Device Type"
+  },
+  {
     accessorKey: "macAddress",
     header: "MAC Address",
+  },
+  {
+    accessorKey: "passcode",
+    header: "Passcode"
   },
   {
     accessorKey: "status",
@@ -67,37 +164,10 @@ export const columns: ColumnDef<Device>[] = [
     }
   },
   {
-    accessorKey: "warrantyStart",
-    header: "Warranty Start",
-     cell: ({ row }) => {
-      const date = new Date(row.getValue("warrantyStart"));
-      return new Intl.DateTimeFormat("en-IN").format(date);
-    },
-  },
-    {
-    accessorKey: "firstConnected",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
-        First Connected
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-    cell: ({ row }) => {
-      const value = row.getValue("firstConnected") as string;
-      if (!value) return "N/A";
-      const date = new Date(value);
-      return new Intl.DateTimeFormat("en-IN", { dateStyle: 'medium', timeStyle: 'short' }).format(date);
-    },
-  },
-  {
     id: "actions",
     cell: ({ row }) => {
-      const device = row.original
- 
       return (
+        <div className="text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -107,13 +177,13 @@ export const columns: ColumnDef<Device>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>Edit Device</DropdownMenuItem>
-            <DropdownMenuItem>Assign to User</DropdownMenuItem>
+            <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+            <DropdownMenuItem><Printer className="mr-2 h-4 w-4" /> Print Welcome Kit</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Lock/Disable Device</DropdownMenuItem>
-            <DropdownMenuItem>View Command Logs</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       )
     },
   },

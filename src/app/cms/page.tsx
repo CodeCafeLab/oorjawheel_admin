@@ -1,4 +1,5 @@
 
+"use client"
 import { z } from 'zod';
 import { columns } from './columns';
 import { DataTable } from './data-table';
@@ -16,19 +17,35 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from "@/components/ui/select"
+import Image from 'next/image';
+import * as React from 'react';
 
 // Mock data fetching
 async function getPages() {
   const data = [
-    { id: 'PAGE001', title: 'Home Control', order: 1, status: 'published' },
-    { id: 'PAGE002', title: 'Lighting Setup', order: 2, status: 'draft' },
-    { id: 'PAGE003', title: 'Device Diagnostics', order: 3, status: 'published' },
+    { id: 'PAGE001', category: 'Lighting', image: 'https://placehold.co/100x100.png', title: 'Ambient Mood', command: 'L100,50,10' , description: 'Set a warm ambient light for evenings.' },
+    { id: 'PAGE002', category: 'Wheel', image: 'https://placehold.co/100x100.png', title: 'Full Speed', command: 'S100', description: 'Run the wheel at maximum speed.' },
+    { id: 'PAGE003', category: 'Sound', image: 'https://placehold.co/100x100.png', title: 'Nature Sounds', command: 'P_NATURE', description: 'Play soothing nature sounds.' },
   ];
   return z.array(pageSchema).parse(data);
 }
 
-export default async function CmsPage() {
-  const pages = await getPages();
+export default function CmsPage() {
+  const [pages, setPages] = React.useState<z.infer<typeof pageSchema>[]>([]);
+  const [categories, setCategories] = React.useState(['Lighting', 'Wheel', 'Sound']);
+
+  React.useEffect(() => {
+    getPages().then(setPages);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -36,13 +53,13 @@ export default async function CmsPage() {
         <div>
           <h1 className="text-3xl font-headline">Content Management</h1>
           <p className="text-muted-foreground">
-            Manage content for both the web and the mobile app.
+            Manage content for the web and the mobile app.
           </p>
         </div>
       </div>
       
-      <Tabs defaultValue="privacy" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+      <Tabs defaultValue="app" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="privacy">Privacy Policy</TabsTrigger>
           <TabsTrigger value="terms">Terms & Conditions</TabsTrigger>
           <TabsTrigger value="shipping">Shipping & Returns</TabsTrigger>
@@ -89,28 +106,74 @@ export default async function CmsPage() {
             <Card>
               <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div>
-                      <CardTitle className="font-headline">App Pages</CardTitle>
-                      <CardDescription>Manage dynamic pages for the mobile app.</CardDescription>
+                      <CardTitle className="font-headline">App Content</CardTitle>
+                      <CardDescription>Manage dynamic content for the mobile app.</CardDescription>
                   </div>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Page
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add New Page</DialogTitle>
-                        <DialogDescription>
-                          Fill in the details to create a new page.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <p className="text-center text-muted-foreground py-8">
-                        Page form will be here.
-                      </p>
-                    </DialogContent>
-                  </Dialog>
+                  <div className='flex gap-2'>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                        <Button variant="outline">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Category
+                        </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Add New Category</DialogTitle>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="category-title">Category Title</Label>
+                                <Input id="category-title" placeholder="e.g., Special Modes" />
+                            </div>
+                            <Button>Save Category</Button>
+                        </div>
+                        </DialogContent>
+                    </Dialog>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button>
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                          Add Content
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-lg">
+                        <DialogHeader>
+                          <DialogTitle>Add New App Content</DialogTitle>
+                        </DialogHeader>
+                        <div className='space-y-4 py-4'>
+                            <div className="space-y-2">
+                                <Label htmlFor="content-category">Category</Label>
+                                <Select>
+                                    <SelectTrigger id="content-category">
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="content-image">Image</Label>
+                                <Input id="content-image" type="file" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="content-title">Title</Label>
+                                <Input id="content-title" placeholder="e.g., Party Mode" />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="content-command">Command</Label>
+                                <Input id="content-command" placeholder="e.g., L255,0,255" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="content-description">Description</Label>
+                                <Textarea id="content-description" placeholder="Describe what this content/command does." />
+                            </div>
+                            <Button>Save Content</Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
               </CardHeader>
               <CardContent>
                   <DataTable columns={columns} data={pages} />
