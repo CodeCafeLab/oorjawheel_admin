@@ -72,8 +72,8 @@ const OorjaLogo = () => (
       label: 'CMS',
       icon: FileText,
       items: [
-          { 
-              label: 'Web', 
+          {
+              label: 'Web',
               items: [
                   { href: '/cms#privacy', label: 'Privacy Policy' },
                   { href: '/cms#terms', label: 'Terms & Conditions' },
@@ -88,7 +88,7 @@ const OorjaLogo = () => (
     { href: '/logs', label: 'Logs', icon: GitBranch },
     { href: '/settings', label: 'Settings', icon: Settings },
   ]
-  
+
 
 const NavItem = ({ item }: { item: any }) => {
     const pathname = usePathname()
@@ -101,7 +101,7 @@ const NavItem = ({ item }: { item: any }) => {
         const baseHref = href.split('#')[0];
         return pathname === baseHref;
     }
-    
+
     // Check if any sub-item is active
     const isSubActive = React.useMemo(() => {
         if (!item.items) return false;
@@ -141,12 +141,12 @@ const NavItem = ({ item }: { item: any }) => {
         </SidebarMenuItem>
       )
     }
-  
+
     return (
         <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
             <CollapsibleTrigger asChild>
                  <Link href={item.href || '#'} passHref>
-                    <SidebarMenuButton 
+                    <SidebarMenuButton
                         isActive={isSubActive}
                         className="w-full justify-between"
                         tooltip={{ children: item.label, side: 'right' }}
@@ -169,21 +169,21 @@ const NavItem = ({ item }: { item: any }) => {
                                  <ul className="flex flex-col gap-1 ml-4">
                                  {subItem.items.map((nestedItem: any, nestedIndex: number) => (
                                      <li key={nestedIndex}>
-                                         <Link href={nestedItem.href} passHref>
-                                             <SidebarMenuSubButton isActive={pathname === nestedItem.href.split('#')[0]}>
+                                        <SidebarMenuSubButton asChild isActive={pathname === nestedItem.href.split('#')[0]}>
+                                            <Link href={nestedItem.href} passHref>
                                                 <span>{nestedItem.label}</span>
-                                            </SidebarMenuSubButton>
-                                         </Link>
+                                            </Link>
+                                        </SidebarMenuSubButton>
                                      </li>
                                  ))}
                                  </ul>
                                 </>
                             ) : (
-                                <Link href={subItem.href} passHref>
-                                    <SidebarMenuSubButton isActive={pathname === subItem.href.split('#')[0]}>
+                                <SidebarMenuSubButton asChild isActive={pathname === subItem.href.split('#')[0]}>
+                                    <Link href={subItem.href} passHref>
                                         <span>{subItem.label}</span>
-                                    </SidebarMenuSubButton>
-                                </Link>
+                                    </Link>
+                                </SidebarMenuSubButton>
                             )}
                         </SidebarMenuSubItem>
                     ))}
