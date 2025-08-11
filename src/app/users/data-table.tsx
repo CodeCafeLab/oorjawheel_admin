@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -13,7 +14,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { Download, Trash2 } from "lucide-react"
+import { Download, Trash2, SlidersHorizontal } from "lucide-react"
 
 import {
   Table,
@@ -38,6 +39,12 @@ import {
     SelectTrigger,
     SelectValue,
   } from "@/components/ui/select"
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
+import { Label } from "@/components/ui/label"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -72,36 +79,76 @@ export function DataTable<TData, TValue>({
     },
   })
 
+  const isFiltered = table.getState().columnFilters.length > 0
+
   return (
     <div className="space-y-4">
         <div className="flex flex-col sm:flex-row items-center gap-4">
-            <Input
-            placeholder="Search by full name..."
-            value={(table.getColumn("fullName")?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-                table.getColumn("fullName")?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-            />
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-                <Select
-                    value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
-                    onValueChange={(value) =>
-                    table.getColumn("status")?.setFilterValue(value === "all" ? undefined : value)
-                    }
-                >
-                    <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Statuses</SelectItem>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="locked">Locked</SelectItem>
-                    </SelectContent>
-                </Select>
-                 <DropdownMenu>
+            <div className="flex items-center gap-2">
+                <Popover>
+                    <PopoverTrigger asChild>
+                         <Button variant="outline" size="sm" className="h-10">
+                            <SlidersHorizontal className="mr-2 h-4 w-4" />
+                            Filter
+                            {isFiltered && <span className="ml-2 h-2 w-2 rounded-full bg-primary" />}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80" align="start">
+                        <div className="grid gap-4">
+                            <div className="space-y-2">
+                                <h4 className="font-medium leading-none">Filters</h4>
+                                <p className="text-sm text-muted-foreground">
+                                Apply filters to the user list.
+                                </p>
+                            </div>
+                            <div className="grid gap-2">
+                                <div className="grid grid-cols-3 items-center gap-4">
+                                    <Label htmlFor="fullName">Full Name</Label>
+                                    <Input
+                                        id="fullName"
+                                        placeholder="Search by name..."
+                                        value={(table.getColumn("fullName")?.getFilterValue() as string) ?? ""}
+                                        onChange={(event) =>
+                                            table.getColumn("fullName")?.setFilterValue(event.target.value)
+                                        }
+                                        className="col-span-2 h-8"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-3 items-center gap-4">
+                                    <Label htmlFor="status">Status</Label>
+                                    <Select
+                                        value={(table.getColumn("status")?.getFilterValue() as string) ?? "all"}
+                                        onValueChange={(value) =>
+                                        table.getColumn("status")?.setFilterValue(value === "all" ? undefined : value)
+                                        }
+                                    >
+                                        <SelectTrigger className="col-span-2 h-8">
+                                            <SelectValue placeholder="Select status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Statuses</SelectItem>
+                                            <SelectItem value="active">Active</SelectItem>
+                                            <SelectItem value="locked">Locked</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                            {isFiltered && (
+                                <Button
+                                variant="ghost"
+                                onClick={() => table.resetColumnFilters()}
+                                className="h-8 justify-center"
+                                >
+                                Clear Filters
+                                </Button>
+                            )}
+                        </div>
+                    </PopoverContent>
+                </Popover>
+
+                <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="ml-auto">
+                        <Button variant="outline" size="sm" className="ml-auto h-10">
                         Columns
                         </Button>
                     </DropdownMenuTrigger>
@@ -129,11 +176,11 @@ export function DataTable<TData, TValue>({
                 </DropdownMenu>
             </div>
             <div className="flex w-full sm:w-auto sm:ml-auto gap-2">
-                 <Button variant="outline" size="sm" disabled={table.getFilteredSelectedRowModel().rows.length === 0}>
+                 <Button variant="outline" size="sm" className="h-10" disabled={table.getFilteredSelectedRowModel().rows.length === 0}>
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete Selected ({table.getFilteredSelectedRowModel().rows.length})
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="h-10">
                     <Download className="mr-2 h-4 w-4" />
                     Export
                 </Button>
