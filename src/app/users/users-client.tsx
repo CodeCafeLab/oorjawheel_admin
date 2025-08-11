@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { z } from 'zod';
@@ -24,6 +23,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
     const [users, setUsers] = React.useState<User[]>(initialUsers);
     const [open, setOpen] = React.useState(false);
+    const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
     const router = useRouter();
 
     React.useEffect(() => {
@@ -32,9 +32,20 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
     
     const handleFormSuccess = () => {
       setOpen(false)
+      setSelectedUser(null)
       // We need to refresh the data. Next.js router.refresh() is the way to do it.
       // It re-fetches data on the server for the current route.
       router.refresh();
+    }
+
+    const handleAddClick = () => {
+        setSelectedUser(null);
+        setOpen(true);
+    }
+
+    const handleEditClick = (user: User) => {
+        setSelectedUser(user);
+        setOpen(true);
     }
 
   return (
@@ -46,29 +57,31 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
             Manage operators and their assigned devices.
           </p>
         </div>
-        <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add User
-                </Button>
-            </SheetTrigger>
-            <SheetContent>
-                <SheetHeader>
-                    <SheetTitle>Add New User</SheetTitle>
-                    <SheetDescription>
-                        Fill in the details to create a new user account.
-                    </SheetDescription>
-                </SheetHeader>
-                <ScrollArea className="h-full">
-                    <div className="px-6 py-4">
-                        <UserForm onFormSuccess={handleFormSuccess} />
-                    </div>
-                </ScrollArea>
-            </SheetContent>
-        </Sheet>
+        <Button onClick={handleAddClick}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add User
+        </Button>
       </div>
-      <DataTable columns={columns} data={users} />
+      <DataTable columns={columns(handleEditClick)} data={users} />
+
+      <Sheet open={open} onOpenChange={(isOpen) => {
+          setOpen(isOpen);
+          if (!isOpen) setSelectedUser(null);
+      }}>
+          <SheetContent>
+              <SheetHeader>
+                  <SheetTitle>{selectedUser ? "Edit User" : "Add New User"}</SheetTitle>
+                  <SheetDescription>
+                      {selectedUser ? "Update the details for this user." : "Fill in the details to create a new user account."}
+                  </SheetDescription>
+              </SheetHeader>
+              <ScrollArea className="h-full">
+                  <div className="px-6 py-4">
+                      <UserForm onFormSuccess={handleFormSuccess} user={selectedUser} />
+                  </div>
+              </ScrollArea>
+          </SheetContent>
+      </Sheet>
     </div>
   );
 }

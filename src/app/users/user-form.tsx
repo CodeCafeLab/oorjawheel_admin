@@ -1,8 +1,10 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -18,8 +20,7 @@ import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { useToast } from "@/hooks/use-toast"
 import { userFormSchema } from "@/actions/schemas"
-import { addUser } from "@/actions/users"
-import { useState } from "react"
+import { addUser, updateUser } from "@/actions/users"
 import { Textarea } from "@/components/ui/textarea"
 import {
     Select,
@@ -28,10 +29,18 @@ import {
     SelectTrigger,
     SelectValue,
   } from "@/components/ui/select"
+import { User } from "./schema"
 
-export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
+type UserFormProps = {
+    onFormSuccess: () => void;
+    user?: User | null; // Make user optional for creating new users
+}
+
+export function UserForm({ onFormSuccess, user }: UserFormProps) {
   const { toast } = useToast()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = React.useState(false)
+
+  const isEditMode = !!user;
 
   const form = useForm<z.infer<typeof userFormSchema>>({
     resolver: zodResolver(userFormSchema),
@@ -46,18 +55,38 @@ export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
     },
   })
 
+  React.useEffect(() => {
+    if (isEditMode && user) {
+        form.reset({
+            fullName: user.fullName || '',
+            email: user.email,
+            contactNumber: user.contactNumber || '',
+            address: user.address || '',
+            country: user.country || '',
+            status: user.status,
+            password: '', // Don't pre-fill password
+        });
+    } else {
+        form.reset();
+    }
+  }, [user, isEditMode, form]);
+
+
   async function onSubmit(data: z.infer<typeof userFormSchema>) {
     setLoading(true)
-    const result = await addUser(data)
+
+    const result = isEditMode && user
+        ? await updateUser(user.id.toString(), data)
+        : await addUser(data)
+    
     setLoading(false)
 
     if (result.success) {
       toast({
-        title: "User Added",
-        description: "The new user has been created successfully.",
+        title: isEditMode ? "User Updated" : "User Added",
+        description: `The user has been ${isEditMode ? 'updated' : 'created'} successfully.`,
       })
       onFormSuccess()
-      form.reset()
     } else {
       toast({
         variant: "destructive",
@@ -128,7 +157,7 @@ export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
             render={({ field }) => (
                 <FormItem>
                 <FormLabel>Country</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={loading}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={loading}>
                     <FormControl>
                     <SelectTrigger>
                         <SelectValue placeholder="Select a country" />
@@ -155,7 +184,7 @@ export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
                 <Input type="password" {...field} disabled={loading}/>
               </FormControl>
               <FormDescription>
-                The user's password. Must be at least 8 characters.
+                {isEditMode ? "Leave blank to keep the current password." : "The user's password. Must be at least 8 characters."}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -170,7 +199,7 @@ export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                   className="flex items-center space-x-4"
                   disabled={loading}
                 >
@@ -196,7 +225,7 @@ export function UserForm({ onFormSuccess }: { onFormSuccess: () => void }) {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={loading}>{loading ? 'Creating User...' : 'Create User'}</Button>
+        <Button type="submit" disabled={loading}>{loading ? (isEditMode ? 'Updating User...' : 'Creating User...') : (isEditMode ? 'Update User' : 'Create User')}</Button>
       </form>
     </Form>
   )

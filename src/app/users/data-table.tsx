@@ -46,6 +46,20 @@ import {
 } from "@/components/ui/popover"
 import { Label } from "@/components/ui/label"
 import { User } from "./schema"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from "@/components/ui/alert-dialog"
+import { useToast } from "@/hooks/use-toast"
+import { deleteUser } from "@/actions/users"
+import { useRouter } from "next/navigation"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -60,6 +74,8 @@ export function DataTable<TData, TValue>({
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
     const [rowSelection, setRowSelection] = React.useState({})
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+    const { toast } = useToast()
+    const router = useRouter()
 
   const table = useReactTable({
     data,
@@ -111,6 +127,30 @@ export function DataTable<TData, TValue>({
       link.click();
       document.body.removeChild(link);
     }
+  }
+
+  const handleDeleteSelected = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const userIdsToDelete = selectedRows.map(row => (row.original as User).id.toString());
+    
+    // In a real app, you'd probably want a single server action that takes an array of IDs.
+    // For this prototype, we'll just loop and call the single delete action.
+    let successCount = 0;
+    for (const userId of userIdsToDelete) {
+        const result = await deleteUser(userId);
+        if (result.success) {
+            successCount++;
+        }
+    }
+
+    toast({
+        title: "Bulk Delete Complete",
+        description: `${successCount} of ${userIdsToDelete.length} users deleted successfully.`,
+    })
+
+    // Reset selection and refresh data
+    table.resetRowSelection();
+    router.refresh();
   }
 
 
@@ -198,16 +238,32 @@ export function DataTable<TData, TValue>({
                                 column.toggleVisibility(!!value)
                                 }
                             >
-                                {column.id}
+                                {column.id === 'fullName' ? 'Full Name' : column.id === 'contactNumber' ? 'Contact Number' : column.id}
                             </DropdownMenuCheckboxItem>
                             )
                         })}
                     </DropdownMenuContent>
                 </DropdownMenu>
-                 <Button variant="outline" size="sm" className="h-10" disabled={table.getFilteredSelectedRowModel().rows.length === 0}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete ({table.getFilteredSelectedRowModel().rows.length})
-                </Button>
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="h-10" disabled={table.getFilteredSelectedRowModel().rows.length === 0}>
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete ({table.getFilteredSelectedRowModel().rows.length})
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                            This will permanently delete {table.getFilteredSelectedRowModel().rows.length} selected user(s). This action cannot be undone.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteSelected} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
                 <Button variant="outline" size="sm" className="h-10" onClick={handleExport}>
                     <Download className="mr-2 h-4 w-4" />
                     Export

@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -8,6 +9,10 @@ import { hashPassword } from '@/lib/hash';
 
 export async function addUser(values: z.infer<typeof userFormSchema>) {
   const { fullName, email, contactNumber, address, country, password, status = 'active' } = values;
+
+  if (!password) {
+    return { success: false, message: 'Password is required.' };
+  }
 
   try {
     const connection = await pool.getConnection();
@@ -46,9 +51,33 @@ export async function addUser(values: z.infer<typeof userFormSchema>) {
 }
 
 export async function updateUser(id: string, values: z.infer<typeof userFormSchema>) {
-    // TODO: Implement database logic to update a user.
-    console.log(`Updating user ${id}:`, values);
-    return { success: true, message: 'User updated successfully.' };
+    const { fullName, email, contactNumber, address, country, password, status = 'active' } = values;
+
+    try {
+        const connection = await pool.getConnection();
+
+        let query = 'UPDATE users SET fullName = ?, email = ?, contactNumber = ?, address = ?, country = ?, status = ?';
+        const params: (string|null)[] = [fullName, email, contactNumber, address, country, status];
+
+        if (password) {
+            const hashedPassword = await hashPassword(password);
+            query += ', password_hash = ?';
+            params.push(hashedPassword);
+        }
+
+        query += ' WHERE id = ?';
+        params.push(id);
+
+        await connection.execute(query, params);
+        connection.release();
+
+        revalidatePath('/users');
+
+        return { success: true, message: 'User updated successfully.' };
+    } catch (error) {
+        console.error('Database Error:', error);
+        return { success: false, message: 'Failed to update user.' };
+    }
 }
 
 export async function deleteUser(id: string) {

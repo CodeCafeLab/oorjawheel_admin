@@ -1,7 +1,8 @@
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, ArrowUpDown, Mail, MessageSquare, List } from "lucide-react"
+import { MoreHorizontal, ArrowUpDown, Mail, MessageSquare, List, Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -33,7 +34,7 @@ import { deleteUser } from "@/actions/users"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 
-const UserActions = ({ user }: { user: User }) => {
+const UserActions = ({ user, onEdit }: { user: User; onEdit: (user: User) => void }) => {
     const { toast } = useToast()
     const router = useRouter()
   
@@ -53,6 +54,24 @@ const UserActions = ({ user }: { user: User }) => {
         })
       }
     }
+
+    const handleSendEmail = () => {
+        window.location.href = `mailto:${user.email}`;
+    }
+
+    const handleSendWhatsapp = () => {
+        if (user.contactNumber) {
+            // Basic cleanup of phone number
+            const phoneNumber = user.contactNumber.replace(/[^0-9]/g, '');
+            window.open(`https://wa.me/${phoneNumber}`, '_blank');
+        } else {
+            toast({
+                variant: "destructive",
+                title: "No Contact Number",
+                description: "This user does not have a contact number.",
+            })
+        }
+    }
   
     return (
       <AlertDialog>
@@ -65,12 +84,15 @@ const UserActions = ({ user }: { user: User }) => {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem>Edit</DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onEdit(user)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSendEmail}>
               <Mail className="mr-2 h-4 w-4" />
               Send Email
             </DropdownMenuItem>
-             <DropdownMenuItem>
+             <DropdownMenuItem onClick={handleSendWhatsapp}>
               <MessageSquare className="mr-2 h-4 w-4" />
               Send Whatsapp
             </DropdownMenuItem>
@@ -112,7 +134,7 @@ const UserActions = ({ user }: { user: User }) => {
     )
   }
 
-export const columns: ColumnDef<User>[] = [
+export const columns = (onEdit: (user: User) => void): ColumnDef<User>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -176,7 +198,7 @@ export const columns: ColumnDef<User>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      return <UserActions user={row.original} />
+      return <UserActions user={row.original} onEdit={onEdit} />
     },
   },
 ]
