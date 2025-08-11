@@ -41,66 +41,49 @@ export default async function CmsPage() {
         </div>
       </div>
       
-      <Tabs defaultValue="web" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
-          <TabsTrigger value="web">Web</TabsTrigger>
+      <Tabs defaultValue="privacy" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          <TabsTrigger value="privacy">Privacy Policy</TabsTrigger>
+          <TabsTrigger value="terms">Terms & Conditions</TabsTrigger>
+          <TabsTrigger value="shipping">Shipping & Returns</TabsTrigger>
+          <TabsTrigger value="payment">Payment Terms</TabsTrigger>
           <TabsTrigger value="app">App</TabsTrigger>
         </TabsList>
-        <TabsContent value="web">
-          <Card>
-            <CardHeader>
-                <CardTitle>Web Content</CardTitle>
-                <CardDescription>Manage static pages for the website.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Tabs defaultValue="privacy" className="w-full flex flex-col md:flex-row gap-6">
-                    <TabsList className="flex-col h-auto items-start bg-transparent border-r-0 md:border-r pr-4 shrink-0">
-                        <TabsTrigger value="privacy" className="w-full justify-start">Privacy Policy</TabsTrigger>
-                        <TabsTrigger value="terms" className="w-full justify-start">Terms & Conditions</TabsTrigger>
-                        <TabsTrigger value="shipping" className="w-full justify-start">Shipping & Returns</TabsTrigger>
-                        <TabsTrigger value="payment" className="w-full justify-start">Payment Terms</TabsTrigger>
-                    </TabsList>
-                    <div className="flex-1">
-                        <TabsContent value="privacy">
-                            <Card>
-                                <CardHeader><CardTitle>Privacy Policy</CardTitle></CardHeader>
-                                <CardContent className="space-y-4">
-                                    <Textarea placeholder="Enter your privacy policy content here..." rows={15} />
-                                    <Button>Save Privacy Policy</Button>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                        <TabsContent value="terms">
-                            <Card>
-                                <CardHeader><CardTitle>Terms & Conditions</CardTitle></CardHeader>
-                                <CardContent className="space-y-4">
-                                    <Textarea placeholder="Enter your terms and conditions content here..." rows={15} />
-                                    <Button>Save Terms & Conditions</Button>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                        <TabsContent value="shipping">
-                            <Card>
-                                <CardHeader><CardTitle>Shipping & Returns</CardTitle></CardHeader>
-                                <CardContent className="space-y-4">
-                                    <Textarea placeholder="Enter your shipping and returns content here..." rows={15} />
-                                    <Button>Save Shipping & Returns</Button>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                         <TabsContent value="payment">
-                            <Card>
-                                <CardHeader><CardTitle>Payment Terms</CardTitle></CardHeader>
-                                <CardContent className="space-y-4">
-                                    <Textarea placeholder="Enter your payment terms content here..." rows={15} />
-                                    <Button>Save Payment Terms</Button>
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-                    </div>
-                </Tabs>
-            </CardContent>
-          </Card>
+        <TabsContent value="privacy">
+            <Card>
+                <CardHeader><CardTitle>Privacy Policy</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                    <Textarea placeholder="Enter your privacy policy content here..." rows={15} />
+                    <Button>Save Privacy Policy</Button>
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="terms">
+            <Card>
+                <CardHeader><CardTitle>Terms & Conditions</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                    <Textarea placeholder="Enter your terms and conditions content here..." rows={15} />
+                    <Button>Save Terms & Conditions</Button>
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="shipping">
+            <Card>
+                <CardHeader><CardTitle>Shipping & Returns</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                    <Textarea placeholder="Enter your shipping and returns content here..." rows={15} />
+                    <Button>Save Shipping & Returns</Button>
+                </CardContent>
+            </Card>
+        </TabsContent>
+         <TabsContent value="payment">
+            <Card>
+                <CardHeader><CardTitle>Payment Terms</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                    <Textarea placeholder="Enter your payment terms content here..." rows={15} />
+                    <Button>Save Payment Terms</Button>
+                </CardContent>
+            </Card>
         </TabsContent>
         <TabsContent value="app">
             <Card>
