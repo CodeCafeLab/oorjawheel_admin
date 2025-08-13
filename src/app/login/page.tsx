@@ -60,7 +60,7 @@ export default function LoginPage() {
         if (result.success) {
             toast({
                 title: "Login Successful",
-                description: "Welcome back!",
+                description: "Redirecting you to the dashboard...",
             })
             router.push("/")
         } else {
