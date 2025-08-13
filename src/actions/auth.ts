@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -10,6 +11,21 @@ import { redirect } from 'next/navigation';
 
 export async function login(values: z.infer<typeof loginSchema>) {
   const { email, password } = values;
+
+  // --- Mock Login Logic ---
+  if (email === 'admin@oorja.com' && password === 'password') {
+    const session = await getSession();
+    session.email = email;
+    session.isLoggedIn = true;
+    await session.save();
+    return { success: true, message: 'Login successful!' };
+  }
+
+  if (email !== 'admin@oorja.com' || password !== 'password') {
+      return { success: false, message: 'Invalid email or password.' };
+  }
+  // --- End Mock Logic ---
+
 
   try {
     const connection = await pool.getConnection();
@@ -48,7 +64,8 @@ export async function login(values: z.infer<typeof loginSchema>) {
 
   } catch (error) {
     console.error('Database Error:', error);
-    return { success: false, message: 'An unexpected error occurred.' };
+    // Fallback to mock error if DB connection fails
+    return { success: false, message: 'Database connection failed. Please try again later.' };
   }
 }
 
