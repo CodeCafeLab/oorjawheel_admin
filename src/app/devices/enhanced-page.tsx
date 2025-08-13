@@ -5,7 +5,7 @@ import { columns, deviceMasterColumns } from './columns';
 import { DataTable } from './data-table';
 import { deviceSchema, deviceMasterSchema, Device, DeviceMaster } from './schema';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, RefreshCw } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,14 +42,13 @@ const modals = [
     { id: 'modal05', title: 'OorjaSensor', image: 'https://placehold.co/400x400.png', type: 'OorjaSensor' },
 ];
 
-export default function DevicesPage() {
+export default function EnhancedDevicesPage() {
     const [devices, setDevices] = React.useState<Device[]>([]);
     const [deviceMasters, setDeviceMasters] = React.useState<DeviceMaster[]>([]);
     const [isSheetOpen, setIsSheetOpen] = React.useState(false);
     const [isMasterSheetOpen, setIsMasterSheetOpen] = React.useState(false);
     const [selectedDevice, setSelectedDevice] = React.useState<Device | null>(null);
     const [selectedMaster, setSelectedMaster] = React.useState<DeviceMaster | null>(null);
-    const [selectedModal, setSelectedModal] = React.useState<string>('');
     const [macAddress, setMacAddress] = React.useState('');
     const [passcode, setPasscode] = React.useState('Auto-generated');
     const [loading, setLoading] = React.useState(false);
@@ -93,12 +92,17 @@ export default function DevicesPage() {
     };
 
     const handleDeleteDevice = async (id: string) => {
-        const result = await deleteDevice(id);
-        if (result.success) {
+        const response = await fetch('/api/devices', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id }),
+        });
+        const result = await response.json();
+        if (response.ok && !result.error) {
             toast({ title: 'Device Deleted', description: result.message });
             refreshData();
         } else {
-            toast({ variant: 'destructive', title: 'Error', description: result.message });
+            toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to delete device.' });
         }
     };
 
@@ -169,16 +173,29 @@ export default function DevicesPage() {
             status: (formData.get('status') as 'never_used' | 'active' | 'disabled') || (selectedDevice?.status || 'never_used'),
         };
 
-        const result = selectedDevice 
-            ? await updateDevice(selectedDevice.id, deviceData) 
-            : await addDevice(deviceData);
+        const apiUrl = '/api/devices';
+        let response;
+        if (selectedDevice) {
+            response = await fetch(apiUrl, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: selectedDevice.id, ...deviceData }),
+            });
+        } else {
+            response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(deviceData),
+            });
+        }
+        const result = await response.json();
 
-        if (result.success) {
+        if (response.ok && !result.error) {
             toast({ title: selectedDevice ? 'Device Updated' : 'Device Created', description: result.message });
             refreshData();
             setIsSheetOpen(false);
         } else {
-            toast({ variant: 'destructive', title: 'Error', description: result.message });
+            toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to save device.' });
         }
     };
 
@@ -207,7 +224,6 @@ export default function DevicesPage() {
         }
     };
 
-
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -217,6 +233,10 @@ export default function DevicesPage() {
                         Manage device masters and individual device settings.
                     </p>
                 </div>
+                <Button onClick={refreshData} disabled={loading} variant="outline">
+                    <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    {loading ? 'Loading...' : 'Refresh'}
+                </Button>
             </div>
             
             <Tabs defaultValue="devices" className="w-full">
@@ -354,11 +374,7 @@ export default function DevicesPage() {
                                                     <h3 className="font-semibold text-lg">Select Modal</h3>
                                                     <div className="grid grid-cols-2 gap-4">
                                                         {modals.map(modal => (
-                                                            <Card 
-                                                                key={modal.id} 
-                                                                className="cursor-pointer hover:border-primary transition-colors"
-                                                                onClick={() => setSelectedModal(modal.type)}
-                                                            >
+                                                            <Card key={modal.id} className="cursor-pointer hover:border-primary transition-colors">
                                                                 <CardContent className="p-4 space-y-2">
                                                                     <Image 
                                                                         src={modal.image} 

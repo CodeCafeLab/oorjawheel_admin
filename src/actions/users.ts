@@ -98,3 +98,22 @@ export async function deleteUser(id: string) {
         return { success: false, message: 'Failed to delete user.' };
     }
 }
+
+export async function fetchUsers() {
+  try {
+    const connection = await pool.getConnection();
+
+    const [rows] = await connection.execute(
+      `SELECT id, fullName, email, contactNumber, address, country, status, first_login_at AS firstLoginAt 
+       FROM users`
+    );
+
+    connection.release();
+
+    // Return rows as User[]
+    return rows as any[];
+  } catch (error) {
+    console.error('Database Error:', error);
+    return [];
+  }
+}

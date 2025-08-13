@@ -104,3 +104,31 @@ export async function deleteDeviceMaster(id: string) {
     return { success: false, message: 'Failed to delete device type.' };
   }
 }
+
+export async function fetchDevices() {
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute(
+      `SELECT id, deviceName, macAddress, deviceType, userId, passcode, status FROM devices`
+    );
+    connection.release();
+    return rows as any[];
+  } catch (error) {
+    console.error('Database Error:', error);
+    return [];
+  }
+}
+
+export async function fetchDeviceMasters() {
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute(
+      `SELECT id, deviceType, btServe, btChar, soundBtName, status FROM device_masters`
+    );
+    connection.release();
+    return rows as any[];
+  } catch (error) {
+    console.error('Database Error:', error);
+    return [];
+  }
+}
