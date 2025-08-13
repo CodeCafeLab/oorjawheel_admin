@@ -24,6 +24,7 @@ import {
   FileText,
   Terminal,
 } from 'lucide-react'
+import { logout } from '@/actions/auth'
 
 const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -45,6 +46,10 @@ export function Header() {
     if (pathname === '/') return 'Dashboard';
     const currentPath = navItems.find(item => item.href !== '/' && pathname.startsWith(item.href));
     return currentPath ? currentPath.label : 'Dashboard';
+  }
+
+  const handleLogout = async () => {
+    await logout();
   }
 
   return (
@@ -82,7 +87,7 @@ export function Header() {
                     <DropdownMenuSeparator />
                     <Link href="/settings" passHref><DropdownMenuItem>Settings</DropdownMenuItem></Link>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>Logout</DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
                 </DropdownMenuContent>
                 </DropdownMenu>
             </div>

@@ -12,10 +12,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  useSidebar,
-  SidebarMenuSubItem,
 } from '@/components/ui/sidebar'
 import {
   LayoutDashboard,
@@ -26,12 +22,11 @@ import {
   FileText,
   Terminal,
   Bell,
-  ChevronDown,
   LineChart,
   GitBranch,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { logout } from '@/actions/auth'
 
 const OorjaLogo = () => (
     <svg
@@ -55,20 +50,19 @@ const OorjaLogo = () => (
 
   const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/analytics', label: 'Analytics', icon: LineChart },
     { href: '/users', label: 'User Management', icon: Users },
     { href: '/devices', label: 'Device Management', icon: Smartphone },
     { href: '/commands', label: 'Command Management', icon: Terminal },
     { href: '/cms', label: 'CMS', icon: FileText },
     { href: '/notifications', label: 'Notifications', icon: Bell },
     { href: '/logs', label: 'Logs', icon: GitBranch },
+    { href: '/analytics', label: 'Analytics', icon: LineChart },
     { href: '/settings', label: 'Settings', icon: Settings },
   ]
 
 
 const NavItem = ({ item }: { item: any }) => {
     const pathname = usePathname()
-    const { state } = useSidebar();
 
     const isActive = (href: string) => {
         if (!href) return false;
@@ -92,6 +86,10 @@ const NavItem = ({ item }: { item: any }) => {
   }
 
 export function AppSidebar() {
+  const handleLogout = async () => {
+    await logout();
+  }
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -106,7 +104,7 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter>
-        <Button variant="ghost" className="w-full justify-start gap-2">
+        <Button variant="ghost" className="w-full justify-start gap-2" onClick={handleLogout}>
           <LogOut />
           <span>Logout</span>
         </Button>

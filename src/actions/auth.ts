@@ -4,6 +4,9 @@ import { z } from 'zod';
 import { loginSchema } from './schemas';
 import pool from '@/lib/db';
 import { comparePassword } from '@/lib/hash';
+import { getSession } from '@/lib/session';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 export async function login(values: z.infer<typeof loginSchema>) {
   const { email, password } = values;
@@ -36,8 +39,10 @@ export async function login(values: z.infer<typeof loginSchema>) {
 
     connection.release();
 
-    // In a real app, you would create a session here (e.g., using JWT or a session library)
-    // For now, we just return success.
+    const session = await getSession();
+    session.email = user.email;
+    session.isLoggedIn = true;
+    await session.save();
     
     return { success: true, message: 'Login successful!' };
 
@@ -45,4 +50,12 @@ export async function login(values: z.infer<typeof loginSchema>) {
     console.error('Database Error:', error);
     return { success: false, message: 'An unexpected error occurred.' };
   }
+}
+
+
+export async function logout() {
+    const session = await getSession();
+    session.destroy();
+    revalidatePath('/', 'layout');
+    redirect('/login');
 }

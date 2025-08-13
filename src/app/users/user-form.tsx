@@ -67,7 +67,15 @@ export function UserForm({ onFormSuccess, user }: UserFormProps) {
             password: '', // Don't pre-fill password
         });
     } else {
-        form.reset();
+        form.reset({
+            fullName: "",
+            email: "",
+            contactNumber: "",
+            address: "",
+            country: "",
+            password: "",
+            status: "active",
+        });
     }
   }, [user, isEditMode, form]);
 
@@ -125,19 +133,44 @@ export function UserForm({ onFormSuccess, user }: UserFormProps) {
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="contactNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Contact Number</FormLabel>
-              <FormControl>
-                <Input placeholder="+91 12345 67890" {...field} disabled={loading} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="flex gap-2">
+            <FormField
+                control={form.control}
+                name="country"
+                render={({ field }) => (
+                    <FormItem className="w-1/3">
+                    <FormLabel>Code</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value} disabled={loading}>
+                        <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Code" />
+                        </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                        {/* In a real app, this would be a dynamic list */}
+                        <SelectItem value="+91">IN (+91)</SelectItem>
+                        <SelectItem value="+1">US (+1)</SelectItem>
+                        <SelectItem value="+44">UK (+44)</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <FormField
+                control={form.control}
+                name="contactNumber"
+                render={({ field }) => (
+                    <FormItem className="w-2/3">
+                    <FormLabel>Contact Number</FormLabel>
+                    <FormControl>
+                        <Input placeholder="12345 67890" {...field} disabled={loading} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+            />
+        </div>
          <FormField
           control={form.control}
           name="address"
@@ -150,29 +183,6 @@ export function UserForm({ onFormSuccess, user }: UserFormProps) {
               <FormMessage />
             </FormItem>
           )}
-        />
-         <FormField
-            control={form.control}
-            name="country"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Country</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value} disabled={loading}>
-                    <FormControl>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Select a country" />
-                    </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                    {/* In a real app, this would be a dynamic list */}
-                    <SelectItem value="India">India</SelectItem>
-                    <SelectItem value="USA">United States</SelectItem>
-                    <SelectItem value="UK">United Kingdom</SelectItem>
-                    </SelectContent>
-                </Select>
-                <FormMessage />
-                </FormItem>
-            )}
         />
         <FormField
           control={form.control}
