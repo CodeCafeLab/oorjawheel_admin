@@ -21,8 +21,9 @@ export async function login(values: z.infer<typeof loginSchema>) {
     return { success: true, message: 'Login successful!' };
   }
 
+
   if (email !== 'admin@oorja.com' || password !== 'password') {
-      return { success: false, message: 'Invalid email or password.' };
+    return { success: false, message: 'Invalid email or password.' };
   }
   // --- End Mock Logic ---
 
@@ -32,7 +33,7 @@ export async function login(values: z.infer<typeof loginSchema>) {
 
     // Check if user exists
     const [users] = await connection.execute('SELECT * FROM users WHERE email = ?', [email]);
-    
+
     if ((users as any[]).length === 0) {
       connection.release();
       return { success: false, message: 'Invalid email or password.' };
@@ -42,8 +43,8 @@ export async function login(values: z.infer<typeof loginSchema>) {
 
     // Check if user account is locked
     if (user.status === 'locked') {
-        connection.release();
-        return { success: false, message: 'Your account is locked. Please contact support.' };
+      connection.release();
+      return { success: false, message: 'Your account is locked. Please contact support.' };
     }
 
     const passwordMatch = await comparePassword(password, user.password_hash);
@@ -59,8 +60,10 @@ export async function login(values: z.infer<typeof loginSchema>) {
     session.email = user.email;
     session.isLoggedIn = true;
     await session.save();
-    
+
     return { success: true, message: 'Login successful!' };
+
+    redirect('/');
 
   } catch (error) {
     console.error('Database Error:', error);
@@ -71,8 +74,8 @@ export async function login(values: z.infer<typeof loginSchema>) {
 
 
 export async function logout() {
-    const session = await getSession();
-    session.destroy();
-    revalidatePath('/', 'layout');
-    redirect('/login');
+  const session = await getSession();
+  session.destroy();
+  revalidatePath('/', 'layout');
+  redirect('/login');
 }
