@@ -16,6 +16,7 @@ const CategoryFormSchema = z.object({
 // --- Page Actions ---
 
 export async function addPage(values: z.infer<typeof PageFormSchema>) {
+  /*
   try {
     const connection = await pool.getConnection();
     const [result] = await connection.execute(
@@ -29,9 +30,14 @@ export async function addPage(values: z.infer<typeof PageFormSchema>) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to add content.' };
   }
+  */
+  console.log("Mock addPage:", values);
+  revalidatePath('/cms');
+  return { success: true, message: 'Content added successfully (Mock).' };
 }
 
 export async function updatePage(id: string, values: z.infer<typeof PageFormSchema>) {
+  /*
   try {
     const connection = await pool.getConnection();
     await connection.execute(
@@ -45,9 +51,14 @@ export async function updatePage(id: string, values: z.infer<typeof PageFormSche
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to update content.' };
   }
+  */
+  console.log("Mock updatePage:", id, values);
+  revalidatePath('/cms');
+  return { success: true, message: 'Content updated successfully (Mock).' };
 }
 
 export async function deletePage(id: string) {
+  /*
   try {
     const connection = await pool.getConnection();
     await connection.execute('DELETE FROM cms_pages WHERE id = ?', [id]);
@@ -58,12 +69,17 @@ export async function deletePage(id: string) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to delete content.' };
   }
+  */
+  console.log("Mock deletePage:", id);
+  revalidatePath('/cms');
+  return { success: true, message: 'Content deleted successfully (Mock).' };
 }
 
 
 // --- Category Actions ---
 
 export async function addCategory(values: { title: string }) {
+    /*
     try {
       const connection = await pool.getConnection();
       // Check if category exists
@@ -81,4 +97,8 @@ export async function addCategory(values: { title: string }) {
       console.error('Database Error:', error);
       return { success: false, message: 'Failed to add category.' };
     }
+    */
+    console.log("Mock addCategory:", values);
+    revalidatePath('/cms');
+    return { success: true, message: 'Category added successfully (Mock).' };
   }

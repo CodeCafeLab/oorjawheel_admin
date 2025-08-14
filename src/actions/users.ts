@@ -8,6 +8,7 @@ import { revalidatePath } from 'next/cache';
 import { hashPassword } from '@/lib/hash';
 
 export async function addUser(values: z.infer<typeof userFormSchema>) {
+  /*
   const { fullName, email, contactNumber, address, country, password, status = 'active' } = values;
 
   if (!password) {
@@ -48,9 +49,14 @@ export async function addUser(values: z.infer<typeof userFormSchema>) {
     }
     return { success: false, message: 'Failed to add user.' };
   }
+  */
+  console.log("Mock addUser:", values);
+  revalidatePath('/users');
+  return { success: true, message: 'User added successfully (Mock).' };
 }
 
 export async function updateUser(id: string, values: z.infer<typeof userFormSchema>) {
+    /*
     const { fullName, email, contactNumber, address, country, password, status = 'active' } = values;
 
     try {
@@ -78,9 +84,14 @@ export async function updateUser(id: string, values: z.infer<typeof userFormSche
         console.error('Database Error:', error);
         return { success: false, message: 'Failed to update user.' };
     }
+    */
+    console.log("Mock updateUser:", id, values);
+    revalidatePath('/users');
+    return { success: true, message: 'User updated successfully (Mock).' };
 }
 
 export async function deleteUser(id: string) {
+    /*
     try {
         const connection = await pool.getConnection();
         const [result] = await connection.execute('DELETE FROM users WHERE id = ?', [id]);
@@ -97,6 +108,10 @@ export async function deleteUser(id: string) {
         console.error('Database Error:', error);
         return { success: false, message: 'Failed to delete user.' };
     }
+    */
+    console.log("Mock deleteUser:", id);
+    revalidatePath('/users');
+    return { success: true, message: 'User deleted successfully (Mock).' };
 }
 
 export async function fetchUsers() {

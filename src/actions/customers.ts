@@ -9,6 +9,7 @@ import { customerSchema } from '@/app/customers/schema';
 const CustomerFormSchema = customerSchema.omit({ id: true });
 
 export async function addCustomer(values: z.infer<typeof CustomerFormSchema>) {
+  /*
   try {
     const connection = await pool.getConnection();
     // Check if customer exists
@@ -29,9 +30,14 @@ export async function addCustomer(values: z.infer<typeof CustomerFormSchema>) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to add customer.' };
   }
+  */
+  console.log("Mock addCustomer:", values);
+  revalidatePath('/customers');
+  return { success: true, message: 'Customer added successfully (Mock).' };
 }
 
 export async function updateCustomer(id: string, values: z.infer<typeof CustomerFormSchema>) {
+    /*
     try {
       const connection = await pool.getConnection();
       await connection.execute(
@@ -45,9 +51,14 @@ export async function updateCustomer(id: string, values: z.infer<typeof Customer
       console.error('Database Error:', error);
       return { success: false, message: 'Failed to update customer.' };
     }
+    */
+    console.log("Mock updateCustomer:", id, values);
+    revalidatePath('/customers');
+    return { success: true, message: 'Customer updated successfully (Mock).' };
   }
 
 export async function deleteCustomer(id: string) {
+  /*
   try {
     const connection = await pool.getConnection();
     await connection.execute('DELETE FROM customers WHERE id = ?', [id]);
@@ -58,4 +69,8 @@ export async function deleteCustomer(id: string) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to delete customer.' };
   }
+  */
+  console.log("Mock deleteCustomer:", id);
+  revalidatePath('/customers');
+  return { success: true, message: 'Customer deleted successfully (Mock).' };
 }

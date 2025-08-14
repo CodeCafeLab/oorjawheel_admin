@@ -14,6 +14,7 @@ const DeviceMasterFormSchema = deviceMasterSchema.omit({ id: true });
 // --- Device Actions ---
 
 export async function addDevice(values: z.infer<typeof DeviceFormSchema>) {
+  /*
   try {
     const connection = await pool.getConnection();
     const [result] = await connection.execute(
@@ -27,9 +28,14 @@ export async function addDevice(values: z.infer<typeof DeviceFormSchema>) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to add device.' };
   }
+  */
+  console.log("Mock addDevice:", values);
+  revalidatePath('/devices');
+  return { success: true, message: 'Device added successfully (Mock).' };
 }
 
 export async function updateDevice(id: string, values: z.infer<typeof DeviceFormSchema>) {
+  /*
   try {
     const connection = await pool.getConnection();
     await connection.execute(
@@ -43,9 +49,14 @@ export async function updateDevice(id: string, values: z.infer<typeof DeviceForm
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to update device.' };
   }
+  */
+  console.log("Mock updateDevice:", id, values);
+  revalidatePath('/devices');
+  return { success: true, message: 'Device updated successfully (Mock).' };
 }
 
 export async function deleteDevice(id: string) {
+  /*
   try {
     const connection = await pool.getConnection();
     await connection.execute('DELETE FROM devices WHERE id = ?', [id]);
@@ -56,11 +67,16 @@ export async function deleteDevice(id: string) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to delete device.' };
   }
+  */
+  console.log("Mock deleteDevice:", id);
+  revalidatePath('/devices');
+  return { success: true, message: 'Device deleted successfully (Mock).' };
 }
 
 // --- Device Master Actions ---
 
 export async function addDeviceMaster(values: z.infer<typeof DeviceMasterFormSchema>) {
+    /*
   try {
     const connection = await pool.getConnection();
     const [result] = await connection.execute(
@@ -74,9 +90,14 @@ export async function addDeviceMaster(values: z.infer<typeof DeviceMasterFormSch
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to add device type.' };
   }
+  */
+  console.log("Mock addDeviceMaster:", values);
+  revalidatePath('/devices');
+  return { success: true, message: 'Device type added successfully (Mock).' };
 }
 
 export async function updateDeviceMaster(id: string, values: z.infer<typeof DeviceMasterFormSchema>) {
+    /*
     try {
       const connection = await pool.getConnection();
       await connection.execute(
@@ -90,9 +111,14 @@ export async function updateDeviceMaster(id: string, values: z.infer<typeof Devi
       console.error('Database Error:', error);
       return { success: false, message: 'Failed to update device type.' };
     }
+    */
+    console.log("Mock updateDeviceMaster:", id, values);
+    revalidatePath('/devices');
+    return { success: true, message: 'Device type updated successfully (Mock).' };
   }
 
 export async function deleteDeviceMaster(id: string) {
+  /*
   try {
     const connection = await pool.getConnection();
     await connection.execute('DELETE FROM device_masters WHERE id = ?', [id]);
@@ -103,6 +129,10 @@ export async function deleteDeviceMaster(id: string) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to delete device type.' };
   }
+  */
+  console.log("Mock deleteDeviceMaster:", id);
+  revalidatePath('/devices');
+  return { success: true, message: 'Device type deleted successfully (Mock).' };
 }
 
 export async function fetchDevices() {

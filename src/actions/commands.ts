@@ -10,6 +10,7 @@ const CommandFormSchema = commandSchema.omit({ id: true });
 
 
 export async function addCommand(values: z.infer<typeof CommandFormSchema>) {
+  /*
   try {
     const connection = await pool.getConnection();
     const [result] = await connection.execute(
@@ -23,9 +24,14 @@ export async function addCommand(values: z.infer<typeof CommandFormSchema>) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to add command.' };
   }
+  */
+  console.log("Mock addCommand:", values);
+  revalidatePath('/commands');
+  return { success: true, message: 'Command added successfully (Mock).' };
 }
 
 export async function updateCommand(id: string, values: z.infer<typeof CommandFormSchema>) {
+  /*
   try {
     const connection = await pool.getConnection();
     await connection.execute(
@@ -39,9 +45,14 @@ export async function updateCommand(id: string, values: z.infer<typeof CommandFo
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to update command.' };
   }
+  */
+  console.log("Mock updateCommand:", id, values);
+  revalidatePath('/commands');
+  return { success: true, message: 'Command updated successfully (Mock).' };
 }
 
 export async function deleteCommand(id: string) {
+  /*
   try {
     const connection = await pool.getConnection();
     await connection.execute('DELETE FROM commands WHERE id = ?', [id]);
@@ -52,4 +63,8 @@ export async function deleteCommand(id: string) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to delete command.' };
   }
+  */
+  console.log("Mock deleteCommand:", id);
+  revalidatePath('/commands');
+  return { success: true, message: 'Command deleted successfully (Mock).' };
 }
