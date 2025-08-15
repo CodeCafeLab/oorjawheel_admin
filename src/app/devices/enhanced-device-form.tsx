@@ -20,7 +20,7 @@ import {
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { addDevice, updateDevice } from "@/actions/devices-final";
+import { addDevice, updateDevice } from "@/actions/devices";
 import { useToast } from "@/hooks/use-toast";
 
 interface EnhancedDeviceFormProps {
@@ -37,21 +37,21 @@ export default function EnhancedDeviceForm({
   onCancel,
 }: EnhancedDeviceFormProps) {
   const [formData, setFormData] = useState({
-    deviceName: device?.deviceName || "",
-    macAddress: device?.macAddress || "",
-    deviceType: device?.deviceType || "",
-    userId: device?.userId || "",
+    deviceName: device?.device_name || device?.deviceName || "",
+    macAddress: device?.mac_address || device?.macAddress || "",
+    deviceType: device?.device_type || device?.deviceType || "",
+    userId: device?.user_id || device?.userId || "",
     passcode: device?.passcode || "",
     status: device?.status || "never_used",
-    btName: device?.btName || "",
-    warrantyStart: device?.warrantyStart || "",
-    defaultCmd: device?.defaultCmd || "",
-    firstConnectedAt: device?.firstConnectedAt || "",
+    btName: device?.bt_name || device?.btName || "",
+    warrantyStart: device?.warranty_start || device?.warrantyStart || "",
+    defaultCmd: device?.default_cmd || device?.defaultCmd || "",
+    firstConnectedAt: device?.first_connected_at || device?.firstConnectedAt || "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(
-    device?.warrantyStart ? new Date(device.warrantyStart) : undefined
+    device?.warranty_start || device?.warrantyStart ? new Date(device.warranty_start || device.warrantyStart) : undefined
   );
   const { toast } = useToast();
 
@@ -283,7 +283,7 @@ export default function EnhancedDeviceForm({
             <Input
               id="firstConnectedAt"
               type="datetime-local"
-              value={formData.firstConnectedAt}
+              value={formData.firstConnectedAt ? format(new Date(formData.firstConnectedAt), "yyyy-MM-dd'T'HH:mm") : ""}
               onChange={(e) => handleChange("firstConnectedAt", e.target.value)}
             />
           </div>

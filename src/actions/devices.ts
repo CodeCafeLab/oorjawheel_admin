@@ -13,9 +13,9 @@ const DeviceFormSchema = z.object({
     passcode: z.string().min(6, "Passcode must be at least 6 characters"),
     status: z.enum(["never_used", "active", "disabled"]),
     btName: z.string().optional(),
-    warrantyStart: z.string().optional(),
+    warrantyStart: z.string().optional().nullable(),
     defaultCmd: z.string().optional(),
-    firstConnectedAt: z.string().optional()
+    firstConnectedAt: z.string().optional().nullable()
 });
 
 const DeviceMasterFormSchema = z.object({
@@ -209,6 +209,7 @@ export async function fetchDevices(filters?: { status?: string; deviceType?: str
   }
 
   export async function bulkDeleteDevices(ids: string[]) {
+    if (ids.length === 0) return { success: true, message: 'No devices selected.' };
     try {
       const connection = await pool.getConnection();
       const placeholders = ids.map(() => '?').join(',');
@@ -226,6 +227,7 @@ export async function fetchDevices(filters?: { status?: string; deviceType?: str
   }
   
   export async function bulkDeleteDeviceMasters(ids: string[]) {
+    if (ids.length === 0) return { success: true, message: 'No device types selected.' };
     try {
       const connection = await pool.getConnection();
       
