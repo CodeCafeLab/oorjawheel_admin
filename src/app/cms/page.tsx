@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { columns } from './columns';
 import { DataTable } from './data-table';
-import { pageSchema, Page } from './schema';
+import { Page } from './schema';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import {
@@ -30,37 +30,7 @@ import Image from 'next/image';
 import * as React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { addCategory, addPage, deletePage, updatePage } from '@/actions/cms';
-import pool from '@/lib/db';
-
-
-async function getPages(): Promise<Page[]> {
-    // This is now dynamic
-    try {
-        const connection = await pool.getConnection();
-        const [rows] = await connection.execute('SELECT id, title, `order`, is_published FROM pages ORDER BY `order` ASC');
-        connection.release();
-        // The UI expects a schema that doesn't fully match the DB. I'll adapt the data.
-        const pages = (rows as any[]).map(row => ({
-            id: row.id.toString(),
-            title: row.title,
-            category: 'General', // Mock category as it's not in the `pages` table
-            command: 'N/A', // Mock command
-            description: `Page with order ${row.order}`, // Mock description
-            image: `https://placehold.co/100x100.png?text=${row.title.charAt(0)}`,
-        }));
-        return z.array(pageSchema).parse(pages);
-    } catch (error) {
-        console.error("Failed to fetch pages:", error);
-        return [];
-    }
-}
-
-async function getCategories(): Promise<string[]> {
-    // This would fetch from a `cms_categories` table.
-    // Since there isn't one, we'll return a mock array.
-    return ['Special Modes', 'Ambiance', 'Wellness', 'General'];
-}
+import { addCategory, addPage, deletePage, updatePage, getPages, getCategories } from '@/actions/cms';
 
 
 export default function CmsPage() {
@@ -197,6 +167,7 @@ export default function CmsPage() {
             </Card>
         </TabsContent>
         <TabsContent value="app">
+           {pages.length > 0 ? (
             <Card>
               <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div>
@@ -289,6 +260,22 @@ export default function CmsPage() {
                   />
               </CardContent>
             </Card>
+           ) : (
+             <Card className="flex flex-col items-center justify-center py-20">
+                 <CardHeader>
+                     <CardTitle className="text-xl font-headline">No App Content Found</CardTitle>
+                     <CardDescription>
+                         Get started by adding your first piece of app content.
+                     </CardDescription>
+                 </CardHeader>
+                 <CardContent>
+                     <Button size="lg" onClick={() => { setSelectedPage(null); setContentSheetOpen(true); }}>
+                         <PlusCircle className="mr-2 h-4 w-4" />
+                         Add Your First Content
+                     </Button>
+                 </CardContent>
+             </Card>
+           )}
         </TabsContent>
       </Tabs>
     </div>

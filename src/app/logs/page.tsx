@@ -5,7 +5,7 @@ import { z } from 'zod';
 import * as React from 'react';
 import { commandColumns, eventColumns } from './columns';
 import { DataTable } from './data-table';
-import { commandLogSchema, deviceEventSchema, CommandLog, DeviceEvent } from './schema';
+import { CommandLog, DeviceEvent } from './schema';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import pool from '@/lib/db';
@@ -16,10 +16,10 @@ async function getCommandLogs(): Promise<CommandLog[]> {
     const [rows] = await connection.execute(`
         SELECT 
             cl.id, 
-            d.deviceName as device, 
+            d.device_name as device, 
             u.fullName as user, 
             cl.command, 
-            cl.sent_at as sentAt, 
+            cl.sent_at, 
             cl.result 
         FROM command_logs cl
         LEFT JOIN devices d ON cl.device_id = d.id
@@ -29,10 +29,14 @@ async function getCommandLogs(): Promise<CommandLog[]> {
     connection.release();
     
     const logs = (rows as any[]).map(r => ({
-        ...r,
         id: r.id.toString(),
-        sentAt: new Date(r.sentAt).toISOString(),
+        device: r.device,
+        user: r.user,
+        command: r.command,
+        sentAt: new Date(r.sent_at).toISOString(),
+        result: r.result,
     }));
+
     return z.array(commandLogSchema.partial()).parse(logs);
   } catch (e) {
     console.error("Failed to fetch command logs", e);
@@ -46,7 +50,7 @@ async function getDeviceEvents(): Promise<DeviceEvent[]> {
       const [rows] = await connection.execute(`
         SELECT 
             de.id,
-            d.deviceName as device,
+            d.device_name as device,
             de.event,
             de.timestamp
         FROM device_events de
@@ -55,8 +59,9 @@ async function getDeviceEvents(): Promise<DeviceEvent[]> {
       `);
       connection.release();
       const events = (rows as any[]).map(r => ({
-          ...r,
           id: r.id.toString(),
+          device: r.device,
+          event: r.event,
           timestamp: new Date(r.timestamp).toISOString(),
       }));
       return z.array(deviceEventSchema.partial()).parse(events);

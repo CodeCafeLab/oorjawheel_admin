@@ -1,10 +1,9 @@
 
 "use client"
 
-import { z } from 'zod';
 import { columns } from './columns';
 import { DataTable } from './data-table';
-import { customerSchema, Customer } from './schema';
+import { Customer } from './schema';
 import {
   Sheet,
   SheetContent,
@@ -18,45 +17,10 @@ import { PlusCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as React from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { deleteCustomer } from '@/actions/customers';
+import { deleteCustomer, fetchCustomers } from '@/actions/customers';
 import { CustomerForm } from './customer-form';
-import pool from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-
-async function getCustomers(): Promise<Customer[]> {
-    try {
-        const connection = await pool.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT 
-                u.id, 
-                u.fullName, 
-                u.email, 
-                u.status,
-                COUNT(ud.device_id) as orders,
-                COALESCE(SUM(p.amount), 0) as totalSpent
-            FROM users u
-            LEFT JOIN user_devices ud ON u.id = ud.user_id
-            LEFT JOIN payments p ON u.id = p.user_id 
-            GROUP BY u.id
-        `);
-        connection.release();
-
-        const customers = (rows as any[]).map(user => ({
-            id: user.id.toString(),
-            name: user.fullName || 'N/A',
-            email: user.email,
-            totalSpent: parseFloat(user.totalSpent),
-            orders: user.orders,
-            status: user.status === 'locked' ? 'inactive' : 'active',
-        }));
-
-        return z.array(customerSchema).parse(customers);
-    } catch (error) {
-        console.error("Failed to fetch customers:", error);
-        return [];
-    }
-}
 
 export default function CustomersPage() {
   const [customers, setCustomers] = React.useState<Customer[]>([]);
@@ -65,7 +29,7 @@ export default function CustomersPage() {
   const { toast } = useToast();
 
   const refreshData = () => {
-    getCustomers().then(setCustomers);
+    fetchCustomers().then(setCustomers);
   };
 
   React.useEffect(() => {

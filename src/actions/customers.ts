@@ -4,16 +4,43 @@
 import pool from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { customerSchema } from '@/app/customers/schema';
-
-// The schema has a `users` table, not a dedicated `customers` table.
-// These actions should operate on the `users` table.
-// I will adapt them to use the `users` table structure.
+import { customerSchema, Customer } from '@/app/customers/schema';
 
 const CustomerFormSchema = customerSchema.omit({ id: true });
 
-// Note: totalSpent and orders are not in the `users` table. They would need to be calculated.
-// For now, I will add/update the core user info.
+export async function fetchCustomers(): Promise<Customer[]> {
+    try {
+        const connection = await pool.getConnection();
+        const [rows] = await connection.execute(`
+            SELECT 
+                u.id, 
+                u.fullName as name, 
+                u.email, 
+                u.status,
+                0 as totalSpent,
+                0 as orders
+            FROM users u
+            WHERE u.id IN (SELECT DISTINCT user_id FROM user_devices)
+            GROUP BY u.id
+        `);
+        connection.release();
+
+        const customers = (rows as any[]).map(user => ({
+            id: user.id.toString(),
+            name: user.name || 'N/A',
+            email: user.email,
+            totalSpent: parseFloat(user.totalSpent || 0),
+            orders: parseInt(user.orders || 0),
+            status: user.status === 'locked' ? 'inactive' : 'active',
+        }));
+
+        return z.array(customerSchema).parse(customers);
+    } catch (error) {
+        console.error("Failed to fetch customers:", error);
+        return [];
+    }
+}
+
 
 export async function addCustomer(values: z.infer<typeof CustomerFormSchema>) {
   try {
@@ -25,7 +52,6 @@ export async function addCustomer(values: z.infer<typeof CustomerFormSchema>) {
       return { success: false, message: 'A user with this email already exists.' };
     }
     
-    // The `users` table expects a password. We'll generate a random one for now.
     const tempPassword = Math.random().toString(36).slice(-8);
     const { hashPassword } = await import('@/lib/hash');
     const hashedPassword = await hashPassword(tempPassword);

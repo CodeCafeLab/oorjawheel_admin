@@ -16,14 +16,13 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { UserForm } from './user-form';
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export function UsersClient({ initialUsers, onAddUser }: { initialUsers: User[], onAddUser?: () => void }) {
+export function UsersClient({ initialUsers, onDataRefresh }: { initialUsers: User[], onDataRefresh: () => void }) {
     const [users, setUsers] = React.useState<User[]>(initialUsers);
     const [open, setOpen] = React.useState(false);
     const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
-    const router = useRouter();
 
     React.useEffect(() => {
         setUsers(initialUsers);
@@ -32,14 +31,11 @@ export function UsersClient({ initialUsers, onAddUser }: { initialUsers: User[],
     const handleFormSuccess = () => {
       setOpen(false)
       setSelectedUser(null)
-      router.refresh();
+      onDataRefresh();
     }
 
     const handleAddClick = () => {
         setSelectedUser(null);
-        if (onAddUser) {
-            onAddUser()
-        }
         setOpen(true);
     }
 
@@ -65,9 +61,18 @@ export function UsersClient({ initialUsers, onAddUser }: { initialUsers: User[],
       {users.length > 0 ? (
         <DataTable columns={columns(handleEditClick)} data={users} />
       ) : (
-        <div className="text-center py-10">
-          <p className="text-muted-foreground">No users found.</p>
-        </div>
+        <Card className="text-center py-20">
+            <CardHeader>
+                <CardTitle className="text-2xl font-headline">No Users Found</CardTitle>
+                <CardDescription>Get started by creating the first user account.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button size="lg" onClick={handleAddClick}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Your First User
+                </Button>
+            </CardContent>
+        </Card>
       )}
 
       <Sheet open={open} onOpenChange={(isOpen) => {
