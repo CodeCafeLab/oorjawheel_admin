@@ -6,7 +6,7 @@ import { userFormSchema } from './schemas';
 import pool from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { hashPassword } from '@/lib/hash';
-import { User } from '@/app/users/schema';
+import { User, userSchema } from '@/app/users/schema';
 
 export async function addUser(values: z.infer<typeof userFormSchema>) {
   const { fullName, email, contactNumber, address, country, password, status = 'active' } = values;
@@ -90,27 +90,26 @@ export async function fetchUsers(): Promise<User[]> {
   try {
     const connection = await pool.getConnection();
 
-    const [rows] = await connection.execute(
-      `SELECT id, fullName, email, contactNumber, address, country, status, first_login_at AS firstLoginAt 
-       FROM users`
-    );
+    const [rows] = await connection.execute(`
+        SELECT 
+            u.id, u.fullName, u.email, u.contactNumber, u.address, u.country, u.status, u.first_login_at AS firstLoginAt,
+            GROUP_CONCAT(ud.device_id) as devicesAssigned
+        FROM users u
+        LEFT JOIN user_devices ud ON u.id = ud.user_id
+        GROUP BY u.id
+    `);
 
     connection.release();
     
-    // Fetch assigned devices for each user
-    const users = rows as any[];
-    for (const user of users) {
-        const [devices] = await connection.execute(
-            'SELECT device_id FROM user_devices WHERE user_id = ?',
-            [user.id]
-        );
-        user.devicesAssigned = (devices as any[]).map(d => `DeviceID-${d.device_id}`);
-    }
+    const users = (rows as any[]).map(user => ({
+        ...user,
+        devicesAssigned: user.devicesAssigned ? user.devicesAssigned.split(',').map((d:string) => `DeviceID-${d}`) : [],
+    }));
 
     return z.array(userSchema).parse(users);
 
   } catch (error) {
-    console.error('Database Error:', error);
+    console.error('Database Error fetching users:', error);
     return [];
   }
 }
