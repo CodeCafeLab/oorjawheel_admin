@@ -53,10 +53,17 @@ export default function DevicesPage() {
                 fetchDevices(),
                 fetchDeviceMasters()
             ]);
-            setDevices(z.array(deviceSchema.partial()).parse(devicesData));
-            setDeviceMasters(z.array(deviceMasterSchema).parse(mastersData));
+            
+            const parsedDevices = z.array(deviceSchema).parse(devicesData.map(d => ({...d, id: d.id.toString() })));
+            const parsedMasters = z.array(deviceMasterSchema).parse(mastersData.map(m => ({...m, id: m.id.toString() })));
+
+            setDevices(parsedDevices);
+            setDeviceMasters(parsedMasters);
         } catch (error) {
             console.error('Data validation/fetching error:', error);
+            if (error instanceof z.ZodError) {
+                console.error(error.issues);
+            }
             toast({
                 variant: 'destructive',
                 title: 'Error',

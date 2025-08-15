@@ -136,14 +136,28 @@ export async function updateDeviceMaster(id: string, values: z.infer<typeof Devi
 
 export async function deleteDeviceMaster(id: string) {
     try {
-      const connection = await pool.getConnection();
-      await connection.execute('DELETE FROM device_masters WHERE id = ?', [id]);
-      connection.release();
-      revalidatePath('/devices');
-      return { success: true, message: 'Device type deleted successfully.' };
+        const connection = await pool.getConnection();
+
+        const [master] = await connection.execute('SELECT deviceType FROM device_masters WHERE id = ?', [id]);
+        if (!Array.isArray(master) || master.length === 0) {
+            connection.release();
+            return { success: false, message: "Device type not found." };
+        }
+        const deviceType = (master[0] as any).deviceType;
+
+        const [devices] = await connection.execute('SELECT id FROM devices WHERE device_type = ?', [deviceType]);
+        if (Array.isArray(devices) && devices.length > 0) {
+            connection.release();
+            return { success: false, message: `Cannot delete. ${devices.length} device(s) are using this type.` };
+        }
+
+        await connection.execute('DELETE FROM device_masters WHERE id = ?', [id]);
+        connection.release();
+        revalidatePath('/devices');
+        return { success: true, message: 'Device type deleted successfully.' };
     } catch (error) {
-      console.error('Database Error:', error);
-      return { success: false, message: 'Failed to delete device type.' };
+        console.error('Database Error:', error);
+        return { success: false, message: 'Failed to delete device type.' };
     }
 }
 
