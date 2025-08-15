@@ -1,3 +1,4 @@
+
 import { z } from "zod"
 
 export const userSchema = z.object({
@@ -8,8 +9,8 @@ export const userSchema = z.object({
   address: z.string().nullable().default(''),
   country: z.string().nullable().default(''),
   status: z.enum(["active", "locked"]),
-  firstLoginAt: z.string().nullable(),
-  devicesAssigned: z.array(z.string()),
+  firstLoginAt: z.string().nullable().optional(),
+  devicesAssigned: z.array(z.string()).optional().default([]),
 })
 
 export type User = z.infer<typeof userSchema>

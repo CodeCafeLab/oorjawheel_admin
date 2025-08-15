@@ -20,17 +20,29 @@ import * as React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { deleteCustomer } from '@/actions/customers';
 import { CustomerForm } from './customer-form';
+import pool from '@/lib/db';
 
 async function getCustomers(): Promise<Customer[]> {
-    // This is a placeholder as the schema doesn't show a `customers` table.
-    // In a real application, you would fetch from `users` or a dedicated `customers` table.
-    const data = [
-        { id: '1', name: 'Aarav Sharma', email: 'aarav.sharma@example.com', totalSpent: 5500, orders: 2, status: 'active' },
-        { id: '2', name: 'Diya Patel', email: 'diya.patel@example.com', totalSpent: 12000, orders: 5, status: 'active' },
-        { id: '3', name: 'Rohan Mehta', email: 'rohan.mehta@example.com', totalSpent: 2500, orders: 1, status: 'inactive' },
-        { id: '4', name: 'Priya Singh', email: 'priya.singh@example.com', totalSpent: 8900, orders: 3, status: 'active' },
-    ];
-    return z.array(customerSchema).parse(data);
+    try {
+        const connection = await pool.getConnection();
+        // Fetching from `users` table as there's no `customers` table
+        const [rows] = await connection.execute('SELECT id, fullName, email, status FROM users');
+        connection.release();
+
+        const customers = (rows as any[]).map(user => ({
+            id: user.id.toString(),
+            name: user.fullName || 'N/A',
+            email: user.email,
+            totalSpent: 0, // This data is not in the `users` table
+            orders: 0,     // This data is not in the `users` table
+            status: user.status === 'locked' ? 'inactive' : 'active',
+        }));
+
+        return z.array(customerSchema).parse(customers);
+    } catch (error) {
+        console.error("Failed to fetch customers:", error);
+        return [];
+    }
 }
 
 export default function CustomersPage() {
@@ -109,7 +121,7 @@ export default function CustomersPage() {
             </SheetContent>
         </Sheet>
       </div>
-      <DataTable columns={columns(handleEdit, handleDelete)} data={customers} onDelete={handleDelete} onDeleteSelected={handleDeleteSelected} />
+      <DataTable columns={columns(handleEdit, handleDelete)} data={customers} onDelete={handleDelete} />
     </div>
   );
 }

@@ -31,23 +31,35 @@ import * as React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { addCategory, addPage, deletePage, updatePage } from '@/actions/cms';
+import pool from '@/lib/db';
 
 
 async function getPages(): Promise<Page[]> {
-    // This would fetch from the `pages` table in your DB.
-    // MOCK DATA for now
-    const data = [
-        { id: '1', category: 'Special Modes', image: 'https://placehold.co/100x100.png', title: 'Party Mode', command: 'L255,0,255', description: 'Cycles through a vibrant color palette.' },
-        { id: '2', category: 'Ambiance', image: 'https://placehold.co/100x100.png', title: 'Reading Light', command: 'L255,240,220', description: 'A soft, warm light for reading.' },
-        { id: '3', category: 'Special Modes', image: 'https://placehold.co/100x100.png', title: 'Focus Mode', command: 'L200,220,255', description: 'A cool, blueish light to enhance focus.' },
-    ];
-    return z.array(pageSchema).parse(data);
+    // This is now dynamic
+    try {
+        const connection = await pool.getConnection();
+        const [rows] = await connection.execute('SELECT id, title, `order`, is_published FROM pages ORDER BY `order` ASC');
+        connection.release();
+        // The UI expects a schema that doesn't fully match the DB. I'll adapt the data.
+        const pages = (rows as any[]).map(row => ({
+            id: row.id.toString(),
+            title: row.title,
+            category: 'General', // Mock category as it's not in the `pages` table
+            command: 'N/A', // Mock command
+            description: `Page with order ${row.order}`, // Mock description
+            image: `https://placehold.co/100x100.png?text=${row.title.charAt(0)}`,
+        }));
+        return z.array(pageSchema).parse(pages);
+    } catch (error) {
+        console.error("Failed to fetch pages:", error);
+        return [];
+    }
 }
 
 async function getCategories(): Promise<string[]> {
     // This would fetch from a `cms_categories` table.
-    // MOCK DATA for now
-    return ['Special Modes', 'Ambiance', 'Wellness'];
+    // Since there isn't one, we'll return a mock array.
+    return ['Special Modes', 'Ambiance', 'Wellness', 'General'];
 }
 
 
@@ -274,7 +286,6 @@ export default function CmsPage() {
                     data={pages} 
                     categories={categories}
                     onDelete={handleDelete}
-                    onDeleteSelected={handleDeleteSelected}
                   />
               </CardContent>
             </Card>

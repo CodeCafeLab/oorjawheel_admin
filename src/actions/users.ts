@@ -9,7 +9,6 @@ import { hashPassword } from '@/lib/hash';
 import { User } from '@/app/users/schema';
 
 export async function addUser(values: z.infer<typeof userFormSchema>) {
-  
   const { fullName, email, contactNumber, address, country, password, status = 'active' } = values;
 
   if (!password) {
@@ -19,7 +18,6 @@ export async function addUser(values: z.infer<typeof userFormSchema>) {
   try {
     const connection = await pool.getConnection();
 
-    // Check if user exists
     const [existing] = await connection.execute('SELECT email FROM users WHERE email = ?', [email]);
     if ((existing as any[]).length > 0) {
       connection.release();
@@ -28,10 +26,8 @@ export async function addUser(values: z.infer<typeof userFormSchema>) {
 
     const hashedPassword = await hashPassword(password);
     
-    // Note: You might need to alter your `users` table to include the new columns
-    // ALTER TABLE users ADD COLUMN fullName VARCHAR(255), ADD COLUMN contactNumber VARCHAR(255), ADD COLUMN address TEXT, ADD COLUMN country VARCHAR(255);
     const [result] = await connection.execute(
-      'INSERT INTO users (fullName, email, contactNumber, address, country, status, password_hash) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO users (fullName, email, contactNumber, address, country, status, password_hash, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())',
       [fullName, email, contactNumber, address, country, status, hashedPassword]
     );
     connection.release();
@@ -41,19 +37,11 @@ export async function addUser(values: z.infer<typeof userFormSchema>) {
     return { success: true, message: 'User added successfully.' };
   } catch (error) {
     console.error('Database Error:', error);
-    if ((error as any).code === 'ER_NO_SUCH_TABLE') {
-        return { success: false, message: 'Database table not found. Please run migrations.' };
-    }
-    // Handle missing columns error
-    if ((error as any).code === 'ER_BAD_FIELD_ERROR') {
-        return { success: false, message: 'Database schema mismatch. Please alter your users table to include the new fields.' };
-    }
     return { success: false, message: 'Failed to add user.' };
   }
 }
 
 export async function updateUser(id: string, values: z.infer<typeof userFormSchema>) {
-    
     const { fullName, email, contactNumber, address, country, password, status = 'active' } = values;
 
     try {
@@ -84,15 +72,10 @@ export async function updateUser(id: string, values: z.infer<typeof userFormSche
 }
 
 export async function deleteUser(id: string) {
-    
     try {
         const connection = await pool.getConnection();
-        const [result] = await connection.execute('DELETE FROM users WHERE id = ?', [id]);
+        await connection.execute('DELETE FROM users WHERE id = ?', [id]);
         connection.release();
-
-        if ((result as any).affectedRows === 0) {
-            return { success: false, message: 'User not found.' };
-        }
 
         revalidatePath('/users');
         return { success: true, message: 'User deleted successfully.' };
@@ -104,7 +87,6 @@ export async function deleteUser(id: string) {
 }
 
 export async function fetchUsers(): Promise<User[]> {
-  
   try {
     const connection = await pool.getConnection();
 
@@ -115,24 +97,17 @@ export async function fetchUsers(): Promise<User[]> {
 
     connection.release();
     
-    const users = z.array(userSchema.partial()).parse(rows);
+    // Fetch assigned devices for each user
+    const users = rows as any[];
+    for (const user of users) {
+        const [devices] = await connection.execute(
+            'SELECT device_id FROM user_devices WHERE user_id = ?',
+            [user.id]
+        );
+        user.devicesAssigned = (devices as any[]).map(d => `DeviceID-${d.device_id}`);
+    }
 
-    // In a real app, you'd join with a user_devices table
-    return users.map(u => ({
-        ...{
-            id: u.id || 0,
-            fullName: u.fullName || '',
-            email: u.email || '',
-            contactNumber: u.contactNumber || '',
-            address: u.address || '',
-            country: u.country || '',
-            status: u.status || 'locked',
-            firstLoginAt: u.firstLoginAt || null,
-            devicesAssigned: [],
-        },
-        ...u,
-        devicesAssigned: u.id ? [`OorjaWheel-${u.id}A`, `OorjaWheel-${u.id}B`] : [] // Mocked device assignment
-    }));
+    return z.array(userSchema).parse(users);
 
   } catch (error) {
     console.error('Database Error:', error);

@@ -1,34 +1,61 @@
+
+'use client';
+
 import { z } from 'zod';
+import * as React from 'react';
 import { commandColumns, eventColumns } from './columns';
 import { DataTable } from './data-table';
-import { commandLogSchema, deviceEventSchema } from './schema';
+import { commandLogSchema, deviceEventSchema, CommandLog, DeviceEvent } from './schema';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import pool from '@/lib/db';
 
-// Mock data fetching
-async function getCommandLogs() {
-  const data = [
-    { id: 'CMD001', device: 'OorjaWheel-A1B2', user: 'super.admin@oorja.com', command: 'S20', sentAt: '2024-07-21T10:00:00Z', result: 'OK' },
-    { id: 'CMD002', device: 'OorjaWheel-F3G4', user: 'operator1@oorja.com', command: 'B80', sentAt: '2024-07-21T10:01:00Z', result: 'OK' },
-    { id: 'CMD003', device: 'OorjaWheel-K7L8', user: 'operator2@oorja.com', command: 'L255,0,0', sentAt: '2024-07-21T10:02:00Z', result: 'ERR:501' },
-    { id: 'CMD004', device: 'OorjaWheel-A1B2', user: 'super.admin@oorja.com', command: 'S10', sentAt: '2024-07-21T10:05:00Z', result: 'OK' },
-  ];
-  return z.array(commandLogSchema).parse(data);
+async function getCommandLogs(): Promise<CommandLog[]> {
+  try {
+    const connection = await pool.getConnection();
+    const [rows] = await connection.execute('SELECT * FROM command_logs');
+    connection.release();
+    // Assuming command_logs table has columns that match CommandLog schema
+    // This will need adjustment if table columns are different.
+    // E.g., user_id instead of user, device_id instead of device
+    const logs = (rows as any[]).map(r => ({
+        ...r,
+        id: r.id.toString(),
+        sentAt: new Date(r.sent_at).toISOString(),
+    }));
+    return z.array(commandLogSchema.partial()).parse(logs);
+  } catch (e) {
+    console.error("Failed to fetch command logs", e);
+    return [];
+  }
 }
 
-async function getDeviceEvents() {
-    const data = [
-      { id: 'EVT001', device: 'OorjaWheel-A1B2', event: 'connect', timestamp: '2024-07-21T09:59:00Z' },
-      { id: 'EVT002', device: 'OorjaWheel-F3G4', event: 'connect', timestamp: '2024-07-21T10:00:30Z' },
-      { id: 'EVT003', device: 'OorjaWheel-A1B2', event: 'disconnect', timestamp: '2024-07-21T10:10:00Z' },
-      { id: 'EVT004', device: 'OorjaWheel-Z9Y8', event: 'scan_fail', timestamp: '2024-07-21T10:11:00Z' },
-    ];
-    return z.array(deviceEventSchema).parse(data);
+async function getDeviceEvents(): Promise<DeviceEvent[]> {
+    try {
+      const connection = await pool.getConnection();
+      const [rows] = await connection.execute('SELECT * FROM device_events');
+      connection.release();
+      const events = (rows as any[]).map(r => ({
+          ...r,
+          id: r.id.toString(),
+          device: `DeviceID-${r.device_id}`,
+          timestamp: new Date(r.timestamp).toISOString(),
+      }));
+      return z.array(deviceEventSchema.partial()).parse(events);
+    } catch(e) {
+        console.error("Failed to fetch device events", e);
+        return [];
+    }
   }
 
-export default async function LogsPage() {
-  const commandLogs = await getCommandLogs();
-  const deviceEvents = await getDeviceEvents();
+export default function LogsPage() {
+  const [commandLogs, setCommandLogs] = React.useState<CommandLog[]>([]);
+  const [deviceEvents, setDeviceEvents] = React.useState<DeviceEvent[]>([]);
+
+  React.useEffect(() => {
+    getCommandLogs().then(setCommandLogs);
+    getDeviceEvents().then(setDeviceEvents);
+  }, []);
 
   return (
     <div className="space-y-6">

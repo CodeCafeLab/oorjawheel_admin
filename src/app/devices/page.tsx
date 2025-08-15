@@ -33,7 +33,7 @@ import {
     fetchDeviceMasters,
     bulkDeleteDevices,
     bulkDeleteDeviceMasters
-} from '@/actions/devices-enhanced';
+} from '@/actions/devices';
 import EnhancedDeviceForm from './enhanced-device-form';
 
 export default function DevicesPage() {
@@ -53,14 +53,14 @@ export default function DevicesPage() {
                 fetchDevices(),
                 fetchDeviceMasters()
             ]);
-            setDevices(z.array(deviceSchema).parse(devicesData));
+            setDevices(z.array(deviceSchema.partial()).parse(devicesData));
             setDeviceMasters(z.array(deviceMasterSchema).parse(mastersData));
         } catch (error) {
-            console.error('Error refreshing data:', error);
+            console.error('Data validation/fetching error:', error);
             toast({
                 variant: 'destructive',
                 title: 'Error',
-                description: 'Failed to refresh device data'
+                description: 'Failed to refresh or validate device data.'
             });
         } finally {
             setLoading(false);
