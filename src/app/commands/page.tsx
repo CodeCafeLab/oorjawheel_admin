@@ -36,6 +36,7 @@ import { commandSchema, Command } from "./schema"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/hooks/use-toast"
 import { addCommand, updateCommand, deleteCommand } from "@/actions/commands"
+import pool from "@/lib/db"
   
 async function getCommands(): Promise<Command[]> {
     // This is a placeholder. The DB schema doesn't show a `commands` table.
@@ -222,17 +223,91 @@ export default function CommandManagementPage() {
                     </SheetContent>
                 </Sheet>
             </div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Command List</CardTitle>
-                    <CardDescription>
-                        Search, filter, and manage all available commands.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <DataTable columns={columns(handleEdit, handleDelete)} data={commands} onDelete={handleDelete} onDeleteSelected={handleDeleteSelected} />
-                </CardContent>
-            </Card>
+            {commands.length > 0 ? (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Command List</CardTitle>
+                        <CardDescription>
+                            Search, filter, and manage all available commands.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <DataTable columns={columns(handleEdit, handleDelete)} data={commands} onDelete={handleDelete} onDeleteSelected={handleDeleteSelected} />
+                    </CardContent>
+                </Card>
+            ) : (
+                <Card className="flex flex-col items-center justify-center py-20">
+                     <CardHeader>
+                        <CardTitle className="text-xl font-headline">No Commands Found</CardTitle>
+                        <CardDescription>
+                           Get started by creating the first command definition.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                    <Sheet open={isSheetOpen} onOpenChange={(isOpen) => {
+                    setIsSheetOpen(isOpen);
+                    if (!isOpen) setSelectedCommand(null);
+                }}>
+                    <SheetTrigger asChild>
+                        <Button size="lg" onClick={() => { setSelectedCommand(null); setIsSheetOpen(true); }}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Your First Command
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent className='md:max-w-xl'>
+                        <SheetHeader>
+                            <SheetTitle>{selectedCommand ? 'Edit Command' : 'Create New Command'}</SheetTitle>
+                        </SheetHeader>
+                        <ScrollArea className="h-full">
+                            <form onSubmit={handleSubmit}>
+                            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full px-6 py-4">
+                                <TabsList className="grid w-full grid-cols-2">
+                                    <TabsTrigger value="manual" disabled={!!(selectedCommand && selectedCommand.type !== 'manual')}>Manual</TabsTrigger>
+                                    <TabsTrigger value="auto" disabled={!!(selectedCommand && selectedCommand.type !== 'auto')}>Auto</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="manual">
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="manual-command-type">Type</Label>
+                                            <Select name="manual-command-type" defaultValue={selectedCommand?.type === 'manual' ? selectedCommand.details.type : undefined}>
+                                                <SelectTrigger id="manual-command-type">
+                                                    <SelectValue placeholder="Select command type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="wheel">Wheel</SelectItem>
+                                                    <SelectItem value="sound">Sound</SelectItem>
+                                                    <SelectItem value="light">Light</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="command-string">Command</Label>
+                                            <Input name="command-string" id="command-string" placeholder="e.g., S20" defaultValue={selectedCommand?.type === 'manual' ? selectedCommand.details.command : ''}/>
+                                        </div>
+                                        <Button type="submit">{selectedCommand ? 'Save Changes' : 'Save Manual Command'}</Button>
+                                    </div>
+                                </TabsContent>
+                                <TabsContent value="auto">
+                                    <div className="space-y-4 py-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="auto-command-title">Title</Label>
+                                            <Input name="auto-command-title" id="auto-command-title" placeholder="e.g., Evening Mode" defaultValue={selectedCommand?.type === 'auto' ? selectedCommand.details.title : ''} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="command-json">JSON</Label>
+                                            <Textarea name="command-json" id="command-json" placeholder='{ "light": "on", "speed": "15" }' rows={5} defaultValue={selectedCommand?.type === 'auto' ? JSON.stringify(selectedCommand.details.json, null, 2) : ''}/>
+                                        </div>
+                                        <Button type="submit">{selectedCommand ? 'Save Changes' : 'Save Auto Command'}</Button>
+                                    </div>
+                                </TabsContent>
+                            </Tabs>
+                            </form>
+                        </ScrollArea>
+                    </SheetContent>
+                </Sheet>
+                    </CardContent>
+                </Card>
+            )}
         </div>
     )
 }

@@ -13,15 +13,25 @@ import pool from '@/lib/db';
 async function getCommandLogs(): Promise<CommandLog[]> {
   try {
     const connection = await pool.getConnection();
-    const [rows] = await connection.execute('SELECT * FROM command_logs');
+    const [rows] = await connection.execute(`
+        SELECT 
+            cl.id, 
+            d.deviceName as device, 
+            u.fullName as user, 
+            cl.command, 
+            cl.sent_at as sentAt, 
+            cl.result 
+        FROM command_logs cl
+        LEFT JOIN devices d ON cl.device_id = d.id
+        LEFT JOIN users u ON cl.user_id = u.id
+        ORDER BY cl.sent_at DESC
+    `);
     connection.release();
-    // Assuming command_logs table has columns that match CommandLog schema
-    // This will need adjustment if table columns are different.
-    // E.g., user_id instead of user, device_id instead of device
+    
     const logs = (rows as any[]).map(r => ({
         ...r,
         id: r.id.toString(),
-        sentAt: new Date(r.sent_at).toISOString(),
+        sentAt: new Date(r.sentAt).toISOString(),
     }));
     return z.array(commandLogSchema.partial()).parse(logs);
   } catch (e) {
@@ -33,12 +43,20 @@ async function getCommandLogs(): Promise<CommandLog[]> {
 async function getDeviceEvents(): Promise<DeviceEvent[]> {
     try {
       const connection = await pool.getConnection();
-      const [rows] = await connection.execute('SELECT * FROM device_events');
+      const [rows] = await connection.execute(`
+        SELECT 
+            de.id,
+            d.deviceName as device,
+            de.event,
+            de.timestamp
+        FROM device_events de
+        LEFT JOIN devices d ON de.device_id = d.id
+        ORDER BY de.timestamp DESC
+      `);
       connection.release();
       const events = (rows as any[]).map(r => ({
           ...r,
           id: r.id.toString(),
-          device: `DeviceID-${r.device_id}`,
           timestamp: new Date(r.timestamp).toISOString(),
       }));
       return z.array(deviceEventSchema.partial()).parse(events);

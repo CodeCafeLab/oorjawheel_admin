@@ -21,20 +21,33 @@ import { useToast } from '@/hooks/use-toast';
 import { deleteCustomer } from '@/actions/customers';
 import { CustomerForm } from './customer-form';
 import pool from '@/lib/db';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+
 
 async function getCustomers(): Promise<Customer[]> {
     try {
         const connection = await pool.getConnection();
-        // Fetching from `users` table as there's no `customers` table
-        const [rows] = await connection.execute('SELECT id, fullName, email, status FROM users');
+        const [rows] = await connection.execute(`
+            SELECT 
+                u.id, 
+                u.fullName, 
+                u.email, 
+                u.status,
+                COUNT(ud.device_id) as orders,
+                COALESCE(SUM(p.amount), 0) as totalSpent
+            FROM users u
+            LEFT JOIN user_devices ud ON u.id = ud.user_id
+            LEFT JOIN payments p ON u.id = p.user_id 
+            GROUP BY u.id
+        `);
         connection.release();
 
         const customers = (rows as any[]).map(user => ({
             id: user.id.toString(),
             name: user.fullName || 'N/A',
             email: user.email,
-            totalSpent: 0, // This data is not in the `users` table
-            orders: 0,     // This data is not in the `users` table
+            totalSpent: parseFloat(user.totalSpent),
+            orders: user.orders,
             status: user.status === 'locked' ? 'inactive' : 'active',
         }));
 
@@ -72,13 +85,6 @@ export default function CustomersPage() {
     } else {
       toast({ variant: 'destructive', title: 'Error', description: result.message });
     }
-  }
-
-  const handleDeleteSelected = (ids: string[]) => {
-    Promise.all(ids.map(id => deleteCustomer(id))).then(() => {
-      toast({ title: 'Customers Deleted', description: `${ids.length} customers have been deleted.` });
-      refreshData();
-    });
   }
 
   const handleFormSuccess = () => {
@@ -121,7 +127,24 @@ export default function CustomersPage() {
             </SheetContent>
         </Sheet>
       </div>
-      <DataTable columns={columns(handleEdit, handleDelete)} data={customers} onDelete={handleDelete} />
+      {customers.length > 0 ? (
+        <DataTable columns={columns(handleEdit, handleDelete)} data={customers} onDelete={handleDelete} />
+      ) : (
+        <Card className="flex flex-col items-center justify-center py-20">
+            <CardHeader>
+                <CardTitle className="text-xl font-headline">No Customers Found</CardTitle>
+                <CardDescription>
+                    Get started by adding your first customer.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Button size="lg" onClick={() => { setSelectedCustomer(null); setSheetOpen(true); }}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Your First Customer
+                </Button>
+            </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

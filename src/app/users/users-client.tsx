@@ -11,7 +11,6 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet"
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -20,7 +19,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
+export function UsersClient({ initialUsers, onAddUser }: { initialUsers: User[], onAddUser?: () => void }) {
     const [users, setUsers] = React.useState<User[]>(initialUsers);
     const [open, setOpen] = React.useState(false);
     const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
@@ -33,13 +32,14 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
     const handleFormSuccess = () => {
       setOpen(false)
       setSelectedUser(null)
-      // We need to refresh the data. Next.js router.refresh() is the way to do it.
-      // It re-fetches data on the server for the current route.
       router.refresh();
     }
 
     const handleAddClick = () => {
         setSelectedUser(null);
+        if (onAddUser) {
+            onAddUser()
+        }
         setOpen(true);
     }
 
@@ -62,7 +62,13 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
             Add User
         </Button>
       </div>
-      <DataTable columns={columns(handleEditClick)} data={users} />
+      {users.length > 0 ? (
+        <DataTable columns={columns(handleEditClick)} data={users} />
+      ) : (
+        <div className="text-center py-10">
+          <p className="text-muted-foreground">No users found.</p>
+        </div>
+      )}
 
       <Sheet open={open} onOpenChange={(isOpen) => {
           setOpen(isOpen);

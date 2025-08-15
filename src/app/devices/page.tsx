@@ -143,7 +143,7 @@ export default function DevicesPage() {
         };
 
         const result = selectedMaster
-            ? await updateDeviceMaster(selectedMaster.id, masterData)
+            ? await updateDeviceMaster(selectedMaster.id.toString(), masterData)
             : await addDeviceMaster(masterData);
 
         if (result.success) {
@@ -177,12 +177,8 @@ export default function DevicesPage() {
                 </TabsList>
                 
                 <TabsContent value="master">
-                    <Card>
-                        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                            <div>
-                                <CardTitle>Device Master List</CardTitle>
-                                <CardDescription>Manage device types, services, and firmware.</CardDescription>
-                            </div>
+                    <div className="space-y-4">
+                        <div className="flex justify-end">
                             <Sheet open={isMasterSheetOpen} onOpenChange={(isOpen) => {
                                 setIsMasterSheetOpen(isOpen)
                                 if (!isOpen) setSelectedMaster(null)
@@ -260,36 +256,55 @@ export default function DevicesPage() {
                                     </ScrollArea>
                                 </SheetContent>
                             </Sheet>
-                        </CardHeader>
-                        <CardContent>
-                            <DataTable 
-                                columns={deviceMasterColumns(handleEditMaster, handleDeleteMaster)} 
-                                data={deviceMasters} 
-                                filterColumnId='deviceType' 
-                                filterPlaceholder='Filter by device type...'
-                                onDelete={handleDeleteMaster}
-                                onDeleteSelected={handleBulkDeleteMasters}
-                                exportFileName='device-masters'
-                                filters={[{
-                                    id: 'status',
-                                    title: 'Status',
-                                    options: [
-                                        { value: 'active', label: 'Active' },
-                                        { value: 'inactive', label: 'Inactive' },
-                                    ]
-                                }]}
-                            />
-                        </CardContent>
-                    </Card>
+                        </div>
+                        {deviceMasters.length > 0 ? (
+                             <Card>
+                                <CardHeader>
+                                    <CardTitle>Device Master List</CardTitle>
+                                    <CardDescription>Manage device types, services, and firmware.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <DataTable 
+                                        columns={deviceMasterColumns(handleEditMaster, handleDeleteMaster)} 
+                                        data={deviceMasters} 
+                                        filterColumnId='deviceType' 
+                                        filterPlaceholder='Filter by device type...'
+                                        onDelete={handleDeleteMaster}
+                                        onDeleteSelected={handleBulkDeleteMasters}
+                                        exportFileName='device-masters'
+                                        filters={[{
+                                            id: 'status',
+                                            title: 'Status',
+                                            options: [
+                                                { value: 'active', label: 'Active' },
+                                                { value: 'inactive', label: 'Inactive' },
+                                            ]
+                                        }]}
+                                    />
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            <Card className="flex flex-col items-center justify-center py-20">
+                                <CardHeader>
+                                    <CardTitle className="text-xl font-headline">No Device Types Found</CardTitle>
+                                    <CardDescription>
+                                    Create a device type to get started.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <Button size="lg" onClick={() => { setSelectedMaster(null); setIsMasterSheetOpen(true);}}>
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Add Your First Device Type
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </div>
                 </TabsContent>
                 
                 <TabsContent value="devices">
-                    <Card>
-                        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                            <div>
-                                <CardTitle>All Devices</CardTitle>
-                                <CardDescription>Manage all provisioned devices.</CardDescription>
-                            </div>
+                     <div className="space-y-4">
+                        <div className="flex justify-end">
                             <Sheet open={isSheetOpen} onOpenChange={(isOpen) => {
                                 setIsSheetOpen(isOpen);
                                 if (!isOpen) setSelectedDevice(null);
@@ -316,35 +331,58 @@ export default function DevicesPage() {
                                     </ScrollArea>
                                 </SheetContent>
                             </Sheet>
-                        </CardHeader>
-                        <CardContent>
-                            <DataTable 
-                                columns={columns(handleEditDevice, handleDeleteDevice)} 
-                                data={devices} 
-                                filterColumnId='deviceName' 
-                                filterPlaceholder='Filter by device name...'
-                                onDelete={handleDeleteDevice}
-                                onDeleteSelected={handleBulkDeleteDevices}
-                                exportFileName='devices'
-                                filters={[
-                                    {
-                                        id: 'status',
-                                        title: 'Status',
-                                        options: [
-                                            { value: 'active', label: 'Active' },
-                                            { value: 'never_used', label: 'Never Used' },
-                                            { value: 'disabled', label: 'Disabled' },
-                                        ]
-                                    },
-                                    {
-                                        id: 'deviceType',
-                                        title: 'Type',
-                                        options: deviceMasters.map(dm => ({ value: dm.deviceType, label: dm.deviceType }))
-                                    }
-                                ]}
-                            />
-                        </CardContent>
-                    </Card>
+                        </div>
+                        {devices.length > 0 ? (
+                             <Card>
+                                <CardHeader>
+                                    <CardTitle>All Devices</CardTitle>
+                                    <CardDescription>Manage all provisioned devices.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <DataTable 
+                                        columns={columns(handleEditDevice, handleDeleteDevice)} 
+                                        data={devices} 
+                                        filterColumnId='deviceName' 
+                                        filterPlaceholder='Filter by device name...'
+                                        onDelete={handleDeleteDevice}
+                                        onDeleteSelected={handleBulkDeleteDevices}
+                                        exportFileName='devices'
+                                        filters={[
+                                            {
+                                                id: 'status',
+                                                title: 'Status',
+                                                options: [
+                                                    { value: 'active', label: 'Active' },
+                                                    { value: 'never_used', label: 'Never Used' },
+                                                    { value: 'disabled', label: 'Disabled' },
+                                                ]
+                                            },
+                                            {
+                                                id: 'deviceType',
+                                                title: 'Type',
+                                                options: deviceMasters.map(dm => ({ value: dm.deviceType, label: dm.deviceType }))
+                                            }
+                                        ]}
+                                    />
+                                </CardContent>
+                            </Card>
+                        ) : (
+                             <Card className="flex flex-col items-center justify-center py-20">
+                                <CardHeader>
+                                    <CardTitle className="text-xl font-headline">No Devices Found</CardTitle>
+                                    <CardDescription>
+                                        Get started by adding your first device.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                     <Button size="lg" onClick={() => { setSelectedDevice(null); setIsSheetOpen(true); }}>
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Add Your First Device
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        )}
+                    </div>
                 </TabsContent>
             </Tabs>
         </div>
