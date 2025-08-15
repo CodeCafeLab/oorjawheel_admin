@@ -1,3 +1,4 @@
+
 'use client';
 
 import { z } from 'zod';
@@ -5,7 +6,7 @@ import { columns, deviceMasterColumns } from './columns';
 import { DataTable } from './data-table';
 import { deviceSchema, deviceMasterSchema, Device, DeviceMaster } from './schema';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, RefreshCw } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,8 +31,11 @@ import {
     updateDeviceMaster, 
     deleteDeviceMaster,
     fetchDevices,
-    fetchDeviceMasters
+    fetchDeviceMasters,
+    bulkDeleteDevices,
+    bulkDeleteDeviceMasters
 } from '@/actions/devices-enhanced';
+import EnhancedDeviceForm from './enhanced-device-form';
 
 // Enhanced modal data with proper device types
 const modals = [
@@ -49,9 +53,6 @@ export default function DevicesPage() {
     const [isMasterSheetOpen, setIsMasterSheetOpen] = React.useState(false);
     const [selectedDevice, setSelectedDevice] = React.useState<Device | null>(null);
     const [selectedMaster, setSelectedMaster] = React.useState<DeviceMaster | null>(null);
-    const [selectedModal, setSelectedModal] = React.useState<string>('');
-    const [macAddress, setMacAddress] = React.useState('');
-    const [passcode, setPasscode] = React.useState('Auto-generated');
     const [loading, setLoading] = React.useState(false);
     const { toast } = useToast();
 
@@ -62,8 +63,8 @@ export default function DevicesPage() {
                 fetchDevices(),
                 fetchDeviceMasters()
             ]);
-            setDevices(devicesData);
-            setDeviceMasters(mastersData);
+            setDevices(z.array(deviceSchema).parse(devicesData));
+            setDeviceMasters(z.array(deviceMasterSchema).parse(mastersData));
         } catch (error) {
             console.error('Error refreshing data:', error);
             toast({
@@ -82,8 +83,6 @@ export default function DevicesPage() {
 
     const handleEditDevice = (device: Device) => {
         setSelectedDevice(device);
-        setMacAddress(device.macAddress);
-        setPasscode(device.passcode);
         setIsSheetOpen(true);
     };
 
@@ -112,76 +111,35 @@ export default function DevicesPage() {
         }
     };
 
-    const handleDeleteSelectedDevices = (ids: string[]) => {
-        Promise.all(ids.map(id => deleteDevice(id))).then(() => {
-            toast({ title: 'Devices Deleted', description: `${ids.length} devices have been deleted.` });
-            refreshData();
-        });
-    };
-
-    const handleDeleteSelectedMasters = (ids: string[]) => {
-        Promise.all(ids.map(id => deleteDeviceMaster(id))).then(() => {
-            toast({ title: 'Device Types Deleted', description: `${ids.length} device types have been deleted.` });
-            refreshData();
-        });
-    };
-
-    React.useEffect(() => {
-        if (isSheetOpen) {
-            setMacAddress(selectedDevice?.macAddress || '');
-            setPasscode(selectedDevice?.passcode || 'Auto-generated');
-        } else {
-            setMacAddress('');
-            setPasscode('Auto-generated');
-            setSelectedDevice(null);
-        }
-    }, [isSheetOpen, selectedDevice]);
-
-    React.useEffect(() => {
-        if (!isMasterSheetOpen) {
-            setSelectedMaster(null);
-        }
-    }, [isMasterSheetOpen]);
-
-    React.useEffect(() => {
-        if (macAddress) {
-            const cleanedMac = macAddress.replace(/[^A-Fa-f0-9]/g, '');
-            if (cleanedMac.length >= 6) {
-                setPasscode(cleanedMac.slice(-6).toUpperCase());
-            } else {
-                setPasscode('Invalid MAC');
-            }
-        } else {
-            setPasscode('Auto-generated');
-        }
-    }, [macAddress]);
-
-    const handleDeviceSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        
-        const deviceData = {
-            deviceName: formData.get('device-name') as string,
-            macAddress: formData.get('mac-address') as string,
-            deviceType: formData.get('device-type') as string,
-            userId: (formData.get('user-id') as string) || null,
-            passcode: passcode,
-            status: (formData.get('status') as 'never_used' | 'active' | 'disabled') || (selectedDevice?.status || 'never_used'),
-        };
-
-        const result = selectedDevice 
-            ? await updateDevice(selectedDevice.id, deviceData) 
-            : await addDevice(deviceData);
-
+    const handleBulkDeleteDevices = async (ids: string[]) => {
+        const result = await bulkDeleteDevices(ids);
         if (result.success) {
-            toast({ title: selectedDevice ? 'Device Updated' : 'Device Created', description: result.message });
-            refreshData();
-            setIsSheetOpen(false);
+          toast({ title: 'Devices Deleted', description: result.message });
+          refreshData();
         } else {
-            toast({ variant: 'destructive', title: 'Error', description: result.message });
+          toast({ variant: 'destructive', title: 'Error', description: result.message });
         }
-    };
+      };
+    
+      const handleBulkDeleteMasters = async (ids: string[]) => {
+        const result = await bulkDeleteDeviceMasters(ids);
+        if (result.success) {
+          toast({ title: 'Device Types Deleted', description: result.message });
+          refreshData();
+        } else {
+          toast({ variant: 'destructive', title: 'Error', description: result.message });
+        }
+      };
+      
 
+    const handleFormSuccess = () => {
+        refreshData();
+        setIsSheetOpen(false);
+        setIsMasterSheetOpen(false)
+        setSelectedDevice(null);
+        setSelectedMaster(null);
+    }
+    
     const handleMasterSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -200,8 +158,7 @@ export default function DevicesPage() {
 
         if (result.success) {
             toast({ title: selectedMaster ? 'Device Type Updated' : 'Device Type Created', description: result.message });
-            refreshData();
-            setIsMasterSheetOpen(false);
+            handleFormSuccess();
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.message });
         }
@@ -217,6 +174,10 @@ export default function DevicesPage() {
                         Manage device masters and individual device settings.
                     </p>
                 </div>
+                 <Button onClick={refreshData} disabled={loading} variant="outline">
+                    <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    {loading ? 'Refreshing...' : 'Refresh Data'}
+                </Button>
             </div>
             
             <Tabs defaultValue="devices" className="w-full">
@@ -232,9 +193,12 @@ export default function DevicesPage() {
                                 <CardTitle>Device Master List</CardTitle>
                                 <CardDescription>Manage device types, services, and firmware.</CardDescription>
                             </div>
-                            <Sheet open={isMasterSheetOpen} onOpenChange={setIsMasterSheetOpen}>
+                            <Sheet open={isMasterSheetOpen} onOpenChange={(isOpen) => {
+                                setIsMasterSheetOpen(isOpen)
+                                if (!isOpen) setSelectedMaster(null)
+                            }}>
                                 <SheetTrigger asChild>
-                                    <Button onClick={() => { setSelectedMaster(null); setIsMasterSheetOpen(true); }}>
+                                    <Button>
                                         <PlusCircle className="mr-2 h-4 w-4" />
                                         Add Device Type
                                     </Button>
@@ -314,7 +278,7 @@ export default function DevicesPage() {
                                 filterColumnId='deviceType' 
                                 filterPlaceholder='Filter by device type...'
                                 onDelete={handleDeleteMaster}
-                                onDeleteSelected={handleDeleteSelectedMasters}
+                                onDeleteSelected={handleBulkDeleteMasters}
                                 exportFileName='device-masters'
                                 filters={[{
                                     id: 'status',
@@ -336,9 +300,12 @@ export default function DevicesPage() {
                                 <CardTitle>All Devices</CardTitle>
                                 <CardDescription>Manage all provisioned devices.</CardDescription>
                             </div>
-                            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                            <Sheet open={isSheetOpen} onOpenChange={(isOpen) => {
+                                setIsSheetOpen(isOpen);
+                                if (!isOpen) setSelectedDevice(null);
+                            }}>
                                 <SheetTrigger asChild>
-                                    <Button onClick={() => { setSelectedDevice(null); setIsSheetOpen(true); }}>
+                                    <Button>
                                         <PlusCircle className="mr-2 h-4 w-4" />
                                         Add Device
                                     </Button>
@@ -347,110 +314,15 @@ export default function DevicesPage() {
                                     <SheetHeader>
                                         <SheetTitle>{selectedDevice ? 'Edit Device' : 'Create New Device'}</SheetTitle>
                                     </SheetHeader>
-                                    <ScrollArea className="h-full">
-                                        <form onSubmit={handleDeviceSubmit}>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-6 py-4">
-                                                <div className="space-y-4">
-                                                    <h3 className="font-semibold text-lg">Select Modal</h3>
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        {modals.map(modal => (
-                                                            <Card 
-                                                                key={modal.id} 
-                                                                className="cursor-pointer hover:border-primary transition-colors"
-                                                                onClick={() => setSelectedModal(modal.type)}
-                                                            >
-                                                                <CardContent className="p-4 space-y-2">
-                                                                    <Image 
-                                                                        src={modal.image} 
-                                                                        alt={modal.title} 
-                                                                        width={200} 
-                                                                        height={200} 
-                                                                        className="rounded-md w-full" 
-                                                                    />
-                                                                    <h4 className="font-semibold text-center">{modal.title}</h4>
-                                                                </CardContent>
-                                                            </Card>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="space-y-4">
-                                                    <h3 className="font-semibold text-lg">Device Details</h3>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="user-id">User ID</Label>
-                                                        <Input 
-                                                            name="user-id" 
-                                                            id="user-id" 
-                                                            placeholder="Assign a user ID" 
-                                                            defaultValue={selectedDevice?.userId || ''}
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="device-type">Device Type</Label>
-                                                        <Select name="device-type" defaultValue={selectedDevice?.deviceType}>
-                                                            <SelectTrigger id="device-type">
-                                                                <SelectValue placeholder="Select a device type" />
-                                                            </SelectTrigger>
-                                                            <SelectContent>
-                                                                {deviceMasters.filter(dm => dm.status === 'active').map(master => (
-                                                                    <SelectItem key={master.id} value={master.deviceType}>
-                                                                        {master.deviceType}
-                                                                    </SelectItem>
-                                                                ))}
-                                                            </SelectContent>
-                                                        </Select>
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="mac-address">MAC Address</Label>
-                                                        <Input 
-                                                            name="mac-address"
-                                                            id="mac-address" 
-                                                            placeholder="00:1A:2B:3C:4D:5E" 
-                                                            value={macAddress}
-                                                            onChange={(e) => setMacAddress(e.target.value)}
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="device-name">Device Name</Label>
-                                                        <Input 
-                                                            name="device-name" 
-                                                            id="device-name" 
-                                                            placeholder="e.g., Living Room Wheel" 
-                                                            defaultValue={selectedDevice?.deviceName}
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label htmlFor="passcode">Passcode</Label>
-                                                        <Input 
-                                                            name="passcode" 
-                                                            id="passcode" 
-                                                            value={passcode} 
-                                                            readOnly 
-                                                        />
-                                                    </div>
-                                                    {selectedDevice && (
-                                                        <div className="space-y-2">
-                                                            <Label htmlFor="status">Status</Label>
-                                                            <Select name="status" defaultValue={selectedDevice?.status}>
-                                                                <SelectTrigger>
-                                                                    <SelectValue placeholder="Select Status" />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    <SelectItem value="never_used">Never Used</SelectItem>
-                                                                    <SelectItem value="active">Active</SelectItem>
-                                                                    <SelectItem value="disabled">Disabled</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                        </div>
-                                                    )}
-                                                    <Button type="submit" className="w-full">
-                                                        {selectedDevice ? 'Update Device' : 'Create Device'}
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </form>
+                                    <ScrollArea className="h-[calc(100vh-8rem)]">
+                                        <div className="px-6 py-4">
+                                            <EnhancedDeviceForm 
+                                                device={selectedDevice}
+                                                deviceMasters={deviceMasters}
+                                                onSuccess={handleFormSuccess}
+                                                onCancel={() => setIsSheetOpen(false)}
+                                            />
+                                        </div>
                                     </ScrollArea>
                                 </SheetContent>
                             </Sheet>
@@ -462,7 +334,7 @@ export default function DevicesPage() {
                                 filterColumnId='deviceName' 
                                 filterPlaceholder='Filter by device name...'
                                 onDelete={handleDeleteDevice}
-                                onDeleteSelected={handleDeleteSelectedDevices}
+                                onDeleteSelected={handleBulkDeleteDevices}
                                 exportFileName='devices'
                                 filters={[
                                     {

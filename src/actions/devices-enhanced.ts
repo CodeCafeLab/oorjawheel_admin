@@ -1,9 +1,10 @@
+
 'use server';
 
 import pool from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { deviceSchema, deviceMasterSchema } from '@/app/devices/schema';
+import { deviceSchema, deviceMasterSchema, Device, DeviceMaster } from '@/app/devices/schema';
 
 // Enhanced schemas with validation
 const DeviceFormSchema = deviceSchema.omit({ id: true });
@@ -12,6 +13,7 @@ const DeviceMasterFormSchema = deviceMasterSchema.omit({ id: true });
 // --- Device Actions ---
 
 export async function addDevice(values: z.infer<typeof DeviceFormSchema>) {
+  /*
   try {
     const connection = await pool.getConnection();
     
@@ -44,9 +46,14 @@ export async function addDevice(values: z.infer<typeof DeviceFormSchema>) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to add device.' };
   }
+  */
+  console.log("Mock addDevice:", values);
+  revalidatePath('/devices');
+  return { success: true, message: 'Device added successfully (Mock).' };
 }
 
 export async function updateDevice(id: string, values: z.infer<typeof DeviceFormSchema>) {
+  /*
   try {
     const connection = await pool.getConnection();
     
@@ -79,9 +86,14 @@ export async function updateDevice(id: string, values: z.infer<typeof DeviceForm
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to update device.' };
   }
+  */
+  console.log("Mock updateDevice:", id, values);
+  revalidatePath('/devices');
+  return { success: true, message: 'Device updated successfully (Mock).' };
 }
 
 export async function deleteDevice(id: string) {
+  /*
   try {
     const connection = await pool.getConnection();
     
@@ -104,11 +116,16 @@ export async function deleteDevice(id: string) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to delete device.' };
   }
+  */
+  console.log("Mock deleteDevice:", id);
+  revalidatePath('/devices');
+  return { success: true, message: 'Device deleted successfully (Mock).' };
 }
 
 // --- Device Master Actions ---
 
 export async function addDeviceMaster(values: z.infer<typeof DeviceMasterFormSchema>) {
+  /*
   try {
     const connection = await pool.getConnection();
     
@@ -134,9 +151,14 @@ export async function addDeviceMaster(values: z.infer<typeof DeviceMasterFormSch
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to add device type.' };
   }
+  */
+  console.log("Mock addDeviceMaster:", values);
+  revalidatePath('/devices');
+  return { success: true, message: 'Device type added successfully (Mock).' };
 }
 
 export async function updateDeviceMaster(id: string, values: z.infer<typeof DeviceMasterFormSchema>) {
+    /*
     try {
       const connection = await pool.getConnection();
       
@@ -162,9 +184,14 @@ export async function updateDeviceMaster(id: string, values: z.infer<typeof Devi
       console.error('Database Error:', error);
       return { success: false, message: 'Failed to update device type.' };
     }
+    */
+    console.log("Mock updateDeviceMaster:", id, values);
+    revalidatePath('/devices');
+    return { success: true, message: 'Device type updated successfully (Mock).' };
   }
 
 export async function deleteDeviceMaster(id: string) {
+  /*
   try {
     const connection = await pool.getConnection();
     
@@ -188,10 +215,15 @@ export async function deleteDeviceMaster(id: string) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to delete device type.' };
   }
+  */
+  console.log("Mock deleteDeviceMaster:", id);
+  revalidatePath('/devices');
+  return { success: true, message: 'Device type deleted successfully (Mock).' };
 }
 
 // Enhanced fetch functions with filtering and pagination
-export async function fetchDevices(filters?: { status?: string; deviceType?: string; search?: string }) {
+export async function fetchDevices(filters?: { status?: string; deviceType?: string; search?: string }): Promise<Device[]> {
+  /*
   try {
     const connection = await pool.getConnection();
     let query = 'SELECT id, deviceName, macAddress, deviceType, userId, passcode, status, createdAt, updatedAt FROM devices WHERE 1=1';
@@ -221,9 +253,18 @@ export async function fetchDevices(filters?: { status?: string; deviceType?: str
     console.error('Database Error:', error);
     return [];
   }
+  */
+  const data = [
+    { id: '1', deviceName: 'Living Room Wheel', macAddress: '00:1A:2B:3C:4D:5E', deviceType: 'OorjaWheel v2', userId: 'user123', passcode: '3C4D5E', status: 'active' as const },
+    { id: '2', deviceName: 'Bedroom Light', macAddress: 'F0:9A:8B:7C:6D:5E', deviceType: 'OorjaLight', userId: 'user123', passcode: '7C6D5E', status: 'active' as const },
+    { id: '3', deviceName: 'Kitchen Hub', macAddress: 'A1:B2:C3:D4:E5:F6', deviceType: 'OorjaHub', userId: null, passcode: 'D4E5F6', status: 'never_used' as const },
+    { id: '4', deviceName: 'Office Sensor', macAddress: '12:34:56:78:90:AB', deviceType: 'OorjaSensor', userId: 'user456', passcode: '7890AB', status: 'disabled' as const },
+  ];
+  return z.array(deviceSchema).parse(data);
 }
 
-export async function fetchDeviceMasters(filters?: { status?: string; search?: string }) {
+export async function fetchDeviceMasters(filters?: { status?: string; search?: string }): Promise<DeviceMaster[]> {
+  /*
   try {
     const connection = await pool.getConnection();
     let query = 'SELECT id, deviceType, btServe, btChar, soundBtName, status, createdAt, updatedAt FROM device_masters WHERE 1=1';
@@ -248,10 +289,19 @@ export async function fetchDeviceMasters(filters?: { status?: string; search?: s
     console.error('Database Error:', error);
     return [];
   }
+  */
+  const data = [
+    { id: '1', deviceType: 'OorjaWheel v2', btServe: 'uuid-serve-wheel', btChar: 'uuid-char-wheel', soundBtName: 'OorjaAudioV2', status: 'active' as const },
+    { id: '2', deviceType: 'OorjaLight', btServe: 'uuid-serve-light', btChar: 'uuid-char-light', soundBtName: 'OorjaAudio-Light', status: 'active' as const },
+    { id: '3', deviceType: 'OorjaHub', btServe: 'uuid-serve-hub', btChar: 'uuid-char-hub', soundBtName: 'N/A', status: 'inactive' as const },
+    { id: '4', deviceType: 'OorjaSensor', btServe: 'uuid-serve-sensor', btChar: 'uuid-char-sensor', soundBtName: 'N/A', status: 'active' as const },
+  ];
+  return z.array(deviceMasterSchema).parse(data);
 }
 
 // Additional utility functions
 export async function getDeviceById(id: string) {
+  /*
   try {
     const connection = await pool.getConnection();
     const [rows] = await connection.execute(
@@ -264,9 +314,13 @@ export async function getDeviceById(id: string) {
     console.error('Database Error:', error);
     return null;
   }
+  */
+  const devices = await fetchDevices();
+  return devices.find(d => d.id === id) || null;
 }
 
 export async function getDeviceMasterById(id: string) {
+  /*
   try {
     const connection = await pool.getConnection();
     const [rows] = await connection.execute(
@@ -279,9 +333,13 @@ export async function getDeviceMasterById(id: string) {
     console.error('Database Error:', error);
     return null;
   }
+  */
+  const masters = await fetchDeviceMasters();
+  return masters.find(m => m.id === id) || null;
 }
 
 export async function getDeviceCount(filters?: { status?: string; deviceType?: string }) {
+  /*
   try {
     const connection = await pool.getConnection();
     let query = 'SELECT COUNT(*) as count FROM devices WHERE 1=1';
@@ -304,9 +362,13 @@ export async function getDeviceCount(filters?: { status?: string; deviceType?: s
     console.error('Database Error:', error);
     return 0;
   }
+  */
+  const devices = await fetchDevices(filters);
+  return devices.length;
 }
 
 export async function getDeviceMasterCount(filters?: { status?: string }) {
+  /*
   try {
     const connection = await pool.getConnection();
     let query = 'SELECT COUNT(*) as count FROM device_masters WHERE 1=1';
@@ -324,10 +386,14 @@ export async function getDeviceMasterCount(filters?: { status?: string }) {
     console.error('Database Error:', error);
     return 0;
   }
+  */
+  const masters = await fetchDeviceMasters(filters);
+  return masters.length;
 }
 
 // Bulk operations
 export async function bulkDeleteDevices(ids: string[]) {
+  /*
   try {
     const connection = await pool.getConnection();
     const placeholders = ids.map(() => '?').join(',');
@@ -342,9 +408,14 @@ export async function bulkDeleteDevices(ids: string[]) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to delete devices.' };
   }
+  */
+  console.log("Mock bulkDeleteDevices:", ids);
+  revalidatePath('/devices');
+  return { success: true, message: `${ids.length} devices deleted successfully (Mock).` };
 }
 
 export async function bulkDeleteDeviceMasters(ids: string[]) {
+  /*
   try {
     const connection = await pool.getConnection();
     
@@ -372,4 +443,8 @@ export async function bulkDeleteDeviceMasters(ids: string[]) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to delete device types.' };
   }
+  */
+  console.log("Mock bulkDeleteDeviceMasters:", ids);
+  revalidatePath('/devices');
+  return { success: true, message: `${ids.length} device types deleted successfully (Mock).` };
 }
