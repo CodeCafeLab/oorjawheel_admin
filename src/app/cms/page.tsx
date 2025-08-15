@@ -34,7 +34,8 @@ import { addCategory, addPage, deletePage, updatePage } from '@/actions/cms';
 
 
 async function getPages(): Promise<Page[]> {
-    // MOCK DATA
+    // This would fetch from the `pages` table in your DB.
+    // MOCK DATA for now
     const data = [
         { id: '1', category: 'Special Modes', image: 'https://placehold.co/100x100.png', title: 'Party Mode', command: 'L255,0,255', description: 'Cycles through a vibrant color palette.' },
         { id: '2', category: 'Ambiance', image: 'https://placehold.co/100x100.png', title: 'Reading Light', command: 'L255,240,220', description: 'A soft, warm light for reading.' },
@@ -44,7 +45,8 @@ async function getPages(): Promise<Page[]> {
 }
 
 async function getCategories(): Promise<string[]> {
-    // MOCK DATA
+    // This would fetch from a `cms_categories` table.
+    // MOCK DATA for now
     return ['Special Modes', 'Ambiance', 'Wellness'];
 }
 

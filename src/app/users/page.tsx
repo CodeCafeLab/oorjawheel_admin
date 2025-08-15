@@ -1,4 +1,6 @@
 
+'use server';
+
 import { fetchUsers } from '@/actions/users';
 import { User } from './schema';
 import { UsersClient } from './users-client';

@@ -16,11 +16,11 @@ const CategoryFormSchema = z.object({
 // --- Page Actions ---
 
 export async function addPage(values: z.infer<typeof PageFormSchema>) {
-  /*
+  
   try {
     const connection = await pool.getConnection();
     const [result] = await connection.execute(
-      'INSERT INTO cms_pages (category, title, command, description, image) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO pages (category, title, command, description, image) VALUES (?, ?, ?, ?, ?)',
       [values.category, values.title, values.command, values.description, 'https://placehold.co/100x100.png']
     );
     connection.release();
@@ -30,18 +30,14 @@ export async function addPage(values: z.infer<typeof PageFormSchema>) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to add content.' };
   }
-  */
-  console.log("Mock addPage:", values);
-  revalidatePath('/cms');
-  return { success: true, message: 'Content added successfully (Mock).' };
 }
 
 export async function updatePage(id: string, values: z.infer<typeof PageFormSchema>) {
-  /*
+  
   try {
     const connection = await pool.getConnection();
     await connection.execute(
-      'UPDATE cms_pages SET category = ?, title = ?, command = ?, description = ? WHERE id = ?',
+      'UPDATE pages SET category = ?, title = ?, command = ?, description = ? WHERE id = ?',
       [values.category, values.title, values.command, values.description, id]
     );
     connection.release();
@@ -51,17 +47,13 @@ export async function updatePage(id: string, values: z.infer<typeof PageFormSche
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to update content.' };
   }
-  */
-  console.log("Mock updatePage:", id, values);
-  revalidatePath('/cms');
-  return { success: true, message: 'Content updated successfully (Mock).' };
 }
 
 export async function deletePage(id: string) {
-  /*
+  
   try {
     const connection = await pool.getConnection();
-    await connection.execute('DELETE FROM cms_pages WHERE id = ?', [id]);
+    await connection.execute('DELETE FROM pages WHERE id = ?', [id]);
     connection.release();
     revalidatePath('/cms');
     return { success: true, message: 'Content deleted successfully.' };
@@ -69,19 +61,17 @@ export async function deletePage(id: string) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to delete content.' };
   }
-  */
-  console.log("Mock deletePage:", id);
-  revalidatePath('/cms');
-  return { success: true, message: 'Content deleted successfully (Mock).' };
 }
 
 
 // --- Category Actions ---
 
 export async function addCategory(values: { title: string }) {
-    /*
+    
     try {
       const connection = await pool.getConnection();
+      // This assumes a `categories` table or similar. The schema screenshot doesn't show one, so this might need adjustment.
+      // For now, let's assume a table `cms_categories`.
       // Check if category exists
       const [existing] = await connection.execute('SELECT * FROM cms_categories WHERE title = ?', [values.title]);
       if ((existing as any[]).length > 0) {
@@ -97,8 +87,4 @@ export async function addCategory(values: { title: string }) {
       console.error('Database Error:', error);
       return { success: false, message: 'Failed to add category.' };
     }
-    */
-    console.log("Mock addCategory:", values);
-    revalidatePath('/cms');
-    return { success: true, message: 'Category added successfully (Mock).' };
   }

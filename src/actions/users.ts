@@ -9,7 +9,7 @@ import { hashPassword } from '@/lib/hash';
 import { User } from '@/app/users/schema';
 
 export async function addUser(values: z.infer<typeof userFormSchema>) {
-  /*
+  
   const { fullName, email, contactNumber, address, country, password, status = 'active' } = values;
 
   if (!password) {
@@ -50,14 +50,10 @@ export async function addUser(values: z.infer<typeof userFormSchema>) {
     }
     return { success: false, message: 'Failed to add user.' };
   }
-  */
-  console.log("Mock addUser:", values);
-  revalidatePath('/users');
-  return { success: true, message: 'User added successfully (Mock).' };
 }
 
 export async function updateUser(id: string, values: z.infer<typeof userFormSchema>) {
-    /*
+    
     const { fullName, email, contactNumber, address, country, password, status = 'active' } = values;
 
     try {
@@ -85,14 +81,10 @@ export async function updateUser(id: string, values: z.infer<typeof userFormSche
         console.error('Database Error:', error);
         return { success: false, message: 'Failed to update user.' };
     }
-    */
-    console.log("Mock updateUser:", id, values);
-    revalidatePath('/users');
-    return { success: true, message: 'User updated successfully (Mock).' };
 }
 
 export async function deleteUser(id: string) {
-    /*
+    
     try {
         const connection = await pool.getConnection();
         const [result] = await connection.execute('DELETE FROM users WHERE id = ?', [id]);
@@ -109,14 +101,10 @@ export async function deleteUser(id: string) {
         console.error('Database Error:', error);
         return { success: false, message: 'Failed to delete user.' };
     }
-    */
-    console.log("Mock deleteUser:", id);
-    revalidatePath('/users');
-    return { success: true, message: 'User deleted successfully (Mock).' };
 }
 
 export async function fetchUsers(): Promise<User[]> {
-  /*
+  
   try {
     const connection = await pool.getConnection();
 
@@ -126,18 +114,28 @@ export async function fetchUsers(): Promise<User[]> {
     );
 
     connection.release();
+    
+    const users = z.array(userSchema.partial()).parse(rows);
 
-    // Return rows as User[]
-    return rows as any[];
+    // In a real app, you'd join with a user_devices table
+    return users.map(u => ({
+        ...{
+            id: u.id || 0,
+            fullName: u.fullName || '',
+            email: u.email || '',
+            contactNumber: u.contactNumber || '',
+            address: u.address || '',
+            country: u.country || '',
+            status: u.status || 'locked',
+            firstLoginAt: u.firstLoginAt || null,
+            devicesAssigned: [],
+        },
+        ...u,
+        devicesAssigned: u.id ? [`OorjaWheel-${u.id}A`, `OorjaWheel-${u.id}B`] : [] // Mocked device assignment
+    }));
+
   } catch (error) {
     console.error('Database Error:', error);
     return [];
   }
-  */
-  const data = [
-    { id: 1, fullName: 'Super Admin', email: 'super.admin@oorja.com', contactNumber: '+919876543210', address: '123 Tech Park, Bangalore', country: '+91', status: 'active', firstLoginAt: '2023-01-15T09:30:00Z', devicesAssigned: ['OorjaWheel-A1B2', 'OorjaWheel-C3D4'] },
-    { id: 2, fullName: 'Operator 1', email: 'operator1@oorja.com', contactNumber: '+919123456789', address: '456 Tech City, Pune', country: '+91', status: 'active', firstLoginAt: '2023-02-20T11:00:00Z', devicesAssigned: ['OorjaWheel-E5F6'] },
-    { id: 3, fullName: 'Operator 2', email: 'operator2@oorja.com', contactNumber: '+919988776655', address: '789 Info Lane, Hyderabad', country: '+91', status: 'locked', firstLoginAt: '2023-03-10T14:00:00Z', devicesAssigned: [] },
-  ];
-  return data as User[];
 }

@@ -9,9 +9,11 @@ import { customerSchema } from '@/app/customers/schema';
 const CustomerFormSchema = customerSchema.omit({ id: true });
 
 export async function addCustomer(values: z.infer<typeof CustomerFormSchema>) {
-  /*
+  
   try {
     const connection = await pool.getConnection();
+    // In a real app, customers might not exist as a separate table and could be part of the `users` table.
+    // This is a placeholder for adding a customer. Assuming a `customers` table for now.
     // Check if customer exists
     const [existing] = await connection.execute('SELECT email FROM customers WHERE email = ?', [values.email]);
     if ((existing as any[]).length > 0) {
@@ -30,14 +32,10 @@ export async function addCustomer(values: z.infer<typeof CustomerFormSchema>) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to add customer.' };
   }
-  */
-  console.log("Mock addCustomer:", values);
-  revalidatePath('/customers');
-  return { success: true, message: 'Customer added successfully (Mock).' };
 }
 
 export async function updateCustomer(id: string, values: z.infer<typeof CustomerFormSchema>) {
-    /*
+    
     try {
       const connection = await pool.getConnection();
       await connection.execute(
@@ -51,14 +49,10 @@ export async function updateCustomer(id: string, values: z.infer<typeof Customer
       console.error('Database Error:', error);
       return { success: false, message: 'Failed to update customer.' };
     }
-    */
-    console.log("Mock updateCustomer:", id, values);
-    revalidatePath('/customers');
-    return { success: true, message: 'Customer updated successfully (Mock).' };
-  }
+}
 
 export async function deleteCustomer(id: string) {
-  /*
+  
   try {
     const connection = await pool.getConnection();
     await connection.execute('DELETE FROM customers WHERE id = ?', [id]);
@@ -69,8 +63,4 @@ export async function deleteCustomer(id: string) {
     console.error('Database Error:', error);
     return { success: false, message: 'Failed to delete customer.' };
   }
-  */
-  console.log("Mock deleteCustomer:", id);
-  revalidatePath('/customers');
-  return { success: true, message: 'Customer deleted successfully (Mock).' };
 }

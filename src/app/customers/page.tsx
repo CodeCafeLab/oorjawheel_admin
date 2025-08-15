@@ -22,7 +22,8 @@ import { deleteCustomer } from '@/actions/customers';
 import { CustomerForm } from './customer-form';
 
 async function getCustomers(): Promise<Customer[]> {
-    // MOCK DATA
+    // This is a placeholder as the schema doesn't show a `customers` table.
+    // In a real application, you would fetch from `users` or a dedicated `customers` table.
     const data = [
         { id: '1', name: 'Aarav Sharma', email: 'aarav.sharma@example.com', totalSpent: 5500, orders: 2, status: 'active' },
         { id: '2', name: 'Diya Patel', email: 'diya.patel@example.com', totalSpent: 12000, orders: 5, status: 'active' },

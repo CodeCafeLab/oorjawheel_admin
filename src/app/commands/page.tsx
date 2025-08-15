@@ -38,7 +38,8 @@ import { useToast } from "@/hooks/use-toast"
 import { addCommand, updateCommand, deleteCommand } from "@/actions/commands"
   
 async function getCommands(): Promise<Command[]> {
-    // MOCK DATA
+    // This is a placeholder. The DB schema doesn't show a `commands` table.
+    // In a real app, this would fetch from a table you create to store these command definitions.
     const data = [
         { id: '1', type: 'manual', status: 'active', details: { type: 'light', command: 'L255,0,0' } },
         { id: '2', type: 'manual', status: 'active', details: { type: 'sound', command: 'S15' } },

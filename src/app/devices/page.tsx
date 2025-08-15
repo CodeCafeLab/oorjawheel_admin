@@ -19,7 +19,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import Image from 'next/image';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as React from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -36,15 +35,6 @@ import {
     bulkDeleteDeviceMasters
 } from '@/actions/devices-enhanced';
 import EnhancedDeviceForm from './enhanced-device-form';
-
-// Enhanced modal data with proper device types
-const modals = [
-    { id: 'modal01', title: 'OorjaWheel v2', image: 'https://placehold.co/400x400.png', type: 'OorjaWheel v2' },
-    { id: 'modal02', title: 'OorjaLight', image: 'https://placehold.co/400x400.png', type: 'OorjaLight' },
-    { id: 'modal03', title: 'OorjaSound', image: 'https://placehold.co/400x400.png', type: 'OorjaSound' },
-    { id: 'modal04', title: 'OorjaHub', image: 'https://placehold.co/400x400.png', type: 'OorjaHub' },
-    { id: 'modal05', title: 'OorjaSensor', image: 'https://placehold.co/400x400.png', type: 'OorjaSensor' },
-];
 
 export default function DevicesPage() {
     const [devices, setDevices] = React.useState<Device[]>([]);
