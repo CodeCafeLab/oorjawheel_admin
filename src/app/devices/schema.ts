@@ -31,3 +31,4 @@ export const deviceSchema = z.object({
 
 export type Device = z.infer<typeof deviceSchema>
 export type DeviceMaster = z.infer<typeof deviceMasterSchema>
+
