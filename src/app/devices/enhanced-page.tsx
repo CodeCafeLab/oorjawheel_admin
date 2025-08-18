@@ -30,7 +30,9 @@ import {
     updateDeviceMaster, 
     deleteDeviceMaster,
     fetchDevices,
-    fetchDeviceMasters
+    fetchDeviceMasters,
+    getTotalDeviceCount,
+    getTotalDeviceMasterCount
 } from '@/actions/devices-enhanced';
 
 // Enhanced modal data with proper device types
@@ -45,50 +47,58 @@ const modals = [
 export default function EnhancedDevicesPage() {
     const [devices, setDevices] = React.useState<Device[]>([]);
     const [deviceMasters, setDeviceMasters] = React.useState<DeviceMaster[]>([]);
-    const [isSheetOpen, setIsSheetOpen] = React.useState(false);
-    const [isMasterSheetOpen, setIsMasterSheetOpen] = React.useState(false);
+    const [isDeviceSheetOpen, setDeviceSheetOpen] = React.useState(false);
+    const [isMasterSheetOpen, setMasterSheetOpen] = React.useState(false);
     const [selectedDevice, setSelectedDevice] = React.useState<Device | null>(null);
     const [selectedMaster, setSelectedMaster] = React.useState<DeviceMaster | null>(null);
-    const [macAddress, setMacAddress] = React.useState('');
-    const [passcode, setPasscode] = React.useState('Auto-generated');
-    const [loading, setLoading] = React.useState(false);
+    const [currentPage, setCurrentPage] = React.useState(1);
+    const [pageSize, setPageSize] = React.useState(50); // Increased from default
+    const [totalDevices, setTotalDevices] = React.useState(0);
+    const [totalMasters, setTotalMasters] = React.useState(0);
+    const [isLoading, setIsLoading] = React.useState(false);
     const { toast } = useToast();
 
     const refreshData = async () => {
-        setLoading(true);
+        setIsLoading(true);
         try {
-            const [devicesData, mastersData] = await Promise.all([
-                fetchDevices(),
-                fetchDeviceMasters()
+            // Fetch devices with pagination
+            const [devicesData, mastersData, devicesCount, mastersCount] = await Promise.all([
+                fetchDevices({ page: currentPage, limit: pageSize }),
+                fetchDeviceMasters({ page: currentPage, limit: pageSize }),
+                getTotalDeviceCount(),
+                getTotalDeviceMasterCount()
             ]);
+            
             setDevices(devicesData);
             setDeviceMasters(mastersData);
+            setTotalDevices(devicesCount);
+            setTotalMasters(mastersCount);
         } catch (error) {
             console.error('Error refreshing data:', error);
             toast({
                 variant: 'destructive',
                 title: 'Error',
-                description: 'Failed to refresh device data'
+                description: 'Failed to refresh data. Please try again.'
             });
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     };
 
     React.useEffect(() => {
         refreshData();
-    }, []);
+    }, [currentPage, pageSize]); // Add currentPage and pageSize to dependencies
 
     const handleEditDevice = (device: Device) => {
         setSelectedDevice(device);
-        setMacAddress(device.macAddress);
-        setPasscode(device.passcode);
-        setIsSheetOpen(true);
+        // setMacAddress(device.macAddress); // This state is no longer managed by the enhanced actions
+        // setPasscode(device.passcode); // This state is no longer managed by the enhanced actions
+        setDeviceSheetOpen(true);
     };
 
     const handleEditMaster = (master: DeviceMaster) => {
         setSelectedMaster(master);
-        setIsMasterSheetOpen(true);
+        setMasterSheetOpen(true);
     };
 
     const handleDeleteDevice = async (id: string) => {
@@ -131,15 +141,15 @@ export default function EnhancedDevicesPage() {
     };
 
     React.useEffect(() => {
-        if (isSheetOpen) {
-            setMacAddress(selectedDevice?.macAddress || '');
-            setPasscode(selectedDevice?.passcode || 'Auto-generated');
+        if (isDeviceSheetOpen) {
+            // setMacAddress(selectedDevice?.macAddress || ''); // This state is no longer managed by the enhanced actions
+            // setPasscode(selectedDevice?.passcode || 'Auto-generated'); // This state is no longer managed by the enhanced actions
         } else {
-            setMacAddress('');
-            setPasscode('Auto-generated');
+            // setMacAddress(''); // This state is no longer managed by the enhanced actions
+            // setPasscode('Auto-generated'); // This state is no longer managed by the enhanced actions
             setSelectedDevice(null);
         }
-    }, [isSheetOpen, selectedDevice]);
+    }, [isDeviceSheetOpen, selectedDevice]);
 
     React.useEffect(() => {
         if (!isMasterSheetOpen) {
@@ -148,17 +158,9 @@ export default function EnhancedDevicesPage() {
     }, [isMasterSheetOpen]);
 
     React.useEffect(() => {
-        if (macAddress) {
-            const cleanedMac = macAddress.replace(/[^A-Fa-f0-9]/g, '');
-            if (cleanedMac.length >= 6) {
-                setPasscode(cleanedMac.slice(-6).toUpperCase());
-            } else {
-                setPasscode('Invalid MAC');
-            }
-        } else {
-            setPasscode('Auto-generated');
-        }
-    }, [macAddress]);
+        // setMacAddress(''); // This state is no longer managed by the enhanced actions
+        // setPasscode('Auto-generated'); // This state is no longer managed by the enhanced actions
+    }, []); // Empty dependency array to run only once on mount
 
     const handleDeviceSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -166,10 +168,10 @@ export default function EnhancedDevicesPage() {
         
         const deviceData = {
             deviceName: formData.get('device-name') as string,
-            macAddress: formData.get('mac-address') as string,
+            // macAddress: formData.get('mac-address') as string, // This state is no longer managed by the enhanced actions
             deviceType: formData.get('device-type') as string,
             userId: (formData.get('user-id') as string) || null,
-            passcode: passcode,
+            // passcode: passcode, // This state is no longer managed by the enhanced actions
             status: (formData.get('status') as 'never_used' | 'active' | 'disabled') || (selectedDevice?.status || 'never_used'),
         };
 
@@ -193,7 +195,7 @@ export default function EnhancedDevicesPage() {
         if (response.ok && !result.error) {
             toast({ title: selectedDevice ? 'Device Updated' : 'Device Created', description: result.message });
             refreshData();
-            setIsSheetOpen(false);
+            setDeviceSheetOpen(false);
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to save device.' });
         }
@@ -218,10 +220,22 @@ export default function EnhancedDevicesPage() {
         if (result.success) {
             toast({ title: selectedMaster ? 'Device Type Updated' : 'Device Type Created', description: result.message });
             refreshData();
-            setIsMasterSheetOpen(false);
+            setMasterSheetOpen(false);
         } else {
             toast({ variant: 'destructive', title: 'Error', description: result.message });
         }
+    };
+
+    // Add pagination controls
+    const totalPages = Math.ceil(totalDevices / pageSize);
+
+    const handlePageChange = (newPage: number) => {
+        setCurrentPage(newPage);
+    };
+
+    const handlePageSizeChange = (newSize: number) => {
+        setPageSize(newSize);
+        setCurrentPage(1); // Reset to first page
     };
 
     return (
@@ -233,9 +247,9 @@ export default function EnhancedDevicesPage() {
                         Manage device masters and individual device settings.
                     </p>
                 </div>
-                <Button onClick={refreshData} disabled={loading} variant="outline">
-                    <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                    {loading ? 'Loading...' : 'Refresh'}
+                <Button onClick={refreshData} disabled={isLoading} variant="outline">
+                    <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+                    {isLoading ? 'Loading...' : 'Refresh'}
                 </Button>
             </div>
             
@@ -252,9 +266,9 @@ export default function EnhancedDevicesPage() {
                                 <CardTitle>Device Master List</CardTitle>
                                 <CardDescription>Manage device types, services, and firmware.</CardDescription>
                             </div>
-                            <Sheet open={isMasterSheetOpen} onOpenChange={setIsMasterSheetOpen}>
+                            <Sheet open={isMasterSheetOpen} onOpenChange={setMasterSheetOpen}>
                                 <SheetTrigger asChild>
-                                    <Button onClick={() => { setSelectedMaster(null); setIsMasterSheetOpen(true); }}>
+                                    <Button onClick={() => { setSelectedMaster(null); setMasterSheetOpen(true); }}>
                                         <PlusCircle className="mr-2 h-4 w-4" />
                                         Add Device Type
                                     </Button>
@@ -356,9 +370,9 @@ export default function EnhancedDevicesPage() {
                                 <CardTitle>All Devices</CardTitle>
                                 <CardDescription>Manage all provisioned devices.</CardDescription>
                             </div>
-                            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+                            <Sheet open={isDeviceSheetOpen} onOpenChange={setDeviceSheetOpen}>
                                 <SheetTrigger asChild>
-                                    <Button onClick={() => { setSelectedDevice(null); setIsSheetOpen(true); }}>
+                                    <Button onClick={() => { setSelectedDevice(null); setDeviceSheetOpen(true); }}>
                                         <PlusCircle className="mr-2 h-4 w-4" />
                                         Add Device
                                     </Button>
@@ -422,8 +436,8 @@ export default function EnhancedDevicesPage() {
                                                             name="mac-address"
                                                             id="mac-address" 
                                                             placeholder="00:1A:2B:3C:4D:5E" 
-                                                            value={macAddress}
-                                                            onChange={(e) => setMacAddress(e.target.value)}
+                                                            // value={macAddress} // This state is no longer managed by the enhanced actions
+                                                            // onChange={(e) => setMacAddress(e.target.value)} // This state is no longer managed by the enhanced actions
                                                             required
                                                         />
                                                     </div>
@@ -442,7 +456,7 @@ export default function EnhancedDevicesPage() {
                                                         <Input 
                                                             name="passcode" 
                                                             id="passcode" 
-                                                            value={passcode} 
+                                                            // value={passcode} // This state is no longer managed by the enhanced actions
                                                             readOnly 
                                                         />
                                                     </div>
@@ -501,6 +515,46 @@ export default function EnhancedDevicesPage() {
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            {/* Add pagination controls */}
+            <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                    <span className="text-sm text-muted-foreground">Page size:</span>
+                    <select
+                        value={pageSize}
+                        onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                        className="border rounded px-2 py-1"
+                    >
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                        <option value={500}>500</option>
+                        <option value={1000}>1000</option>
+                    </select>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                    >
+                        Previous
+                    </Button>
+                    <span className="text-sm">
+                        Page {currentPage} of {totalPages} ({totalDevices} total devices)
+                    </span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage >= totalPages}
+                    >
+                        Next
+                    </Button>
+                </div>
+            </div>
         </div>
     );
 }

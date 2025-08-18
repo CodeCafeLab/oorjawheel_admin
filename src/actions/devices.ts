@@ -41,7 +41,7 @@ export async function addDevice(values: z.infer<typeof DeviceFormSchema>) {
         values.userId,
         values.passcode,
         values.status,
-        values.btName || null,
+        values.btName ?? '',
         values.warrantyStart || null,
         values.defaultCmd || null,
         values.firstConnectedAt || null
@@ -69,7 +69,7 @@ export async function updateDevice(id: string, values: z.infer<typeof DeviceForm
         values.userId,
         values.passcode,
         values.status,
-        values.btName || null,
+        values.btName ?? '',
         values.warrantyStart || null,
         values.defaultCmd || null,
         values.firstConnectedAt || null,
@@ -163,9 +163,11 @@ export async function deleteDeviceMaster(id: string) {
 
 // --- Data Fetching ---
 
-export async function fetchDevices(filters?: { status?: string; deviceType?: string; search?: string }) {
+export async function fetchDevices(filters?: { status?: string; deviceType?: string; search?: string; page?: number; limit?: number }) {
     try {
       const connection = await pool.getConnection();
+      
+      // Build the base query
       let query = 'SELECT * FROM devices WHERE 1=1';
       const params: any[] = [];
       
@@ -184,18 +186,45 @@ export async function fetchDevices(filters?: { status?: string; deviceType?: str
         params.push(`%${filters.search}%`, `%${filters.search}%`);
       }
       
-      query += ' ORDER BY created_at DESC';
+      // Add pagination if specified
+      if (filters?.page && filters?.limit) {
+        const offset = (filters.page - 1) * filters.limit;
+        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+        params.push(filters.limit, offset);
+      } else {
+        // If no pagination, still order by creation date
+        query += ' ORDER BY created_at DESC';
+      }
       
       const [rows] = await connection.execute(query, params);
       connection.release();
-      return rows as any[];
+      
+      // Normalize to schema
+      const devices = (rows as any[]).map(row => ({
+        id: row.id?.toString?.() ?? String(row.id),
+        deviceName: row.device_name ?? null,
+        macAddress: row.mac_address ?? null,
+        deviceType: row.device_type ?? null,
+        userId: row.user_id ? String(row.user_id) : null,
+        passcode: row.passcode ?? null,
+        status: row.status,
+        btName: row.bt_name ?? null,
+        warrantyStart: row.warranty_start ? String(row.warranty_start) : null,
+        defaultCmd: row.default_cmd ?? null,
+        firstConnectedAt: row.first_connected_at ? String(row.first_connected_at) : null,
+        createdAt: row.created_at ? String(row.created_at) : null,
+        updatedAt: row.updated_at ? String(row.updated_at) : null,
+      }));
+
+      const { deviceSchema } = await import('@/app/devices/schema');
+      return (await import('zod')).z.array(deviceSchema).parse(devices);
     } catch (error) {
       console.error('Database Error fetching devices:', error);
       return [];
     }
-  }
+}
   
-  export async function fetchDeviceMasters(filters?: { status?: string; search?: string }) {
+  export async function fetchDeviceMasters(filters?: { status?: string; search?: string; page?: number; limit?: number }) {
     try {
       const connection = await pool.getConnection();
       let query = 'SELECT * FROM device_masters WHERE 1=1';
@@ -211,11 +240,30 @@ export async function fetchDevices(filters?: { status?: string; deviceType?: str
         params.push(`%${filters.search}%`);
       }
       
-      query += ' ORDER BY createdAt DESC';
+      // Add pagination if specified
+      if (filters?.page && filters?.limit) {
+        const offset = (filters.page - 1) * filters.limit;
+        query += ' ORDER BY createdAt DESC LIMIT ? OFFSET ?';
+        params.push(filters.limit, offset);
+      } else {
+        query += ' ORDER BY createdAt DESC';
+      }
       
       const [rows] = await connection.execute(query, params);
       connection.release();
-      return rows as any[];
+      
+      const masters = (rows as any[]).map(row => ({
+        id: row.id?.toString?.() ?? String(row.id),
+        deviceType: row.deviceType,
+        btServe: row.btServe,
+        btChar: row.btChar,
+        soundBtName: row.soundBtName,
+        status: row.status,
+        createdAt: row.createdAt ? String(row.createdAt) : null,
+        updatedAt: row.updatedAt ? String(row.updatedAt) : null,
+      }));
+      const { deviceMasterSchema } = await import('@/app/devices/schema');
+      return (await import('zod')).z.array(deviceMasterSchema).parse(masters);
     } catch (error) {
       console.error('Database Error fetching device masters:', error);
       return [];
@@ -259,3 +307,118 @@ export async function fetchDevices(filters?: { status?: string; deviceType?: str
       return { success: false, message: 'Failed to delete device types.' };
     }
   }
+
+// Add a function to get total count for pagination
+export async function getTotalDeviceCount(filters?: { status?: string; deviceType?: string; search?: string }) {
+    try {
+      const connection = await pool.getConnection();
+      let query = 'SELECT COUNT(*) as total FROM devices WHERE 1=1';
+      const params: any[] = [];
+      
+      if (filters?.status) {
+        query += ' AND status = ?';
+        params.push(filters.status);
+      }
+      
+      if (filters?.deviceType) {
+        query += ' AND device_type = ?';
+        params.push(filters.deviceType);
+      }
+      
+      if (filters?.search) {
+        query += ' AND (device_name LIKE ? OR mac_address LIKE ?)';
+        params.push(`%${filters.search}%`, `%${filters.search}%`);
+      }
+      
+      const [rows] = await connection.execute(query, params);
+      connection.release();
+      
+      return (rows as any[])[0]?.total || 0;
+    } catch (error) {
+      console.error('Database Error getting device count:', error);
+      return 0;
+    }
+}
+
+export async function getTotalDeviceMasterCount(filters?: { status?: string; search?: string }) {
+    try {
+      const connection = await pool.getConnection();
+      let query = 'SELECT COUNT(*) as total FROM device_masters WHERE 1=1';
+      const params: any[] = [];
+      
+      if (filters?.status) {
+        query += ' AND status = ?';
+        params.push(filters.status);
+      }
+      
+      if (filters?.search) {
+        query += ' AND deviceType LIKE ?';
+        params.push(`%${filters.search}%`);
+      }
+      
+      const [rows] = await connection.execute(query, params);
+      connection.release();
+      
+      return (rows as any[])[0]?.total || 0;
+    } catch (error) {
+      console.error('Database Error getting device master count:', error);
+      return 0;
+    }
+}
+
+// Function to get ALL devices without pagination (use with caution for large datasets)
+export async function fetchAllDevices(filters?: { status?: string; deviceType?: string; search?: string }) {
+    try {
+      const connection = await pool.getConnection();
+      let query = 'SELECT * FROM devices WHERE 1=1';
+      const params: any[] = [];
+      
+      if (filters?.status) {
+        query += ' AND status = ?';
+        params.push(filters.status);
+      }
+      
+      if (filters?.deviceType) {
+        query += ' AND device_type = ?';
+        params.push(filters.deviceType);
+      }
+      
+      if (filters?.search) {
+        query += ' AND (device_name LIKE ? OR mac_address LIKE ?)';
+        params.push(`%${filters.search}%`, `%${filters.search}%`);
+      }
+      
+      query += ' ORDER BY created_at DESC';
+      
+      // Execute with larger timeout for big datasets
+      const [rows] = await connection.execute({
+        sql: query,
+        values: params,
+        timeout: 120000 // 2 minutes timeout
+      });
+      
+      connection.release();
+      
+      // Convert to proper format
+      const devices = (rows as any[]).map(row => ({
+        id: row.id.toString(),
+        deviceName: row.device_name || row.deviceName,
+        macAddress: row.mac_address || row.macAddress,
+        deviceType: row.device_type || row.deviceType,
+        userId: row.user_id || row.userId,
+        passcode: row.passcode,
+        status: row.status,
+        btName: row.bt_name || row.btName,
+        warrantyStart: row.warranty_start || row.warrantyStart,
+        defaultCmd: row.default_cmd || row.defaultCmd,
+        firstConnectedAt: row.first_connected_at || row.firstConnectedAt,
+        createdAt: row.created_at || row.createdAt,
+        updatedAt: row.updated_at || row.updatedAt
+      }));
+      
+      return devices;
+    } catch (error) {
+      console.error('Database Error fetching all devices:', error);
+      return [];
+    }
+}

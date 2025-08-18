@@ -36,7 +36,7 @@ import { commandSchema, Command } from "./schema"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/hooks/use-toast"
 import { addCommand, updateCommand, deleteCommand } from "@/actions/commands"
-import pool from "@/lib/db"
+// removed direct DB import; using in-memory/mock or future API
   
 async function getCommands(): Promise<Command[]> {
     // This is a placeholder. The DB schema doesn't show a `commands` table.
