@@ -55,7 +55,7 @@ export default function AnalyticsPage() {
   React.useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch('/api/analytics')
+        const res = await fetch((process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api') + '/analytics', { credentials: 'include' })
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Failed')
         setKpis(data.kpis)

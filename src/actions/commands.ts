@@ -1,7 +1,6 @@
 
 'use server';
 
-import pool from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { commandSchema } from '@/app/commands/schema';
