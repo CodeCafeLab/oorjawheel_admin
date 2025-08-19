@@ -1,12 +1,15 @@
 {
-    "compilerOptions": {
-      "target": "ES2020",
-      "module": "ES2020",
-      "moduleResolution": "Bundler",
-      "outDir": "dist",
-      "strict": true,
-      "skipLibCheck": true,
-      "esModuleInterop": true
-    },
-    "include": ["src"]
-  }
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowJs": true,                 // 👈 allow .js files
+    "checkJs": false,                // 👈 don’t type-check JS unless you want
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"]
+}

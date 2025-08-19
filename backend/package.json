@@ -1,10 +1,10 @@
 {
   "name": "oorja-backend",
   "version": "0.1.0",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch src/server.js",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js"
   },
