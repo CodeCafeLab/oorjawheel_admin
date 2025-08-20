@@ -1,5 +1,21 @@
+// next.config.js
 module.exports = {
-  //... other configurations ...
+  // Enable images optimization
+  images: {
+    domains: ['placehold.co', 'example.com', 'anotherdomain.com'],
+  },
+
+  // Rewrite API routes
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:9002/api/:path*',
+      },
+    ];
+  },
+
+  // Set headers for API routes
   async headers() {
     return [
       {

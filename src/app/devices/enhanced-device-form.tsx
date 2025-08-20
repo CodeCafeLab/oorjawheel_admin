@@ -22,10 +22,12 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { addDevice, updateDevice } from "@/actions/devices";
 import { useToast } from "@/hooks/use-toast";
+import { Device } from "@/app/devices/schema";
 
 interface EnhancedDeviceFormProps {
   device?: any;
   deviceMasters: any[];
+  onSubmit: (data: Device) => void
   onSuccess: () => void;
   onCancel: () => void;
 }
