@@ -1,33 +1,22 @@
-import pool from '../config/pool.js';
+import pool from "../config/pool.js";
 
-export async function getDevices({ status, deviceType, search, page = 1, limit = 50 }) {
-  const offset = (page - 1) * limit;
-  let sql = 'SELECT SQL_CALC_FOUND_ROWS * FROM devices WHERE 1=1';
-  const params = [];
-
-  if (status) {
-    sql += ' AND status = ?';
-    params.push(status);
-  }
-  if (deviceType) {
-    sql += ' AND device_type = ?';
-    params.push(deviceType);
-  }
-  if (search) {
-    sql += ' AND (device_name LIKE ? OR mac_address LIKE ?)';
-    params.push(`%${search}%`, `%${search}%`);
-  }
-
-  sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-  params.push(limit, offset);
-
+export async function getDevices(filters) {
   const conn = await pool.getConnection();
   try {
-    const [rows] = await conn.execute(sql, params);
-    const [countRows] = await conn.query('SELECT FOUND_ROWS() as total');
-    const total = countRows[0]?.total ?? 0;
-
-    return { data: rows, page, limit, total };
+    let sql = "SELECT * FROM devices";
+    let params = [];
+    if (filters.status) {
+      sql += " WHERE status = ?";
+      params.push(filters.status);
+    }
+    // ... more filters ...
+    if (params.length > 0) {
+      const [rows] = await conn.execute(sql, params);
+      return rows;
+    } else {
+      const [rows] = await conn.execute(sql);
+      return rows;
+    }
   } finally {
     conn.release();
   }
@@ -40,10 +29,10 @@ export async function createDevice({
   user_id,
   passcode,
   status,
-  bt_name = '',
-  warranty_start = null,
-  default_cmd = null,
-  first_connected_at = null
+  bt_name,
+  warranty_start,
+  default_cmd,
+  first_connected_at,
 }) {
   const conn = await pool.getConnection();
   try {
@@ -52,16 +41,16 @@ export async function createDevice({
        (device_name, mac_address, device_type, user_id, passcode, status, bt_name, warranty_start, default_cmd, first_connected_at, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [
-        device_name,
-        mac_address,
-        device_type,
-        user_id,
-        passcode,
-        status,
-        bt_name,
-        warranty_start,
-        default_cmd,
-        first_connected_at
+        device_name ?? null,
+        mac_address ?? null,
+        device_type ?? null,
+        user_id ?? null,
+        passcode ?? null,
+        status ?? null,
+        bt_name ?? null,
+        warranty_start ?? null,
+        default_cmd ?? null,
+        first_connected_at ?? null,
       ]
     );
     return { id: result.insertId };
@@ -73,7 +62,9 @@ export async function createDevice({
 export async function getDeviceById(id) {
   const conn = await pool.getConnection();
   try {
-    const [rows] = await conn.execute('SELECT * FROM devices WHERE id = ?', [id]);
+    const [rows] = await conn.execute("SELECT * FROM devices WHERE id = ?", [
+      id,
+    ]);
     return rows[0] || null;
   } finally {
     conn.release();
@@ -89,10 +80,10 @@ export async function updateDevice(
     user_id,
     passcode,
     status,
-    bt_name = '',
+    bt_name = "",
     warranty_start = null,
     default_cmd = null,
-    first_connected_at = null
+    first_connected_at = null,
   }
 ) {
   const conn = await pool.getConnection();
@@ -113,7 +104,7 @@ export async function updateDevice(
         warranty_start,
         default_cmd,
         first_connected_at,
-        id
+        id,
       ]
     );
     return true;
@@ -125,7 +116,7 @@ export async function updateDevice(
 export async function deleteDevice(id) {
   const conn = await pool.getConnection();
   try {
-    await conn.execute('DELETE FROM devices WHERE id = ?', [id]);
+    await conn.execute("DELETE FROM devices WHERE id = ?", [id]);
     return true;
   } finally {
     conn.release();

@@ -10,9 +10,16 @@ import {
 
 export async function getUsers(req, res, next) {
   try {
-    const result = await listUsers(req.query);
-    res.json(result);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const offset = (page - 1) * limit;
+    const status = req.query.status || undefined;
+    const search = req.query.search || undefined;
+
+    const users = await listUsers({ status, search, limit, offset, page });
+    res.json(users);
   } catch (err) {
+    console.error("Error in getUsers:", err);
     next(err);
   }
 }

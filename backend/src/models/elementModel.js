@@ -1,4 +1,4 @@
-import pool from '../config/db.js';
+import pool from '../config/pool.js';
 
 export async function getElements(sectionId) {
   const conn = await pool.getConnection();

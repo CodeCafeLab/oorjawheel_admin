@@ -1,4 +1,4 @@
-import pool from '../config/db.js';
+import pool from '../config/pool.js';
 
 export async function getPages() {
   const conn = await pool.getConnection();
