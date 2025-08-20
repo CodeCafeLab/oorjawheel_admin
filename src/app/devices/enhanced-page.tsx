@@ -102,17 +102,12 @@ export default function EnhancedDevicesPage() {
     };
 
     const handleDeleteDevice = async (id: string) => {
-        const response = await fetch('/api/devices', {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id }),
-        });
-        const result = await response.json();
-        if (response.ok && !result.error) {
+        const result = await deleteDevice(id);
+        if (result.success) {
             toast({ title: 'Device Deleted', description: result.message });
             refreshData();
         } else {
-            toast({ variant: 'destructive', title: 'Error', description: result.error || 'Failed to delete device.' });
+            toast({ variant: 'destructive', title: 'Error', description: result.message || 'Failed to delete device.' });
         }
     };
 

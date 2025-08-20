@@ -1,424 +1,151 @@
 
 'use server';
 
-import pool from '@/lib/db';
-import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { api } from '@/lib/api-client';
 
 const DeviceFormSchema = z.object({
-    deviceName: z.string().min(1, "Device name is required"),
-    macAddress: z.string().regex(/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/, "Invalid MAC address format"),
-    deviceType: z.string().min(1, "Device type is required"),
-    userId: z.string().nullable(),
-    passcode: z.string().min(6, "Passcode must be at least 6 characters"),
-    status: z.enum(["never_used", "active", "disabled"]),
-    btName: z.string().optional(),
-    warrantyStart: z.string().optional().nullable(),
-    defaultCmd: z.string().optional(),
-    firstConnectedAt: z.string().optional().nullable()
+  deviceName: z.string().min(1),
+  macAddress: z.string().regex(/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/),
+  deviceType: z.string().min(1),
+  userId: z.string().nullable(),
+  passcode: z.string().min(6),
+  status: z.enum(['never_used', 'active', 'disabled']),
+  btName: z.string().optional(),
+  warrantyStart: z.string().optional().nullable(),
+  defaultCmd: z.string().optional(),
+  firstConnectedAt: z.string().optional().nullable(),
 });
-
-const DeviceMasterFormSchema = z.object({
-    deviceType: z.string().min(1, "Device type name is required"),
-    btServe: z.string().min(1, "BT service UUID is required"),
-    btChar: z.string().min(1, "BT characteristic UUID is required"),
-    soundBtName: z.string().min(1, "Sound BT name is required"),
-    status: z.enum(["active", "inactive"])
-});
-
-// --- Device Actions ---
 
 export async function addDevice(values: z.infer<typeof DeviceFormSchema>) {
   try {
-    const connection = await pool.getConnection();
-    
-    const [result] = await connection.execute(
-      'INSERT INTO devices (device_name, mac_address, device_type, user_id, passcode, status, bt_name, warranty_start, default_cmd, first_connected_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
-      [
-        values.deviceName,
-        values.macAddress,
-        values.deviceType,
-        values.userId,
-        values.passcode,
-        values.status,
-        values.btName ?? '',
-        values.warrantyStart || null,
-        values.defaultCmd || null,
-        values.firstConnectedAt || null
-      ]
-    );
-    connection.release();
-    revalidatePath('/devices');
+    await api.post('/devices', {
+      device_name: values.deviceName,
+      mac_address: values.macAddress,
+      device_type: values.deviceType,
+      user_id: values.userId,
+      passcode: values.passcode,
+      status: values.status,
+      bt_name: values.btName ?? '',
+      warranty_start: values.warrantyStart || null,
+      default_cmd: values.defaultCmd || null,
+      first_connected_at: values.firstConnectedAt || null,
+    });
     return { success: true, message: 'Device added successfully.' };
-  } catch (error) {
-    console.error('Database Error:', error);
-    return { success: false, message: 'Failed to add device.' };
+  } catch (e: any) {
+    return { success: false, message: e.message };
   }
 }
 
 export async function updateDevice(id: string, values: z.infer<typeof DeviceFormSchema>) {
   try {
-    const connection = await pool.getConnection();
-    
-    await connection.execute(
-      'UPDATE devices SET device_name = ?, mac_address = ?, device_type = ?, user_id = ?, passcode = ?, status = ?, bt_name = ?, warranty_start = ?, default_cmd = ?, first_connected_at = ?, updated_at = NOW() WHERE id = ?',
-      [
-        values.deviceName,
-        values.macAddress,
-        values.deviceType,
-        values.userId,
-        values.passcode,
-        values.status,
-        values.btName ?? '',
-        values.warrantyStart || null,
-        values.defaultCmd || null,
-        values.firstConnectedAt || null,
-        id
-      ]
-    );
-    connection.release();
-    revalidatePath('/devices');
+    await api.put(`/devices/${id}`, {
+      device_name: values.deviceName,
+      mac_address: values.macAddress,
+      device_type: values.deviceType,
+      user_id: values.userId,
+      passcode: values.passcode,
+      status: values.status,
+      bt_name: values.btName ?? '',
+      warranty_start: values.warrantyStart || null,
+      default_cmd: values.defaultCmd || null,
+      first_connected_at: values.firstConnectedAt || null,
+    });
     return { success: true, message: 'Device updated successfully.' };
-  } catch (error) {
-    console.error('Database Error:', error);
-    return { success: false, message: 'Failed to update device.' };
+  } catch (e: any) {
+    return { success: false, message: e.message };
   }
 }
 
 export async function deleteDevice(id: string) {
   try {
-    const connection = await pool.getConnection();
-    await connection.execute('DELETE FROM devices WHERE id = ?', [id]);
-    connection.release();
-    revalidatePath('/devices');
+    await api.delete(`/devices/${id}`);
     return { success: true, message: 'Device deleted successfully.' };
-  } catch (error) {
-    console.error('Database Error:', error);
-    return { success: false, message: 'Failed to delete device.' };
+  } catch (e: any) {
+    return { success: false, message: e.message };
   }
 }
 
-// --- Device Master Actions ---
+export async function fetchDevices(filters?: { status?: string; deviceType?: string; search?: string; page?: number; limit?: number }) {
+  try {
+    const { data } = await api.get('/devices', { params: filters });
+    return data?.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getTotalDeviceCount(filters?: { status?: string; deviceType?: string; search?: string }) {
+  try {
+    const { data } = await api.get('/devices', { params: { ...filters, page: 1, limit: 1 } });
+    return data?.total ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+// ---- Device Masters ----
+
+const DeviceMasterFormSchema = z.object({
+  deviceType: z.string().min(1),
+  btServe: z.string().min(1),
+  btChar: z.string().min(1),
+  soundBtName: z.string().min(1),
+  status: z.enum(['active', 'inactive'])
+});
+
+export async function fetchDeviceMasters(filters?: { status?: string; search?: string; page?: number; limit?: number }) {
+  try {
+    const { data } = await api.get('/device-masters', { params: filters });
+    return data?.data ?? [];
+  } catch {
+    return [];
+  }
+}
 
 export async function addDeviceMaster(values: z.infer<typeof DeviceMasterFormSchema>) {
   try {
-    const connection = await pool.getConnection();
-    
-    await connection.execute(
-      'INSERT INTO device_masters (deviceType, btServe, btChar, soundBtName, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
-      [values.deviceType, values.btServe, values.btChar, values.soundBtName, values.status]
-    );
-    connection.release();
-    revalidatePath('/devices');
+    await api.post('/device-masters', values);
     return { success: true, message: 'Device type added successfully.' };
-  } catch (error) {
-    console.error('Database Error:', error);
-    return { success: false, message: 'Failed to add device type.' };
+  } catch (e: any) {
+    return { success: false, message: e.message };
   }
 }
 
 export async function updateDeviceMaster(id: string, values: z.infer<typeof DeviceMasterFormSchema>) {
-    try {
-      const connection = await pool.getConnection();
-      
-      await connection.execute(
-        'UPDATE device_masters SET deviceType = ?, btServe = ?, btChar = ?, soundBtName = ?, status = ?, updatedAt = NOW() WHERE id = ?',
-        [values.deviceType, values.btServe, values.btChar, values.soundBtName, values.status, id]
-      );
-      connection.release();
-      revalidatePath('/devices');
-      return { success: true, message: 'Device type updated successfully.' };
-    } catch (error) {
-      console.error('Database Error:', error);
-      return { success: false, message: 'Failed to update device type.' };
-    }
+  try {
+    await api.put(`/device-masters/${id}`, values);
+    return { success: true, message: 'Device type updated successfully.' };
+  } catch (e: any) {
+    return { success: false, message: e.message };
+  }
 }
 
 export async function deleteDeviceMaster(id: string) {
-    try {
-        const connection = await pool.getConnection();
-
-        const [master] = await connection.execute('SELECT deviceType FROM device_masters WHERE id = ?', [id]);
-        if (!Array.isArray(master) || master.length === 0) {
-            connection.release();
-            return { success: false, message: "Device type not found." };
-        }
-        const deviceType = (master[0] as any).deviceType;
-
-        const [devices] = await connection.execute('SELECT id FROM devices WHERE device_type = ?', [deviceType]);
-        if (Array.isArray(devices) && devices.length > 0) {
-            connection.release();
-            return { success: false, message: `Cannot delete. ${devices.length} device(s) are using this type.` };
-        }
-
-        await connection.execute('DELETE FROM device_masters WHERE id = ?', [id]);
-        connection.release();
-        revalidatePath('/devices');
-        return { success: true, message: 'Device type deleted successfully.' };
-    } catch (error) {
-        console.error('Database Error:', error);
-        return { success: false, message: 'Failed to delete device type.' };
-    }
-}
-
-// --- Data Fetching ---
-
-export async function fetchDevices(filters?: { status?: string; deviceType?: string; search?: string; page?: number; limit?: number }) {
-    try {
-      const connection = await pool.getConnection();
-      
-      // Build the base query
-      let query = 'SELECT * FROM devices WHERE 1=1';
-      const params: any[] = [];
-      
-      if (filters?.status) {
-        query += ' AND status = ?';
-        params.push(filters.status);
-      }
-      
-      if (filters?.deviceType) {
-        query += ' AND device_type = ?';
-        params.push(filters.deviceType);
-      }
-      
-      if (filters?.search) {
-        query += ' AND (device_name LIKE ? OR mac_address LIKE ?)';
-        params.push(`%${filters.search}%`, `%${filters.search}%`);
-      }
-      
-      // Add pagination if specified
-      if (filters?.page && filters?.limit) {
-        const offset = (filters.page - 1) * filters.limit;
-        query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-        params.push(filters.limit, offset);
-      } else {
-        // If no pagination, still order by creation date
-        query += ' ORDER BY created_at DESC';
-      }
-      
-      const [rows] = await connection.execute(query, params);
-      connection.release();
-      
-      // Normalize to schema
-      const devices = (rows as any[]).map(row => ({
-        id: row.id?.toString?.() ?? String(row.id),
-        deviceName: row.device_name ?? null,
-        macAddress: row.mac_address ?? null,
-        deviceType: row.device_type ?? null,
-        userId: row.user_id ? String(row.user_id) : null,
-        passcode: row.passcode ?? null,
-        status: row.status,
-        btName: row.bt_name ?? null,
-        warrantyStart: row.warranty_start ? String(row.warranty_start) : null,
-        defaultCmd: row.default_cmd ?? null,
-        firstConnectedAt: row.first_connected_at ? String(row.first_connected_at) : null,
-        createdAt: row.created_at ? String(row.created_at) : null,
-        updatedAt: row.updated_at ? String(row.updated_at) : null,
-      }));
-
-      const { deviceSchema } = await import('@/app/devices/schema');
-      return (await import('zod')).z.array(deviceSchema).parse(devices);
-    } catch (error) {
-      console.error('Database Error fetching devices:', error);
-      return [];
-    }
-}
-  
-  export async function fetchDeviceMasters(filters?: { status?: string; search?: string; page?: number; limit?: number }) {
-    try {
-      const connection = await pool.getConnection();
-      let query = 'SELECT * FROM device_masters WHERE 1=1';
-      const params: any[] = [];
-      
-      if (filters?.status) {
-        query += ' AND status = ?';
-        params.push(filters.status);
-      }
-      
-      if (filters?.search) {
-        query += ' AND deviceType LIKE ?';
-        params.push(`%${filters.search}%`);
-      }
-      
-      // Add pagination if specified
-      if (filters?.page && filters?.limit) {
-        const offset = (filters.page - 1) * filters.limit;
-        query += ' ORDER BY createdAt DESC LIMIT ? OFFSET ?';
-        params.push(filters.limit, offset);
-      } else {
-        query += ' ORDER BY createdAt DESC';
-      }
-      
-      const [rows] = await connection.execute(query, params);
-      connection.release();
-      
-      const masters = (rows as any[]).map(row => ({
-        id: row.id?.toString?.() ?? String(row.id),
-        deviceType: row.deviceType,
-        btServe: row.btServe,
-        btChar: row.btChar,
-        soundBtName: row.soundBtName,
-        status: row.status,
-        createdAt: row.createdAt ? String(row.createdAt) : null,
-        updatedAt: row.updatedAt ? String(row.updatedAt) : null,
-      }));
-      const { deviceMasterSchema } = await import('@/app/devices/schema');
-      return (await import('zod')).z.array(deviceMasterSchema).parse(masters);
-    } catch (error) {
-      console.error('Database Error fetching device masters:', error);
-      return [];
-    }
+  try {
+    await api.delete(`/device-masters/${id}`);
+    return { success: true, message: 'Device type deleted successfully.' };
+  } catch (e: any) {
+    return { success: false, message: e.message };
   }
-
-  export async function bulkDeleteDevices(ids: string[]) {
-    if (ids.length === 0) return { success: true, message: 'No devices selected.' };
-    try {
-      const connection = await pool.getConnection();
-      const placeholders = ids.map(() => '?').join(',');
-      await connection.execute(
-        `DELETE FROM devices WHERE id IN (${placeholders})`,
-        ids
-      );
-      connection.release();
-      revalidatePath('/devices');
-      return { success: true, message: `${ids.length} devices deleted successfully.` };
-    } catch (error) {
-      console.error('Database Error:', error);
-      return { success: false, message: 'Failed to delete devices.' };
-    }
-  }
-  
-  export async function bulkDeleteDeviceMasters(ids: string[]) {
-    if (ids.length === 0) return { success: true, message: 'No device types selected.' };
-    try {
-      const connection = await pool.getConnection();
-      
-      const placeholders = ids.map(() => '?').join(',');
-      
-      await connection.execute(
-        `DELETE FROM device_masters WHERE id IN (${placeholders})`,
-        ids
-      );
-      connection.release();
-      revalidatePath('/devices');
-      return { success: true, message: `${ids.length} device types deleted successfully.` };
-    } catch (error) {
-      console.error('Database Error:', error);
-      return { success: false, message: 'Failed to delete device types.' };
-    }
-  }
-
-// Add a function to get total count for pagination
-export async function getTotalDeviceCount(filters?: { status?: string; deviceType?: string; search?: string }) {
-    try {
-      const connection = await pool.getConnection();
-      let query = 'SELECT COUNT(*) as total FROM devices WHERE 1=1';
-      const params: any[] = [];
-      
-      if (filters?.status) {
-        query += ' AND status = ?';
-        params.push(filters.status);
-      }
-      
-      if (filters?.deviceType) {
-        query += ' AND device_type = ?';
-        params.push(filters.deviceType);
-      }
-      
-      if (filters?.search) {
-        query += ' AND (device_name LIKE ? OR mac_address LIKE ?)';
-        params.push(`%${filters.search}%`, `%${filters.search}%`);
-      }
-      
-      const [rows] = await connection.execute(query, params);
-      connection.release();
-      
-      return (rows as any[])[0]?.total || 0;
-    } catch (error) {
-      console.error('Database Error getting device count:', error);
-      return 0;
-    }
 }
 
-export async function getTotalDeviceMasterCount(filters?: { status?: string; search?: string }) {
-    try {
-      const connection = await pool.getConnection();
-      let query = 'SELECT COUNT(*) as total FROM device_masters WHERE 1=1';
-      const params: any[] = [];
-      
-      if (filters?.status) {
-        query += ' AND status = ?';
-        params.push(filters.status);
-      }
-      
-      if (filters?.search) {
-        query += ' AND deviceType LIKE ?';
-        params.push(`%${filters.search}%`);
-      }
-      
-      const [rows] = await connection.execute(query, params);
-      connection.release();
-      
-      return (rows as any[])[0]?.total || 0;
-    } catch (error) {
-      console.error('Database Error getting device master count:', error);
-      return 0;
-    }
+// ---- Bulk helpers ----
+
+export async function bulkDeleteDevices(ids: string[]) {
+  try {
+    await Promise.all(ids.map((id) => api.delete(`/devices/${id}`)));
+    return { success: true, message: `${ids.length} devices deleted successfully.` };
+  } catch (e: any) {
+    return { success: false, message: e.message || 'Failed to delete devices.' };
+  }
 }
 
-// Function to get ALL devices without pagination (use with caution for large datasets)
-export async function fetchAllDevices(filters?: { status?: string; deviceType?: string; search?: string }) {
-    try {
-      const connection = await pool.getConnection();
-      let query = 'SELECT * FROM devices WHERE 1=1';
-      const params: any[] = [];
-      
-      if (filters?.status) {
-        query += ' AND status = ?';
-        params.push(filters.status);
-      }
-      
-      if (filters?.deviceType) {
-        query += ' AND device_type = ?';
-        params.push(filters.deviceType);
-      }
-      
-      if (filters?.search) {
-        query += ' AND (device_name LIKE ? OR mac_address LIKE ?)';
-        params.push(`%${filters.search}%`, `%${filters.search}%`);
-      }
-      
-      query += ' ORDER BY created_at DESC';
-      
-      // Execute with larger timeout for big datasets
-      const [rows] = await connection.execute({
-        sql: query,
-        values: params,
-        timeout: 120000 // 2 minutes timeout
-      });
-      
-      connection.release();
-      
-      // Convert to proper format
-      const devices = (rows as any[]).map(row => ({
-        id: row.id.toString(),
-        deviceName: row.device_name || row.deviceName,
-        macAddress: row.mac_address || row.macAddress,
-        deviceType: row.device_type || row.deviceType,
-        userId: row.user_id || row.userId,
-        passcode: row.passcode,
-        status: row.status,
-        btName: row.bt_name || row.btName,
-        warrantyStart: row.warranty_start || row.warrantyStart,
-        defaultCmd: row.default_cmd || row.defaultCmd,
-        firstConnectedAt: row.first_connected_at || row.firstConnectedAt,
-        createdAt: row.created_at || row.createdAt,
-        updatedAt: row.updated_at || row.updatedAt
-      }));
-      
-      return devices;
-    } catch (error) {
-      console.error('Database Error fetching all devices:', error);
-      return [];
-    }
+export async function bulkDeleteDeviceMasters(ids: string[]) {
+  try {
+    await Promise.all(ids.map((id) => api.delete(`/device-masters/${id}`)));
+    return { success: true, message: `${ids.length} device types deleted successfully.` };
+  } catch (e: any) {
+    return { success: false, message: e.message || 'Failed to delete device types.' };
+  }
 }
