@@ -27,10 +27,20 @@ export const getCommandLogById = async (req, res, next) => {
 
 export const createCommandLog = async (req, res, next) => {
   try {
+    console.log('Controller received body:', JSON.stringify(req.body, null, 2));
     const log = await create(req.body);
+    console.log('Successfully created log:', log);
     res.status(201).json(log);
   } catch (err) {
-    next(err);
+    console.error('Error in createCommandLog:', err.message);
+    console.error('Stack trace:', err.stack);
+    
+    // Send detailed error response for debugging
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: err.message,
+      details: err.stack
+    });
   }
 };
 
