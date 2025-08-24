@@ -1,8 +1,37 @@
-import pool from '../config/pool.js';
+import pool from "../config/pool.js";
 
-async function query(sql, params = []) {
+export async function getDeviceEvents(filters = {}) {
   const conn = await pool.getConnection();
   try {
+    let sql = `
+      SELECT e.*
+      FROM device_events e
+      WHERE 1=1
+    `;
+    const params = [];
+
+    if (filters.deviceId) {
+      sql += " AND e.device_id = ?";
+      params.push(filters.deviceId);
+    }
+
+    if (filters.event) {
+      sql += " AND e.event = ?";
+      params.push(filters.event);
+    }
+
+    if (filters.startDate) {
+      sql += " AND e.timestamp >= ?";
+      params.push(filters.startDate);
+    }
+
+    if (filters.endDate) {
+      sql += " AND e.timestamp <= ?";
+      params.push(filters.endDate);
+    }
+
+    sql += " ORDER BY e.timestamp DESC";
+
     const [rows] = await conn.execute(sql, params);
     return rows;
   } finally {
@@ -10,44 +39,59 @@ async function query(sql, params = []) {
   }
 }
 
-export async function getDeviceEvents({ deviceId, page = 1, limit = 100 }) {
-  const offset = (page - 1) * limit;
-  let sql = `
-    SELECT SQL_CALC_FOUND_ROWS de.*, d.device_name as device
-    FROM device_events de
-    LEFT JOIN devices d ON de.device_id = d.id
-    WHERE 1=1
-  `;
-  const params = [];
 
-  if (deviceId) {
-    sql += ' AND de.device_id = ?';
-    params.push(deviceId);
-  }
 
-  sql += ' ORDER BY de.timestamp DESC LIMIT ? OFFSET ?';
-  params.push(limit, offset);
-
+export async function createDeviceEvent({ deviceId, event }) {
   const conn = await pool.getConnection();
   try {
-    const [rows] = await conn.execute(sql, params);
-    const [countRows] = await conn.query('SELECT FOUND_ROWS() as total');
-    const total = countRows[0]?.total ?? 0;
-
-    return { data: rows, page, limit, total };
+    const [result] = await conn.execute(
+      `INSERT INTO device_events (device_id, event, timestamp) 
+       VALUES (?, ?, NOW())`,
+      [deviceId, event]
+    );
+    return { id: result.insertId };
   } finally {
     conn.release();
   }
 }
 
-export async function createDeviceEvent({ device_id, event, timestamp }) {
+export async function getDeviceEventById(id) {
   const conn = await pool.getConnection();
   try {
-    const [result] = await conn.execute(
-      'INSERT INTO device_events (device_id, event, timestamp) VALUES (?, ?, ?)',
-      [device_id, event, timestamp || new Date()]
+    const [rows] = await conn.execute(
+      `SELECT e.*, d.name as device_name 
+       FROM device_events e
+       LEFT JOIN devices d ON e.device_id = d.id
+       WHERE e.id = ?`,
+      [id]
     );
-    return { id: result.insertId };
+    return rows[0];
+  } finally {
+    conn.release();
+  }
+}
+
+export async function getDeviceEventsByDevice(deviceId, limit = 50) {
+  const conn = await pool.getConnection();
+  try {
+    const [rows] = await conn.execute(
+      `SELECT * FROM device_events 
+       WHERE device_id = ? 
+       ORDER BY timestamp DESC 
+       LIMIT ?`,
+      [deviceId, parseInt(limit)]
+    );
+    return rows;
+  } finally {
+    conn.release();
+  }
+}
+
+export async function deleteDeviceEvent(id) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.execute("DELETE FROM device_events WHERE id = ?", [id]);
+    return { id };
   } finally {
     conn.release();
   }
