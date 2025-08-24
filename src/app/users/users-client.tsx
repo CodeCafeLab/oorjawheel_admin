@@ -1,3 +1,4 @@
+
 "use client";
 
 import { z } from "zod";
@@ -12,7 +13,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Users as UsersIcon } from "lucide-react";
 import { UserForm } from "./user-form";
 import * as React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -158,7 +159,7 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-headline">User Management</h1>
           <p className="text-muted-foreground">
@@ -171,23 +172,30 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
         </Button>
       </div>
       {users.length > 0 ? (
-        <DataTable columns={columns(handleEditClick)} data={users} />
-      ) : (
-        <Card className="text-center py-20">
-          <CardHeader>
-            <CardTitle className="text-2xl font-headline">
-              No Users Found
-            </CardTitle>
-            <CardDescription>
-              Get started by creating the first user account.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button size="lg" onClick={handleAddClick}>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Your First User
-            </Button>
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <DataTable columns={columns(handleEditClick)} data={users} />
           </CardContent>
+        </Card>
+      ) : (
+        <Card className="flex flex-col items-center justify-center py-20 border-dashed">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+              <UsersIcon className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <CardHeader className="text-center p-0">
+                <CardTitle className="text-xl font-headline">
+                No Users Found
+                </CardTitle>
+                <CardDescription>
+                Get started by creating the first user account.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0 mt-6">
+                <Button size="lg" onClick={handleAddClick}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Your First User
+                </Button>
+            </CardContent>
         </Card>
       )}
 
@@ -198,9 +206,9 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
           if (!isOpen) setSelectedUser(null);
         }}
       >
-        <SheetContent>
+        <SheetContent className="sm:max-w-lg">
           <SheetHeader>
-            <SheetTitle>
+            <SheetTitle className="font-headline text-2xl">
               {selectedUser ? "Edit User" : "Add New User"}
             </SheetTitle>
             <SheetDescription>
@@ -209,8 +217,8 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
                 : "Fill in the details to create a new user account."}
             </SheetDescription>
           </SheetHeader>
-          <ScrollArea className="h-full">
-            <div className="px-6 py-4">
+          <ScrollArea className="h-[calc(100vh-8rem)]">
+            <div className="px-1 py-6">
               <UserForm onFormSuccess={handleFormSuccess} user={selectedUser} />
             </div>
           </ScrollArea>

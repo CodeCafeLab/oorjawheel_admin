@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from 'react'
@@ -23,12 +24,13 @@ import {
   CartesianGrid,
   PieChart,
   Pie,
+  Cell
 } from 'recharts'
 import type { ChartConfig } from "@/components/ui/chart"
 import { Users, Package, AlertTriangle, Terminal } from "lucide-react"
 
 const commandVolumeChartConfig = {
-  commands: { label: "Events", color: "hsl(var(--primary))" },
+  commands: { label: "Events", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig
 
 const deviceStatusChartConfig = {
@@ -85,10 +87,10 @@ export default function DashboardPage() {
   ]
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {kpiCards.map((kpi, index) => (
-          <Card key={index} className="shadow-md hover:shadow-lg transition-shadow">
+          <Card key={index} className="shadow-sm hover:shadow-lg transition-shadow duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
               <div className={`p-1.5 rounded-md ${kpi.bgColor}`}>
@@ -101,15 +103,15 @@ export default function DashboardPage() {
           </Card>
         ))}
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="lg:col-span-4 shadow-md">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="lg:col-span-4 shadow-sm">
           <CardHeader>
             <CardTitle className="font-headline">Daily Events</CardTitle>
             <CardDescription>Events recorded over the last 7 days.</CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
             <ChartContainer config={commandVolumeChartConfig} className="min-h-[300px] w-full">
-              <BarChart accessibilityLayer data={commandVolumeData}>
+              <BarChart accessibilityLayer data={commandVolumeData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="day" tickLine={false} tickMargin={10} axisLine={false} />
                 <YAxis tickLine={false} axisLine={false} tickMargin={10} />
@@ -120,7 +122,7 @@ export default function DashboardPage() {
             </ChartContainer>
           </CardContent>
         </Card>
-        <Card className="lg:col-span-3 shadow-md">
+        <Card className="lg:col-span-3 shadow-sm">
           <CardHeader>
             <CardTitle className="font-headline">Device Status</CardTitle>
             <CardDescription>Current distribution of device statuses.</CardDescription>
@@ -129,7 +131,6 @@ export default function DashboardPage() {
             <ChartContainer config={deviceStatusChartConfig} className="min-h-[300px] max-h-[300px] w-full aspect-square">
               <PieChart accessibilityLayer>
                 <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                <ChartLegend content={<ChartLegendContent nameKey="status" />} />
                 <Pie
                   data={deviceStatusData}
                   dataKey="count"
@@ -149,7 +150,12 @@ export default function DashboardPage() {
                       </text>
                     )
                   }}
-                />
+                >
+                  {deviceStatusData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Pie>
+                <ChartLegend content={<ChartLegendContent nameKey="status" />} />
               </PieChart>
             </ChartContainer>
           </CardContent>

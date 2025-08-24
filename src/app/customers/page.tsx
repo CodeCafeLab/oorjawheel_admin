@@ -13,7 +13,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Users } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import * as React from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -59,7 +59,7 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-6">
-       <div className="flex items-center justify-between">
+       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-headline">Customers</h1>
           <p className="text-muted-foreground">
@@ -76,15 +76,15 @@ export default function CustomersPage() {
                     Add Customer
                 </Button>
             </SheetTrigger>
-            <SheetContent className='md:max-w-xl'>
+            <SheetContent className='sm:max-w-lg'>
                 <SheetHeader>
-                    <SheetTitle>{selectedCustomer ? 'Edit Customer' : 'Add New Customer'}</SheetTitle>
+                    <SheetTitle className="font-headline text-2xl">{selectedCustomer ? 'Edit Customer' : 'Add New Customer'}</SheetTitle>
                     <SheetDescription>
                         Fill in the details for the customer.
                     </SheetDescription>
                 </SheetHeader>
-                <ScrollArea className="h-full">
-                  <div className="py-4 px-6">
+                <ScrollArea className="h-[calc(100vh-8rem)]">
+                  <div className="py-6 px-1">
                     <CustomerForm onFormSuccess={handleFormSuccess} customer={selectedCustomer} />
                   </div>
                 </ScrollArea>
@@ -92,21 +92,28 @@ export default function CustomersPage() {
         </Sheet>
       </div>
       {customers.length > 0 ? (
-        <DataTable columns={columns(handleEdit, handleDelete)} data={customers} onDelete={handleDelete} />
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <DataTable columns={columns(handleEdit, handleDelete)} data={customers} onDelete={handleDelete} />
+          </CardContent>
+        </Card>
       ) : (
-        <Card className="flex flex-col items-center justify-center py-20">
-            <CardHeader>
-                <CardTitle className="text-xl font-headline">No Customers Found</CardTitle>
-                <CardDescription>
-                    Get started by adding your first customer.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Button size="lg" onClick={() => { setSelectedCustomer(null); setSheetOpen(true); }}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Your First Customer
-                </Button>
-            </CardContent>
+        <Card className="flex flex-col items-center justify-center py-20 border-dashed">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+              <Users className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <CardHeader className="text-center p-0">
+              <CardTitle className="text-xl font-headline">No Customers Found</CardTitle>
+              <CardDescription>
+                  Get started by adding your first customer.
+              </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 mt-6">
+              <Button size="lg" onClick={() => { setSelectedCustomer(null); setSheetOpen(true); }}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Your First Customer
+              </Button>
+          </CardContent>
         </Card>
       )}
     </div>

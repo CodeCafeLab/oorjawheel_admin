@@ -118,58 +118,66 @@ export default function SettingsPage() {
                 Manage general application settings and branding.
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="app-title">App Title</Label>
-                <Input id="app-title" defaultValue="Oorja" />
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="app-title">App Title</Label>
+                  <Input id="app-title" defaultValue="Oorja" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="official-email">Official Email</Label>
+                  <Input id="official-email" type="email" defaultValue="contact@oorjawheel.com" />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="official-email">Official Email</Label>
-                <Input id="official-email" type="email" defaultValue="contact@oorjawheel.com" />
+              <Separator />
+               <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="app-logo">App Logo URL</Label>
+                  <Input id="app-logo" placeholder="https://example.com/logo.png" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="app-icon">App Icon URL</Label>
+                  <Input id="app-icon" placeholder="https://example.com/icon.png" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-logo">Admin Logo URL</Label>
+                  <Input id="admin-logo" placeholder="https://example.com/admin-logo.png" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="admin-icon">Admin Icon URL</Label>
+                  <Input id="admin-icon" placeholder="https://example.com/admin-icon.png" />
+                </div>
               </div>
-               <div className="space-y-2">
-                <Label htmlFor="app-logo">App Logo URL</Label>
-                <Input id="app-logo" placeholder="https://example.com/logo.png" />
-              </div>
-               <div className="space-y-2">
-                <Label htmlFor="app-icon">App Icon URL</Label>
-                <Input id="app-icon" placeholder="https://example.com/icon.png" />
-              </div>
-               <div className="space-y-2">
-                <Label htmlFor="admin-logo">Admin Logo URL</Label>
-                <Input id="admin-logo" placeholder="https://example.com/admin-logo.png" />
-              </div>
-               <div className="space-y-2">
-                <Label htmlFor="admin-icon">Admin Icon URL</Label>
-                <Input id="admin-icon" placeholder="https://example.com/admin-icon.png" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="play-store-link">Play Store Link</Label>
-                <Input id="play-store-link" placeholder="https://play.google.com/store/apps/details?id=..." />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="app-store-link">App Store Link</Label>
-                <Input id="app-store-link" placeholder="https://apps.apple.com/app/id..." />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="support-number">Support Number</Label>
-                <Input id="support-number" placeholder="+91 12345 67890" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="whatsapp-number">WhatsApp Number</Label>
-                <Input id="whatsapp-number" placeholder="+91 12345 67890" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="facebook-link">Facebook Link</Label>
-                <Input id="facebook-link" placeholder="https://facebook.com/oorjawheel" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="instagram-link">Instagram Link</Label>
-                <Input id="instagram-link" placeholder="https://instagram.com/oorjawheel" />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="website-link">Website Link</Label>
-                <Input id="website-link" placeholder="https://oorjawheel.com" />
+              <Separator />
+               <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="play-store-link">Play Store Link</Label>
+                  <Input id="play-store-link" placeholder="https://play.google.com/store/apps/details?id=..." />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="app-store-link">App Store Link</Label>
+                  <Input id="app-store-link" placeholder="https://apps.apple.com/app/id..." />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="support-number">Support Number</Label>
+                  <Input id="support-number" placeholder="+91 12345 67890" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp-number">WhatsApp Number</Label>
+                  <Input id="whatsapp-number" placeholder="+91 12345 67890" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="facebook-link">Facebook Link</Label>
+                  <Input id="facebook-link" placeholder="https://facebook.com/oorjawheel" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="instagram-link">Instagram Link</Label>
+                  <Input id="instagram-link" placeholder="https://instagram.com/oorjawheel" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="website-link">Website Link</Label>
+                  <Input id="website-link" placeholder="https://oorjawheel.com" />
+                </div>
               </div>
             </CardContent>
             <CardFooter>
