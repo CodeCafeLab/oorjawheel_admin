@@ -1,6 +1,7 @@
 'use client'
 
 import { Toaster } from '@/components/ui/toaster'
+import { ToastProvider } from '@/lib/toast'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { Header } from '@/components/layout/header'
@@ -24,6 +25,7 @@ export default function RootClientLayout({
   }
 
   return (
+    <ToastProvider>
     <SidebarProvider>
       <AppSidebar />
       <div className="flex flex-col w-full min-h-screen">
@@ -34,5 +36,6 @@ export default function RootClientLayout({
       </div>
       <Toaster />
     </SidebarProvider>
+    </ToastProvider>
   )
 }

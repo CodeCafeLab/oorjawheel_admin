@@ -10,10 +10,12 @@ export const commandLogSchema = z.object({
 })
 
 export const deviceEventSchema = z.object({
-    id: z.string(),
-    device: z.string(),
-    event: z.enum(["connect", "disconnect", "scan_fail"]),
-    timestamp: z.string(),
+  id: z.string(),
+  deviceId: z.string(),
+  device: z.string(),
+  event: z.enum(["connect", "disconnect", "scan_fail"]),
+  timestamp: z.string(),
+  rawTimestamp: z.string().optional(),
 })
 
 export type CommandLog = z.infer<typeof commandLogSchema>

@@ -11,19 +11,24 @@ import { commandSchema } from '@/app/commands/schema';
 
 const CommandFormSchema = commandSchema.omit({ id: true });
 
-export async function addCommand(values: z.infer<typeof CommandFormSchema>) {
+type ActionResult = {
+  success: boolean;
+  message: string;
+};
+
+export async function addCommand(values: z.infer<typeof CommandFormSchema>): Promise<ActionResult> {
   console.log("Mock addCommand:", values);
   revalidatePath('/commands');
   return { success: true, message: 'Command added successfully (Mock).' };
 }
 
-export async function updateCommand(id: string, values: z.infer<typeof CommandFormSchema>) {
+export async function updateCommand(id: string, values: z.infer<typeof CommandFormSchema>): Promise<ActionResult> {
   console.log("Mock updateCommand:", id, values);
   revalidatePath('/commands');
   return { success: true, message: 'Command updated successfully (Mock).' };
 }
 
-export async function deleteCommand(id: string) {
+export async function deleteCommand(id: string): Promise<ActionResult> {
   console.log("Mock deleteCommand:", id);
   revalidatePath('/commands');
   return { success: true, message: 'Command deleted successfully (Mock).' };
