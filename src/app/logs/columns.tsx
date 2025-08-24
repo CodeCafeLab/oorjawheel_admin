@@ -257,8 +257,10 @@ export const eventColumns: ColumnDef<DeviceEvent>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const event = row.original;
+      // @ts-ignore - meta is not in the type definition
+      const { handleEdit, handleDelete } = table.options.meta || {};
 
       return (
         <div className="text-right">
@@ -277,8 +279,19 @@ export const eventColumns: ColumnDef<DeviceEvent>[] = [
                 Copy Event ID
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>View Device Details</DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">
+              <DropdownMenuItem 
+                onClick={() => handleEdit?.(event.id, event)}
+              >
+                Edit Event
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-red-600"
+                onClick={async () => {
+                  if (window.confirm('Are you sure you want to delete this event?')) {
+                    await handleDelete?.(event.id);
+                  }
+                }}
+              >
                 Delete Event
               </DropdownMenuItem>
             </DropdownMenuContent>

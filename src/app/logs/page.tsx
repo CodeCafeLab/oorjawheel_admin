@@ -3,7 +3,6 @@
 import * as React from "react";
 import { eventColumns } from "./columns";
 import { DataTable } from "./data-table";
-import { api } from "@/lib/api-client";
 import { DeviceEvent } from "./schema";
 import {
   Card,
@@ -12,9 +11,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useToast } from "./../../hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PlusCircle, RefreshCw } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { EventForm } from "./event-form";
+import {
+  deleteDeviceEvent,
+  addDeviceEvent,
+  fetchDeviceEvent,
+} from "@/actions/events";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
@@ -30,8 +44,12 @@ export default function DeviceEventsPage() {
   const [error, setError] = React.useState<string | null>(null);
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [isSheetOpen, setSheetOpen] = React.useState(false);
+  const [selectedEvent, setSelectedEvent] = React.useState<DeviceEvent | null>(
+    null
+  );
 
-  const fetchDeviceEvents = async () => {
+  const fetchDeviceEvents = async (): Promise<DeviceEvent[] | undefined> => {
     setLoading(true);
     setError(null);
     try {
@@ -56,31 +74,29 @@ export default function DeviceEventsPage() {
       const response = await res.json();
       console.log("API Response:", response);
 
-      // Check if response.data exists and is an array
-      if (!response.data || !Array.isArray(response.data)) {
-        console.error(
-          "Invalid response format - data is not an array:",
-          response
+      // Check if response is an array (direct response from API)
+      const eventsData = Array.isArray(response) ? response : response.data;
+
+      if (!Array.isArray(eventsData)) {
+        console.error("Invalid response format - expected an array:", response);
+        throw new Error(
+          "Invalid response format from server - expected an array of events"
         );
-        throw new Error("Invalid response format from server");
       }
 
       // Transform data to match the DeviceEvent schema
-      const transformedData = response.data.map((event: any) => {
-        const transformed = {
-          id: event.id.toString(),
-          deviceId: event.device_id.toString(),
-          device: `Device ${event.device_id}`,
-          event: event.event,
-          timestamp: event.timestamp,
-          rawTimestamp: formatDate(event.timestamp),
-        };
-        console.log("Transformed event:", transformed);
-        return transformed;
-      });
+      const transformedData = eventsData.map((event: any) => ({
+        id: event.id.toString(),
+        deviceId: event.device_id?.toString() || "unknown",
+        device: `Device ${event.device_id || "unknown"}`,
+        event: event.event || "unknown",
+        timestamp: event.timestamp || new Date().toISOString(),
+        rawTimestamp: formatDate(event.timestamp || new Date().toISOString()),
+      }));
 
-      console.log("Setting device events:", transformedData);
+      console.log("Transformed events:", transformedData);
       setDeviceEvents(transformedData);
+      return transformedData;
     } catch (err) {
       console.error("Error fetching device events:", err);
       setError(
@@ -96,24 +112,100 @@ export default function DeviceEventsPage() {
     }
   };
 
+  const refreshEvents = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const events = await fetchDeviceEvents();
+      if (events) {
+        setDeviceEvents(events);
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unknown error occurred";
+      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: "Failed to load device events. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   React.useEffect(() => {
-    fetchDeviceEvents();
-  }, [searchTerm]);
+    refreshEvents();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchDeviceEvents();
+    refreshEvents();
+  };
+
+  const handleEdit = async (id: string, data: Partial<DeviceEvent>): Promise<{ success: boolean; data?: any; error?: any }> => {
+    try {
+      // Find the full event data from the current deviceEvents list
+      const eventToEdit = deviceEvents.find(event => event.id === id);
+      if (!eventToEdit) {
+        throw new Error('Event not found');
+      }
+      
+      // Set the selected event with the complete data
+      setSelectedEvent({
+        ...eventToEdit,
+        ...data
+      });
+      
+      // Open the sheet for editing
+      setSheetOpen(true);
+      
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to edit event';
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: errorMessage,
+      });
+      return { success: false, error: errorMessage };
+    }
   };
 
   const handleDelete = async (id: string) => {
     try {
-      await api.delete(`/device-events/${id}`); // ✅ fixed endpoint
-      await fetchDeviceEvents();
-      return { success: true, data: { id } };
+      const result = await deleteDeviceEvent(id);
+      if (result.success) {
+        toast({
+          title: "Event Deleted",
+          description: result.message || "The device event has been deleted.",
+        });
+        await refreshEvents();
+        return { success: true, data: { id } };
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.message || "Failed to delete the device event.",
+        });
+        return { success: false, error: result.message };
+      }
     } catch (error) {
-      console.error("Error deleting event:", error);
-      return { success: false, error };
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: errorMessage,
+      });
+      return { success: false, error: errorMessage };
     }
+  };
+
+  const handleFormSuccess = () => {
+    setSheetOpen(false);
+    setSelectedEvent(null);
+    refreshEvents();
   };
 
   return (
@@ -121,36 +213,118 @@ export default function DeviceEventsPage() {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Device Events</CardTitle>
-              <CardDescription>
-                View and manage device connection events
-              </CardDescription>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-headline">Device Events</h1>
+                <p className="text-muted-foreground">
+                  View and manage device connection events.
+                </p>
+              </div>
+              <form onSubmit={handleSearch} className="flex space-x-2">
+                <Input
+                  placeholder="Search by device ID..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="max-w-sm"
+                />
+                <Button type="submit" disabled={loading}>
+                  Search
+                </Button>
+              </form>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={refreshEvents}
+                  disabled={loading}
+                  variant="outline"
+                >
+                  <RefreshCw
+                    className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                  />
+                  {loading ? "Refreshing..." : "Refresh"}
+                </Button>
+                <Sheet
+                  open={isSheetOpen}
+                  onOpenChange={(isOpen) => {
+                    setSheetOpen(isOpen);
+                    if (!isOpen) setSelectedEvent(null);
+                  }}
+                >
+                  <SheetTrigger asChild>
+                    <Button
+                      onClick={() => {
+                        setSelectedEvent(null);
+                        setSheetOpen(true);
+                      }}
+                    >
+                      <PlusCircle className="mr-2 h-4 w-4" />
+                      Add Event
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <SheetHeader>
+                      <SheetTitle>
+                        {selectedEvent
+                          ? "Edit Device Event"
+                          : "Add New Device Event"}
+                      </SheetTitle>
+                      <SheetDescription>
+                        Fill in the details for the device event.
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="py-4">
+                      <EventForm
+                        onFormSuccess={handleFormSuccess}
+                        event={selectedEvent}
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
             </div>
-            <form onSubmit={handleSearch} className="flex space-x-2">
-              <Input
-                placeholder="Search by device ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
-              />
-              <Button type="submit" disabled={loading}>
-                Search
-              </Button>
-            </form>
           </div>
         </CardHeader>
         <CardContent>
           {error ? (
-            <div className="text-red-500 text-center py-4">{error}</div>
+            <div className="text-red-500 text-center py-4">
+              <p>Error loading device events: {error}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={refreshEvents}
+                disabled={loading}
+              >
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                />
+                {loading ? "Retrying..." : "Retry"}
+              </Button>
+            </div>
+          ) : deviceEvents.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground mb-4">
+                {loading
+                  ? "Loading device events..."
+                  : "No device events found"}
+              </p>
+              {!loading && (
+                <Button variant="outline" onClick={refreshEvents}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Refresh
+                </Button>
+              )}
+            </div>
           ) : (
             <DataTable<DeviceEvent, unknown>
               columns={eventColumns}
               data={deviceEvents}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
               filterColumnId="device"
               filterPlaceholder="Search by device ID..."
               loading={loading}
-              onDelete={handleDelete}
+              enablePagination={true}
+              pageSizeOptions={[5, 10, 20]}
             />
           )}
         </CardContent>
