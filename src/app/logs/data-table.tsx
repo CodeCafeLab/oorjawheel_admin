@@ -50,9 +50,9 @@ interface DataTableProps<TData extends Record<string, any>, TValue> {
     rowSelection?: RowSelectionState
   }
   loading?: boolean
-  onAdd?: (data: Omit<TData, 'id'>) => Promise<{ success: boolean; data?: any; error?: any }>
-  onEdit?: (id: string, data: Partial<TData>) => Promise<{ success: boolean; data?: any; error?: any }>
-  onDelete?: (id: string) => Promise<{ success: boolean; data?: any; error?: any }>
+  onAdd?: (data: Omit<TData, 'id'>) => Promise<void>
+  onEdit?: (data: TData) => void;
+  onDelete?: (id: string) => void;
   enableRowSelection?: boolean
   enableMultiRowSelection?: boolean
   enableSorting?: boolean
@@ -82,14 +82,11 @@ export function DataTable<TData extends Record<string, any>, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [rowSelection, setInternalRowSelection] = React.useState<RowSelectionState>(state?.rowSelection || {});
-  const [isLoading, setIsLoading] = React.useState(loading);
   
-  // Initialize pagination state
   const [pagination, setPagination] = React.useState<PaginationState>(
     state?.pagination || { pageIndex: 0, pageSize: pageSizeOptions[0] || 10 }
   );
   
-  // Sync with parent state if provided
   React.useEffect(() => {
     if (state?.pagination) {
       setPagination(state.pagination);
@@ -99,42 +96,11 @@ export function DataTable<TData extends Record<string, any>, TValue>({
     }
   }, [state?.pagination, state?.rowSelection]);
   
-  // Notify parent of row selection changes
   React.useEffect(() => {
     if (onRowSelectionChange) {
       onRowSelectionChange(rowSelection);
     }
   }, [rowSelection, onRowSelectionChange]);
-
-  const handleAdd = async (data: Omit<TData, 'id'>) => {
-    if (!onAdd) return;
-    setIsLoading(true);
-    try {
-      await onAdd(data);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleEdit = async (id: string, data: Partial<TData>) => {
-    if (!onEdit) return;
-    setIsLoading(true);
-    try {
-      await onEdit(id, data);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!onDelete) return;
-    setIsLoading(true);
-    try {
-      await onDelete(id);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const table = useReactTable({
     data,
@@ -158,22 +124,13 @@ export function DataTable<TData extends Record<string, any>, TValue>({
     manualPagination: !!onPaginationChange,
     enableMultiRowSelection: enableMultiRowSelection,
     autoResetPageIndex: false,
+    meta: {
+      handleEdit: onEdit,
+      handleDelete: onDelete,
+    }
   })
 
-  // Debug logs
-  React.useEffect(() => {
-    console.log('DataTable data:', data);
-    console.log('Table rows:', table.getRowModel().rows);
-    console.log('Table state:', {
-      sorting,
-      columnFilters,
-      pagination,
-      rowSelection
-    });
-  }, [data, sorting, columnFilters, pagination, rowSelection]);
-
-  // Render loading skeleton
-  if (loading || isLoading) {
+  if (loading) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -236,7 +193,7 @@ export function DataTable<TData extends Record<string, any>, TValue>({
         {enablePagination && (
           <div className="flex items-center space-x-2">
             <p className="text-sm text-muted-foreground">
-              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() > 0 ? table.getPageCount() : 1}
             </p>
             <Select
               value={`${table.getState().pagination.pageSize}`}
@@ -337,7 +294,7 @@ export function DataTable<TData extends Record<string, any>, TValue>({
               Previous
             </Button>
             <span className="text-sm">
-              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+              Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount() > 0 ? table.getPageCount() : 1}
             </span>
             <Button
               variant="outline"

@@ -6,6 +6,8 @@ import {
   ArrowUpDown,
   ShieldCheck,
   ShieldX,
+  Trash2,
+  Edit,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,6 +21,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { CommandLog, DeviceEvent } from "./schema";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 
 export const commandColumns: ColumnDef<CommandLog>[] = [
   {
@@ -212,7 +226,7 @@ export const eventColumns: ColumnDef<DeviceEvent>[] = [
     },
   },
   {
-    accessorKey: "rawTimestamp",
+    accessorKey: "timestamp",
     header: ({ column }) => {
       return (
         <Button
@@ -263,7 +277,7 @@ export const eventColumns: ColumnDef<DeviceEvent>[] = [
       const { handleEdit, handleDelete } = table.options.meta || {};
 
       return (
-        <div className="text-right">
+        <AlertDialog>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
@@ -274,29 +288,35 @@ export const eventColumns: ColumnDef<DeviceEvent>[] = [
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(event.id)}
+                onClick={() => handleEdit?.(event)}
               >
-                Copy Event ID
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => handleEdit?.(event.id, event)}
-              >
+                <Edit className="mr-2 h-4 w-4" />
                 Edit Event
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                className="text-red-600"
-                onClick={async () => {
-                  if (window.confirm('Are you sure you want to delete this event?')) {
-                    await handleDelete?.(event.id);
-                  }
-                }}
-              >
-                Delete Event
-              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem 
+                  className="text-red-600"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Event
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
+          <AlertDialogContent>
+              <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      This action cannot be undone. This will permanently delete this device event.
+                  </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDelete?.(event.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+              </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       );
     },
   },

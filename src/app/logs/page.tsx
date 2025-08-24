@@ -28,6 +28,7 @@ import {
   deleteDeviceEvent,
   addDeviceEvent,
   fetchDeviceEvent,
+  updateDeviceEvent,
 } from "@/actions/events";
 
 const API_BASE =
@@ -72,9 +73,7 @@ export default function DeviceEventsPage() {
       }
 
       const response = await res.json();
-      console.log("API Response:", response);
 
-      // Check if response is an array (direct response from API)
       const eventsData = Array.isArray(response) ? response : response.data;
 
       if (!Array.isArray(eventsData)) {
@@ -84,7 +83,6 @@ export default function DeviceEventsPage() {
         );
       }
 
-      // Transform data to match the DeviceEvent schema
       const transformedData = eventsData.map((event: any) => ({
         id: event.id.toString(),
         deviceId: event.device_id?.toString() || "unknown",
@@ -94,7 +92,6 @@ export default function DeviceEventsPage() {
         rawTimestamp: formatDate(event.timestamp || new Date().toISOString()),
       }));
 
-      console.log("Transformed events:", transformedData);
       setDeviceEvents(transformedData);
       return transformedData;
     } catch (err) {
@@ -143,35 +140,11 @@ export default function DeviceEventsPage() {
     refreshEvents();
   };
 
-  const handleEdit = async (id: string, data: Partial<DeviceEvent>): Promise<{ success: boolean; data?: any; error?: any }> => {
-    try {
-      // Find the full event data from the current deviceEvents list
-      const eventToEdit = deviceEvents.find(event => event.id === id);
-      if (!eventToEdit) {
-        throw new Error('Event not found');
-      }
-      
-      // Set the selected event with the complete data
-      setSelectedEvent({
-        ...eventToEdit,
-        ...data
-      });
-      
-      // Open the sheet for editing
-      setSheetOpen(true);
-      
-      return { success: true };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to edit event';
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: errorMessage,
-      });
-      return { success: false, error: errorMessage };
-    }
+  const handleEdit = (eventToEdit: DeviceEvent) => {
+    setSelectedEvent(eventToEdit);
+    setSheetOpen(true);
   };
-
+  
   const handleDelete = async (id: string) => {
     try {
       const result = await deleteDeviceEvent(id);
@@ -181,14 +154,12 @@ export default function DeviceEventsPage() {
           description: result.message || "The device event has been deleted.",
         });
         await refreshEvents();
-        return { success: true, data: { id } };
       } else {
         toast({
           variant: "destructive",
           title: "Error",
           description: result.message || "Failed to delete the device event.",
         });
-        return { success: false, error: result.message };
       }
     } catch (error) {
       const errorMessage =
@@ -198,7 +169,6 @@ export default function DeviceEventsPage() {
         title: "Error",
         description: errorMessage,
       });
-      return { success: false, error: errorMessage };
     }
   };
 
@@ -212,76 +182,76 @@ export default function DeviceEventsPage() {
     <div className="container mx-auto py-10">
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-headline">Device Events</h1>
                 <p className="text-muted-foreground">
                   View and manage device connection events.
                 </p>
               </div>
-              <form onSubmit={handleSearch} className="flex space-x-2">
-                <Input
-                  placeholder="Search by device ID..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="max-w-sm"
-                />
-                <Button type="submit" disabled={loading}>
-                  Search
-                </Button>
-              </form>
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={refreshEvents}
-                  disabled={loading}
-                  variant="outline"
-                >
-                  <RefreshCw
-                    className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                <form onSubmit={handleSearch} className="flex space-x-2 flex-grow">
+                  <Input
+                    placeholder="Search by device ID..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="max-w-sm flex-grow"
                   />
-                  {loading ? "Refreshing..." : "Refresh"}
-                </Button>
-                <Sheet
-                  open={isSheetOpen}
-                  onOpenChange={(isOpen) => {
-                    setSheetOpen(isOpen);
-                    if (!isOpen) setSelectedEvent(null);
-                  }}
-                >
-                  <SheetTrigger asChild>
-                    <Button
-                      onClick={() => {
-                        setSelectedEvent(null);
-                        setSheetOpen(true);
-                      }}
-                    >
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Add Event
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <SheetHeader>
-                      <SheetTitle>
-                        {selectedEvent
-                          ? "Edit Device Event"
-                          : "Add New Device Event"}
-                      </SheetTitle>
-                      <SheetDescription>
-                        Fill in the details for the device event.
-                      </SheetDescription>
-                    </SheetHeader>
-                    <div className="py-4">
-                      <EventForm
-                        onFormSuccess={handleFormSuccess}
-                        event={selectedEvent}
-                      />
-                    </div>
-                  </SheetContent>
-                </Sheet>
+                  <Button type="submit" disabled={loading} variant="secondary">
+                    Search
+                  </Button>
+                </form>
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={refreshEvents}
+                    disabled={loading}
+                    variant="outline"
+                  >
+                    <RefreshCw
+                      className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                    />
+                    {loading ? "Refreshing..." : "Refresh"}
+                  </Button>
+                  <Sheet
+                    open={isSheetOpen}
+                    onOpenChange={(isOpen) => {
+                      setSheetOpen(isOpen);
+                      if (!isOpen) setSelectedEvent(null);
+                    }}
+                  >
+                    <SheetTrigger asChild>
+                      <Button
+                        onClick={() => {
+                          setSelectedEvent(null);
+                          setSheetOpen(true);
+                        }}
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Event
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                      <SheetHeader>
+                        <SheetTitle>
+                          {selectedEvent
+                            ? "Edit Device Event"
+                            : "Add New Device Event"}
+                        </SheetTitle>
+                        <SheetDescription>
+                          Fill in the details for the device event.
+                        </SheetDescription>
+                      </SheetHeader>
+                      <div className="py-4">
+                        <EventForm
+                          onFormSuccess={handleFormSuccess}
+                          event={selectedEvent}
+                        />
+                      </div>
+                    </SheetContent>
+                  </Sheet>
+                </div>
               </div>
             </div>
-          </div>
         </CardHeader>
         <CardContent>
           {error ? (
@@ -300,19 +270,15 @@ export default function DeviceEventsPage() {
                 {loading ? "Retrying..." : "Retry"}
               </Button>
             </div>
-          ) : deviceEvents.length === 0 ? (
+          ) : !loading && deviceEvents.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">
-                {loading
-                  ? "Loading device events..."
-                  : "No device events found"}
+                No device events found.
               </p>
-              {!loading && (
-                <Button variant="outline" onClick={refreshEvents}>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Refresh
-                </Button>
-              )}
+              <Button variant="outline" onClick={refreshEvents}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh
+              </Button>
             </div>
           ) : (
             <DataTable<DeviceEvent, unknown>
