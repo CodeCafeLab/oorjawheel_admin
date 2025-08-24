@@ -29,20 +29,87 @@ export async function listDeviceEvents(req, res, next) {
 
 export async function addDeviceEvent(req, res, next) {
   try {
+    console.log('Received request body:', req.body);
+    
     const { deviceId, event } = req.body;
     
-    if (!deviceId || !event) {
-      return res.status(400).json({ error: 'deviceId and event are required' });
+    if (deviceId === undefined || event === undefined) {
+      console.error('Missing required fields. DeviceId:', deviceId, 'Event:', event);
+      return res.status(400).json({ 
+        success: false,
+        message: 'deviceId and event are required',
+        received: { deviceId, event }
+      });
     }
 
     if (!['connect', 'disconnect', 'scan_fail'].includes(event)) {
-      return res.status(400).json({ error: 'Invalid event type' });
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid event type. Must be one of: connect, disconnect, scan_fail',
+        received: event 
+      });
     }
 
-    const result = await createDeviceEvent({ deviceId, event });
-    res.status(201).json({ message: 'Event created', id: result.id });
+    // Ensure deviceId is a number
+    const deviceIdNum = Number(deviceId);
+    if (isNaN(deviceIdNum)) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'deviceId must be a number',
+        received: deviceId 
+      });
+    }
+
+    console.log('Creating event with:', { deviceId: deviceIdNum, event });
+    const result = await createDeviceEvent({ 
+      deviceId: deviceIdNum, 
+      event 
+    });
+    
+    console.log('Event created successfully:', result);
+    res.status(201).json({ 
+      success: true, 
+      message: 'Event created', 
+      data: { id: result.id } 
+    });
   } catch (err) {
-    next(err);
+    console.error('Error in addDeviceEvent:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name,
+      ...(err.code && { code: err.code }),
+      ...(err.sqlMessage && { sqlMessage: err.sqlMessage }),
+      ...(err.sql && { sql: err.sql })
+    });
+    
+    // Handle device not found error
+    if (err.code === 'DEVICE_NOT_FOUND') {
+      return res.status(404).json({
+        success: false,
+        message: err.message,
+        code: 'DEVICE_NOT_FOUND'
+      });
+    }
+    
+    // Handle foreign key constraint errors
+    if (err.code === 'ER_NO_REFERENCED_ROW_2') {
+      return res.status(400).json({
+        success: false,
+        message: 'Device not found. Please check the device ID and try again.',
+        code: 'INVALID_DEVICE_ID'
+      });
+    }
+    
+    // Generic error response
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to create device event',
+      error: process.env.NODE_ENV === 'development' ? {
+        message: err.message,
+        ...(err.code && { code: err.code }),
+        ...(err.sqlMessage && { sqlMessage: err.sqlMessage })
+      } : undefined
+    });
   }
 }
 

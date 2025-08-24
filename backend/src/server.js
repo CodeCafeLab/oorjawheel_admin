@@ -21,10 +21,14 @@ import cmsRoutes from "./routes/cmsRoutes.js";
 
 const app = express();
 
-const allowedOrigins = (process.env.CORS_ORIGINS || "http://localhost:9002")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
+const allowedOrigins = [
+  'http://localhost:9002',
+  'https://6000-firebase-studio-1754361228920.cluster-sumfw3zmzzhzkx4mpvz3ogth4y.cloudworkstations.dev',
+  ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : [])
+].filter(Boolean);
+
+// Log allowed origins for debugging
+console.log('Allowed CORS origins:', allowedOrigins);
 
 app.use(
   cors({
@@ -32,17 +36,23 @@ app.use(
       // Allow requests with no origin (like mobile apps or curl requests)
       if (!origin) return callback(null, true);
       
-      if (allowedOrigins.indexOf(origin) !== -1) {
+      if (allowedOrigins.some(allowedOrigin => 
+        origin === allowedOrigin || 
+        origin.startsWith(allowedOrigin.replace('https://', 'http://')) ||
+        origin.startsWith(allowedOrigin.replace('http://', 'https://'))
+      )) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        console.log('CORS blocked for origin:', origin);
+        callback(new Error(`Not allowed by CORS. Origin ${origin} not in allowed origins`));
       }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Content-Range', 'X-Total-Count'],
     preflightContinue: false,
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 204
   })
 );
 

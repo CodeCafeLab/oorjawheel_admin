@@ -44,6 +44,19 @@ export async function getDeviceEvents(filters = {}) {
 export async function createDeviceEvent({ deviceId, event }) {
   const conn = await pool.getConnection();
   try {
+    // First check if device exists
+    const [device] = await conn.execute(
+      'SELECT id FROM devices WHERE id = ?',
+      [deviceId]
+    );
+
+    if (device.length === 0) {
+      const error = new Error(`Device with ID ${deviceId} not found`);
+      error.code = 'DEVICE_NOT_FOUND';
+      throw error;
+    }
+
+    // If device exists, create the event
     const [result] = await conn.execute(
       `INSERT INTO device_events (device_id, event, timestamp) 
        VALUES (?, ?, NOW())`,
