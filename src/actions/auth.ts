@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { loginSchema } from "./schemas";
-import { api } from "@/lib/api-client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 

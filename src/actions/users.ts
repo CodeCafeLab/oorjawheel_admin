@@ -1,13 +1,13 @@
 "use server";
 
-import { api } from "@/lib/api-client";
+import apiClient from "@/lib/api-client";
 import { z } from "zod";
 import { userFormSchema } from "./schemas";
 import type { User } from "@/app/users/schema";
 
 export async function addUser(values: z.infer<typeof userFormSchema>) {
   try {
-    await api.post("/users", {
+    await apiClient.post("/users", {
       fullName: values.fullName,
       email: values.email,
       contactNumber: values.contactNumber,
@@ -36,7 +36,7 @@ export async function updateUser(
     status = "active",
   } = values;
   try {
-    await api.put(`/users/${id}`, {
+    await apiClient.put(`/users/${id}`, {
       fullName,
       email,
       contactNumber,
@@ -53,7 +53,7 @@ export async function updateUser(
 
 export async function deleteUser(id: string) {
   try {
-    await api.delete(`/users/${id}`);
+    await apiClient.delete(`/users/${id}`);
     return { success: true, message: "User deleted successfully." };
   } catch (error) {
     return { success: false, message: "Failed to delete user." };

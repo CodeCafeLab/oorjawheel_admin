@@ -1,12 +1,11 @@
+"use client";
 
-"use client"
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import * as React from "react";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import * as React from "react"
-
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -15,30 +14,33 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { useToast } from "@/hooks/use-toast"
-import { userFormSchema } from "@/actions/schemas"
-import { addUser, updateUser } from "@/actions/users"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useToast } from "@/hooks/use-toast";
+import { userFormSchema } from "@/actions/schemas";
+import { addUser, updateUser } from "@/actions/users";
+import { Textarea } from "@/components/ui/textarea";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-  } from "@/components/ui/select"
-import { User } from "./schema"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { User } from "./schema";
 
-type UserFormProps = {
-    onFormSuccess: () => void;
-    user?: User | null; // Make user optional for creating new users
+interface UserFormProps {
+  onFormSuccess: () => void;
+  user?: User | null;
+  onSubmit: (
+    data: z.infer<typeof userFormSchema>
+  ) => Promise<{ success: boolean; message: string }>;
 }
 
-export function UserForm({ onFormSuccess, user }: UserFormProps) {
-  const { toast } = useToast()
-  const [loading, setLoading] = React.useState(false)
+export function UserForm({ onFormSuccess, user, onSubmit }: UserFormProps) {
+  const { toast } = useToast();
+  const [loading, setLoading] = React.useState(false);
 
   const isEditMode = !!user;
 
@@ -53,54 +55,58 @@ export function UserForm({ onFormSuccess, user }: UserFormProps) {
       password: "",
       status: "active",
     },
-  })
+  });
 
   React.useEffect(() => {
     if (isEditMode && user) {
-        form.reset({
-            fullName: user.fullName || '',
-            email: user.email,
-            contactNumber: user.contactNumber || '',
-            address: user.address || '',
-            country: user.country || '',
-            status: user.status,
-            password: '', // Don't pre-fill password
-        });
+      form.reset({
+        fullName: user.fullName || "",
+        email: user.email,
+        contactNumber: user.contactNumber || "",
+        address: user.address || "",
+        country: user.country || "",
+        status: user.status,
+        password: "", // Don't pre-fill password
+      });
     } else {
-        form.reset({
-            fullName: "",
-            email: "",
-            contactNumber: "",
-            address: "",
-            country: "",
-            password: "",
-            status: "active",
-        });
+      form.reset({
+        fullName: "",
+        email: "",
+        contactNumber: "",
+        address: "",
+        country: "",
+        password: "",
+        status: "active",
+      });
     }
   }, [user, isEditMode, form]);
 
+  async function handleSubmit(data: z.infer<typeof userFormSchema>) {
+    setLoading(true);
 
-  async function onSubmit(data: z.infer<typeof userFormSchema>) {
-    setLoading(true)
+    try {
+      const result = await onSubmit(data); // Call the prop's onSubmit
 
-    const result = isEditMode && user
-        ? await updateUser(user.id.toString(), data)
-        : await addUser(data)
-    
-    setLoading(false)
-
-    if (result.success) {
-      toast({
-        title: isEditMode ? "User Updated" : "User Added",
-        description: `The user has been ${isEditMode ? 'updated' : 'created'} successfully.`,
-      })
-      onFormSuccess()
-    } else {
+      if (result.success) {
+        toast({
+          title: isEditMode ? "User Updated" : "User Added",
+          description: `The user has been ${
+            isEditMode ? "updated" : "created"
+          } successfully.`,
+        });
+        onFormSuccess();
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: result.message,
-      })
+        description:
+          error.message || "An error occurred while saving the user.",
+      });
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -127,58 +133,74 @@ export function UserForm({ onFormSuccess, user }: UserFormProps) {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="user@example.com" {...field} disabled={loading} />
+                <Input
+                  placeholder="user@example.com"
+                  {...field}
+                  disabled={loading}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
         <div className="flex gap-2">
-            <FormField
-                control={form.control}
-                name="country"
-                render={({ field }) => (
-                    <FormItem className="w-1/3">
-                    <FormLabel>Code</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={loading}>
-                        <FormControl>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Code" />
-                        </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                        {/* In a real app, this would be a dynamic list */}
-                        <SelectItem value="+91">IN (+91)</SelectItem>
-                        <SelectItem value="+1">US (+1)</SelectItem>
-                        <SelectItem value="+44">UK (+44)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
-            <FormField
-                control={form.control}
-                name="contactNumber"
-                render={({ field }) => (
-                    <FormItem className="w-2/3">
-                    <FormLabel>Contact Number</FormLabel>
-                    <FormControl>
-                        <Input placeholder="12345 67890" {...field} disabled={loading} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-            />
+          <FormField
+            control={form.control}
+            name="country"
+            render={({ field }) => (
+              <FormItem className="w-1/3">
+                <FormLabel>Code</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  disabled={loading}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Code" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {/* In a real app, this would be a dynamic list */}
+                    <SelectItem value="+91">IN (+91)</SelectItem>
+                    <SelectItem value="+1">US (+1)</SelectItem>
+                    <SelectItem value="+44">UK (+44)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="contactNumber"
+            render={({ field }) => (
+              <FormItem className="w-2/3">
+                <FormLabel>Contact Number</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="12345 67890"
+                    {...field}
+                    disabled={loading}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-         <FormField
+        <FormField
           control={form.control}
           name="address"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Address</FormLabel>
               <FormControl>
-                <Textarea placeholder="123 Main St, Anytown..." {...field} disabled={loading} />
+                <Textarea
+                  placeholder="123 Main St, Anytown..."
+                  {...field}
+                  disabled={loading}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -191,10 +213,12 @@ export function UserForm({ onFormSuccess, user }: UserFormProps) {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" {...field} disabled={loading}/>
+                <Input type="password" {...field} disabled={loading} />
               </FormControl>
               <FormDescription>
-                {isEditMode ? "Leave blank to keep the current password." : "The user's password. Must be at least 8 characters."}
+                {isEditMode
+                  ? "Leave blank to keep the current password."
+                  : "The user's password. Must be at least 8 characters."}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -217,17 +241,13 @@ export function UserForm({ onFormSuccess, user }: UserFormProps) {
                     <FormControl>
                       <RadioGroupItem value="active" />
                     </FormControl>
-                    <FormLabel className="font-normal">
-                      Active
-                    </FormLabel>
+                    <FormLabel className="font-normal">Active</FormLabel>
                   </FormItem>
                   <FormItem className="flex items-center space-x-2 space-y-0">
                     <FormControl>
                       <RadioGroupItem value="locked" />
                     </FormControl>
-                    <FormLabel className="font-normal">
-                      Locked
-                    </FormLabel>
+                    <FormLabel className="font-normal">Locked</FormLabel>
                   </FormItem>
                 </RadioGroup>
               </FormControl>
@@ -235,8 +255,16 @@ export function UserForm({ onFormSuccess, user }: UserFormProps) {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={loading}>{loading ? (isEditMode ? 'Updating User...' : 'Creating User...') : (isEditMode ? 'Update User' : 'Create User')}</Button>
+        <Button type="submit" disabled={loading}>
+          {loading
+            ? isEditMode
+              ? "Updating User..."
+              : "Creating User..."
+            : isEditMode
+            ? "Update User"
+            : "Create User"}
+        </Button>
       </form>
     </Form>
-  )
+  );
 }

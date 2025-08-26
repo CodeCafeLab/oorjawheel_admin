@@ -1,8 +1,8 @@
-
 "use client";
 
 import { z } from "zod";
 import { columns } from "./columns";
+import { userFormSchema } from "@/actions/schemas";
 import { DataTable } from "./data-table";
 import { User, userSchema } from "./schema";
 import {
@@ -37,6 +37,7 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
   const handleFormSuccess = () => {
     setOpen(false);
     setSelectedUser(null);
+    refreshUsers(); // Refresh the user list after successful form submission
   };
 
   const handleAddClick = () => {
@@ -51,23 +52,30 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
 
   // Fetch users (similar to refreshData)
   const refreshUsers = async () => {
-    // setLoading(true);
     try {
       const apiBase =
         process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
-      const res = await fetch(`${apiBase}/users`, { credentials: "include" });
+      const res = await fetch(`${apiBase}/users?page=1&limit=1000`, {
+        credentials: "include",
+        cache: "no-store",
+      });
+
       if (!res.ok) throw new Error("Failed to fetch users");
-      const usersJson = await res.json();
-      const parsedUsers = z.array(userSchema).parse(
-        (Array.isArray(usersJson) ? usersJson : usersJson.data ?? []).map(
-          (u: any) => ({
-            id: u.id.toString(),
-            name: u.name,
-            email: u.email,
-            // ...map other fields as needed...
-          })
-        )
-      );
+
+      const data = await res.json();
+      const usersList = Array.isArray(data) ? data : data?.data || [];
+
+      const parsedUsers = usersList.map((user: any) => ({
+        id: user.id.toString(),
+        fullName: user.fullName || "",
+        email: user.email,
+        contactNumber: user.contactNumber || "",
+        address: user.address || "",
+        country: user.country || "",
+        status: user.status || "active",
+        // Add other fields as needed
+      }));
+
       setUsers(parsedUsers);
     } catch (error) {
       // toast({
@@ -80,60 +88,41 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
     }
   };
 
-  // Add user
-  const handleAddUser = async (data: User) => {
-    // setLoading(true);
-    try {
-      const apiBase =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
-      const res = await fetch(`${apiBase}/users`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          fullName: data.fullName,
-          email: data.email,
-          // ...other fields as needed...
-        }),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || "Failed to add user");
-      // toast({ title: "User Added", description: result.message });
-      refreshUsers();
-      setOpen(false);
-    } catch (e: any) {
-      // toast({ variant: "destructive", title: "Error", description: e.message });
-    } finally {
-      // setLoading(false);
-    }
+  // Add new user
+  const handleAddUser = async (data: z.infer<typeof userFormSchema>) => {
+    const apiBase =
+      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
+    const res = await fetch(`${apiBase}/users`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || "Failed to add user");
+    refreshUsers();
+    setOpen(false);
+    return result;
   };
 
   // Update user
-  const handleUpdateUser = async (id: string, data: User) => {
-    // setLoading(true);
-    try {
-      const apiBase =
-        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
-      const res = await fetch(`${apiBase}/users/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          fullName: data.fullName,
-          email: data.email,
-          // ...other fields as needed...
-        }),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || "Failed to update user");
-      // toast({ title: "User Updated", description: result.message });
-      refreshUsers();
-      setOpen(false);
-    } catch (e: any) {
-      // toast({ variant: "destructive", title: "Error", description: e.message });
-    } finally {
-      // setLoading(false);
-    }
+  const handleUpdateUser = async (
+    id: string | number,
+    data: z.infer<typeof userFormSchema>
+  ) => {
+    const apiBase =
+      process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
+    const res = await fetch(`${apiBase}/users/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || "Failed to update user");
+    refreshUsers();
+    setOpen(false);
+    return result;
   };
 
   // Delete user
@@ -179,23 +168,23 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
         </Card>
       ) : (
         <Card className="flex flex-col items-center justify-center py-20 border-dashed">
-            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-              <UsersIcon className="w-8 h-8 text-muted-foreground" />
-            </div>
-            <CardHeader className="text-center p-0">
-                <CardTitle className="text-xl font-headline">
-                No Users Found
-                </CardTitle>
-                <CardDescription>
-                Get started by creating the first user account.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0 mt-6">
-                <Button size="lg" onClick={handleAddClick}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add Your First User
-                </Button>
-            </CardContent>
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+            <UsersIcon className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <CardHeader className="text-center p-0">
+            <CardTitle className="text-xl font-headline">
+              No Users Found
+            </CardTitle>
+            <CardDescription>
+              Get started by creating the first user account.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0 mt-6">
+            <Button size="lg" onClick={handleAddClick}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Your First User
+            </Button>
+          </CardContent>
         </Card>
       )}
 
@@ -219,7 +208,34 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
           </SheetHeader>
           <ScrollArea className="h-[calc(100vh-8rem)]">
             <div className="px-1 py-6">
-              <UserForm onFormSuccess={handleFormSuccess} user={selectedUser} />
+              <UserForm
+                onFormSuccess={handleFormSuccess}
+                user={selectedUser}
+                onSubmit={async (data) => {
+                  try {
+                    if (selectedUser) {
+                      await handleUpdateUser(selectedUser.id, data);
+                      return {
+                        success: true,
+                        message: "User updated successfully",
+                      };
+                    } else {
+                      await handleAddUser(data);
+                      return {
+                        success: true,
+                        message: "User created successfully",
+                      };
+                    }
+                  } catch (error: any) {
+                    return {
+                      success: false,
+                      message:
+                        error.message ||
+                        "An error occurred while saving the user",
+                    };
+                  }
+                }}
+              />
             </div>
           </ScrollArea>
         </SheetContent>

@@ -3,7 +3,7 @@
 
 import { z } from 'zod';
 import { deviceEventSchema, DeviceEvent } from '@/app/logs/schema';
-import { api } from '@/lib/api-client';
+import apiClient from '@/lib/api-client';
 import { revalidatePath } from 'next/cache';
 
 const eventFormSchema = deviceEventSchema.omit({ id: true });
@@ -15,7 +15,7 @@ export async function fetchDeviceEvent(filters?: { deviceId?: string }): Promise
       params.append('deviceId', filters.deviceId);
     }
     
-    const { data } = await api.get(`/device-events?${params.toString()}`);
+    const { data } = await apiClient.get(`/device-events?${params.toString()}`);
     
     const eventList = data.data;
 

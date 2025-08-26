@@ -2,7 +2,7 @@
 'use server';
 
 import { z } from 'zod';
-import { api } from '@/lib/api-client';
+import apiClient from '@/lib/api-client';
 
 const DeviceFormSchema = z.object({
   deviceName: z.string().min(1),
@@ -19,18 +19,7 @@ const DeviceFormSchema = z.object({
 
 export async function addDevice(values: z.infer<typeof DeviceFormSchema>) {
   try {
-    await api.post('/devices', {
-      device_name: values.deviceName,
-      mac_address: values.macAddress,
-      device_type: values.deviceType,
-      user_id: values.userId,
-      passcode: values.passcode,
-      status: values.status,
-      bt_name: values.btName ?? '',
-      warranty_start: values.warrantyStart || null,
-      default_cmd: values.defaultCmd || null,
-      first_connected_at: values.firstConnectedAt || null,
-    });
+    await apiClient.post('/devices', values);
     return { success: true, message: 'Device added successfully.' };
   } catch (e: any) {
     return { success: false, message: e.message };
@@ -39,18 +28,7 @@ export async function addDevice(values: z.infer<typeof DeviceFormSchema>) {
 
 export async function updateDevice(id: string, values: z.infer<typeof DeviceFormSchema>) {
   try {
-    await api.put(`/devices/${id}`, {
-      device_name: values.deviceName,
-      mac_address: values.macAddress,
-      device_type: values.deviceType,
-      user_id: values.userId,
-      passcode: values.passcode,
-      status: values.status,
-      bt_name: values.btName ?? '',
-      warranty_start: values.warrantyStart || null,
-      default_cmd: values.defaultCmd || null,
-      first_connected_at: values.firstConnectedAt || null,
-    });
+    await apiClient.put(`/devices/${id}`, values);
     return { success: true, message: 'Device updated successfully.' };
   } catch (e: any) {
     return { success: false, message: e.message };
@@ -59,7 +37,7 @@ export async function updateDevice(id: string, values: z.infer<typeof DeviceForm
 
 export async function deleteDevice(id: string) {
   try {
-    await api.delete(`/devices/${id}`);
+    await apiClient.delete(`/devices/${id}`);
     return { success: true, message: 'Device deleted successfully.' };
   } catch (e: any) {
     return { success: false, message: e.message };
@@ -68,7 +46,7 @@ export async function deleteDevice(id: string) {
 
 export async function fetchDevices(filters?: { status?: string; deviceType?: string; search?: string; page?: number; limit?: number }) {
   try {
-    const { data } = await api.get('/devices', { params: filters });
+    const { data } = await apiClient.get('/devices', { params: filters });
     return data?.data ?? [];
   } catch {
     return [];
@@ -77,7 +55,7 @@ export async function fetchDevices(filters?: { status?: string; deviceType?: str
 
 export async function getTotalDeviceCount(filters?: { status?: string; deviceType?: string; search?: string }) {
   try {
-    const { data } = await api.get('/devices', { params: { ...filters, page: 1, limit: 1 } });
+    const { data } = await apiClient.get('/devices', { params: { ...filters, page: 1, limit: 1 } });
     return data?.total ?? 0;
   } catch {
     return 0;
@@ -96,7 +74,7 @@ const DeviceMasterFormSchema = z.object({
 
 export async function fetchDeviceMasters(filters?: { status?: string; search?: string; page?: number; limit?: number }) {
   try {
-    const { data } = await api.get('/device-masters', { params: filters });
+    const { data } = await apiClient.get('/device-masters', { params: filters });
     return data?.data ?? [];
   } catch {
     return [];
@@ -105,16 +83,16 @@ export async function fetchDeviceMasters(filters?: { status?: string; search?: s
 
 export async function addDeviceMaster(values: z.infer<typeof DeviceMasterFormSchema>) {
   try {
-    await api.post('/device-masters', values);
+    await apiClient.post('/device-masters', values);
     return { success: true, message: 'Device type added successfully.' };
   } catch (e: any) {
     return { success: false, message: e.message };
   }
 }
 
-export async function updateDeviceMaster(id: string, values: z.infer<typeof DeviceMasterFormSchema>) {
+export async function updateDeviceMaster(id: string | number, values: z.infer<typeof DeviceMasterFormSchema>) {
   try {
-    await api.put(`/device-masters/${id}`, values);
+    await apiClient.put(`/device-masters/${id}`, values);
     return { success: true, message: 'Device type updated successfully.' };
   } catch (e: any) {
     return { success: false, message: e.message };
@@ -123,7 +101,7 @@ export async function updateDeviceMaster(id: string, values: z.infer<typeof Devi
 
 export async function deleteDeviceMaster(id: string) {
   try {
-    await api.delete(`/device-masters/${id}`);
+    await apiClient.delete(`/device-masters/${id}`);
     return { success: true, message: 'Device type deleted successfully.' };
   } catch (e: any) {
     return { success: false, message: e.message };
@@ -134,7 +112,7 @@ export async function deleteDeviceMaster(id: string) {
 
 export async function bulkDeleteDevices(ids: string[]) {
   try {
-    await Promise.all(ids.map((id) => api.delete(`/devices/${id}`)));
+    await Promise.all(ids.map((id) => apiClient.delete(`/devices/${id}`)));
     return { success: true, message: `${ids.length} devices deleted successfully.` };
   } catch (e: any) {
     return { success: false, message: e.message || 'Failed to delete devices.' };
@@ -143,7 +121,7 @@ export async function bulkDeleteDevices(ids: string[]) {
 
 export async function bulkDeleteDeviceMasters(ids: string[]) {
   try {
-    await Promise.all(ids.map((id) => api.delete(`/device-masters/${id}`)));
+    await Promise.all(ids.map((id) => apiClient.delete(`/device-masters/${id}`)));
     return { success: true, message: `${ids.length} device types deleted successfully.` };
   } catch (e: any) {
     return { success: false, message: e.message || 'Failed to delete device types.' };
