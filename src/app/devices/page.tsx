@@ -199,7 +199,7 @@ export default function DevicesPage() {
       selectedDevice ? "Device Updated" : "Device Added"
     );
 
-  const handleDeleteDevice = (id: string) =>
+  const handleDeleteDevice = (id: string | number) =>
     handleAction(
       () => apiRequest(`/devices/${id}`, { method: "DELETE" }),
       "Device Deleted",
@@ -251,7 +251,7 @@ export default function DevicesPage() {
     );
   };
 
-  const handleDeleteMaster = (id: string) =>
+  const handleDeleteMaster = (id: string | number) =>
     handleAction(
       () => apiRequest(`/device-masters/${id}`, { method: "DELETE" }),
       "Device Type Deleted",

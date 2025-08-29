@@ -1,6 +1,13 @@
-import { IronSessionData } from 'iron-session';
+import { IronSession } from 'iron-session';
 
-export type SessionUser = IronSessionData & {
+export interface SessionData {
+  user?: {
+    email?: string;
+    isLoggedIn?: boolean;
+  };
+}
+
+export type SessionUser = IronSession<SessionData>['user'] & {
   email?: string;
   isLoggedIn?: boolean;
 };

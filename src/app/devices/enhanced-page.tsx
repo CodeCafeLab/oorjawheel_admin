@@ -149,7 +149,7 @@ export default function EnhancedDevicesPage() {
     setMasterSheetOpen(true);
   };
 
-  const handleDeleteDevice = async (id: string) => {
+  const handleDeleteDevice = async (id: string | number) => {
     const result = await deleteDevice(id);
     if (result.success) {
       toast({ title: "Device Deleted", description: result.message });
@@ -163,7 +163,7 @@ export default function EnhancedDevicesPage() {
     }
   };
 
-  const handleDeleteMaster = async (id: string) => {
+  const handleDeleteMaster = async (id: string | number) => {
     const result = await deleteDeviceMaster(id);
     if (result.success) {
       toast({ title: "Device Type Deleted", description: result.message });

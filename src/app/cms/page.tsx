@@ -79,10 +79,17 @@ export default function CmsPage() {
       setTemplates(templatesData);
       
       // Set media files
-      if (mediaResult.success && mediaResult.data?.items) {
-        setMediaFiles(mediaResult.data.items);
+      if (mediaResult?.items) {
+        setMediaFiles(mediaResult.items);
       }
       
+      // Define the static page response type
+      type StaticPageResponse = {
+        title: string;
+        excerpt: string;
+        status: string;
+      };
+
       // Load static pages
       const staticPageTypes = ['privacy', 'terms', 'shipping', 'payment'] as const;
       const staticPagesData: {[key: string]: string} = {};
@@ -90,7 +97,10 @@ export default function CmsPage() {
       for (const type of staticPageTypes) {
         const result = await getStaticPage(type);
         if (result.success && result.data) {
-          staticPagesData[type] = result.data.excerpt || '';
+          const pageData = result.data as StaticPageResponse;
+          staticPagesData[type] = pageData?.excerpt ?? '';
+        } else {
+          staticPagesData[type] = '';
         }
       }
       setStaticPages(staticPagesData);
@@ -591,7 +601,7 @@ export default function CmsPage() {
                       {file.mime_type?.startsWith('image/') ? (
                         <Image 
                           src={file.url || '/placeholder.png'} 
-                          alt={file.original_name} 
+                          alt={file.original_name || ""} 
                           width={100} 
                           height={100} 
                           className="rounded-lg object-cover w-full h-full" 

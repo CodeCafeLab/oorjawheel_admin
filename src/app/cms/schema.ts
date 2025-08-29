@@ -46,19 +46,19 @@ export const categorySchema = z.object({
 })
 
 export type Category = z.infer<typeof categorySchema>
-
-// Media File Schema
+// In schema.ts
 export const mediaFileSchema = z.object({
   id: z.string(),
-  filename: z.string(),
-  original_name: z.string(),
-  mime_type: z.string(),
-  size: z.number(),
   url: z.string(),
-  created_at: z.string(),
-})
+  thumbnail: z.string().nullable().optional(),
+  filename: z.string().optional(),
+  original_name: z.string().optional(),
+  mime_type: z.string().optional(),
+  size: z.number().optional(),
+  created_at: z.string().optional(),
+});
 
-export type MediaFile = z.infer<typeof mediaFileSchema>
+export type MediaFile = z.infer<typeof mediaFileSchema>;
 
 // Field Type Schema
 export const fieldTypeSchema = z.object({

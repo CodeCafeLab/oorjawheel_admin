@@ -35,7 +35,7 @@ export async function updateDevice(id: string, values: z.infer<typeof DeviceForm
   }
 }
 
-export async function deleteDevice(id: string) {
+export async function deleteDevice(id: string | number) {
   try {
     await apiClient.delete(`/devices/${id}`);
     return { success: true, message: 'Device deleted successfully.' };
@@ -99,7 +99,7 @@ export async function updateDeviceMaster(id: string | number, values: z.infer<ty
   }
 }
 
-export async function deleteDeviceMaster(id: string) {
+export async function deleteDeviceMaster(id: string | number) {
   try {
     await apiClient.delete(`/device-masters/${id}`);
     return { success: true, message: 'Device type deleted successfully.' };

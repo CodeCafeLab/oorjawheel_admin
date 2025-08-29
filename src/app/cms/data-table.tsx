@@ -112,7 +112,7 @@ export function DataTable<TData, TValue>({
         `"${item.title.replace(/"/g, '""')}"`,
         item.category,
         item.command,
-        `"${item.description.replace(/"/g, '""')}"`,
+        `"${item?.description?.replace(/"/g, '""')}"`,
         item.image
       ].join(","))
     ].join("\n");
