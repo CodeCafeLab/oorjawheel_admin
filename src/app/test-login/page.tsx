@@ -31,7 +31,7 @@ export default function TestLogin() {
       console.log('Login successful:', data);
       
       // Redirect to dashboard or home page
-      router.push('/dashboard');
+      router.push('/');
       
     } catch (err) {
       console.error('Test login error:', err);

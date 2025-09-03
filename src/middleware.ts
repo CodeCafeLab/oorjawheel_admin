@@ -6,7 +6,7 @@ import { isAuthenticated } from './actions/auth';
 const publicPaths = ['/login', '/api/auth'];
 
 // Define admin paths that require admin role
-const adminPaths = ['/dashboard', '/users', '/settings'];
+const adminPaths = ['/', '/users', '/settings'];
 
 // Define API paths that require admin access
 const adminApiPaths = ['/api/admin'];
@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
 
   // If user is authenticated but tries to access guest-only pages
   if (token && guestPaths.some(path => pathname.startsWith(path))) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   // Check admin routes
@@ -66,8 +66,8 @@ export async function middleware(request: NextRequest) {
             { status: 403, headers: { 'Content-Type': 'application/json' } }
           );
         }
-        // Otherwise redirect to dashboard
-        return NextResponse.redirect(new URL('/dashboard', request.url));
+        // Otherwise redirect to home
+        return NextResponse.redirect(new URL('/', request.url));
       }
     } catch (error) {
       console.error('Error in admin middleware:', error);

@@ -45,7 +45,7 @@ const OorjaLogo = () => (
 // Client component that uses useSearchParams
 function LoginForm() {
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get('from') || '/dashboard'
+  const redirectTo = searchParams.get('from') || '/'
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
