@@ -76,7 +76,7 @@ function LoginForm() {
         });
         
         if (response.ok) {
-          router.push(redirectTo);
+          router.push(redirectTo || '/dashboard');
         } else {
           // If not authenticated, clear any existing auth data
           await fetch('/api/auth/logout', {
@@ -106,8 +106,8 @@ function LoginForm() {
           description: "Redirecting to dashboard...",
         })
         
-        router.push(redirectTo)
-        router.refresh()
+        // Force a hard redirect to ensure all cookies are properly set
+        router.push(redirectTo || '/dashboard');
       } else {
         setError(result.message || "Invalid email or password")
         toast({
