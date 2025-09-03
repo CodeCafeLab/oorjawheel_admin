@@ -139,23 +139,23 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 py-12">
-      <Card className="w-full max-w-md shadow-lg border-0">
-        <CardHeader className="space-y-1 text-center px-8 pt-8 pb-2">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md shadow-xl border border-border bg-card">
+        <CardHeader className="space-y-1 text-center px-6 pt-8 pb-2">
           <div className="flex justify-center mb-4">
             <OorjaLogo />
           </div>
-          <CardTitle className="text-2xl font-headline bg-gradient-to-r from-foreground to-primary bg-clip-text text-transparent">
+          <CardTitle className="text-2xl font-headline text-card-foreground">
             Oorja Wheel Admin
           </CardTitle>
-          <CardDescription className="text-muted-foreground">
+          <CardDescription className="text-muted-foreground/80">
             Enter your credentials to access the admin panel
           </CardDescription>
         </CardHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <CardContent className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <CardContent className="space-y-4 px-6">
               {error && (
                 <Alert variant="destructive" className="mb-4">
                   <AlertCircle className="h-4 w-4" />
@@ -232,8 +232,8 @@ function LoginForm() {
               />
             </CardContent>
             
-            <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
+            <CardFooter className="flex flex-col space-y-4 px-6 pb-6">
+              <Button type="submit" className="w-full mt-2 bg-primary hover:bg-primary/90" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -247,15 +247,7 @@ function LoginForm() {
                 )}
               </Button>
               
-              <p className="text-center text-sm text-muted-foreground">
-                Don't have an account?{' '}
-                <Link
-                  href="/register"
-                  className="font-medium text-primary hover:underline"
-                >
-                  Contact administrator
-                </Link>
-              </p>
+             
             </CardFooter>
           </form>
         </Form>
