@@ -35,7 +35,8 @@ export default function TestLogin() {
       
     } catch (err) {
       console.error('Test login error:', err);
-      setError(err.message || 'Failed to log in');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to log in';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

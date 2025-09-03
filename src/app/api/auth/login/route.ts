@@ -25,11 +25,11 @@ export async function POST(request: Request) {
     }
 
     // Set secure HTTP-only cookie with the token
-    const cookieStore = cookies();
     const secure = process.env.NODE_ENV === 'production';
+    const responseCookies = new NextResponse(JSON.stringify(data));
     
     if (data.data?.token) {
-      cookieStore.set('auth_token', data.data.token, {
+      responseCookies.cookies.set('auth_token', data.data.token, {
         httpOnly: true,
         secure,
         sameSite: 'lax',
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     }
 
     if (data.data?.user) {
-      cookieStore.set('user_data', JSON.stringify(data.data.user), {
+      responseCookies.cookies.set('user_data', JSON.stringify(data.data.user), {
         httpOnly: false,
         secure,
         sameSite: 'lax',
@@ -47,6 +47,8 @@ export async function POST(request: Request) {
         maxAge: 60 * 60 * 24 * 7, // 1 week
       });
     }
+    
+    return responseCookies;
 
     return NextResponse.json(data);
     

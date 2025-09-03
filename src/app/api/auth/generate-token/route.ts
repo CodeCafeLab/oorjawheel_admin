@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+// @ts-ignore
 import jwt from 'jsonwebtoken';
 
 // Use the same secret as your backend

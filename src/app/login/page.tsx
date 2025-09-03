@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -41,7 +42,10 @@ const OorjaLogo = () => (
   </div>
 )
 
-export default function LoginPage() {
+// Client component that uses useSearchParams
+function LoginForm() {
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('from') || '/dashboard'
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -51,15 +55,11 @@ export default function LoginPage() {
   })
   
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [showPassword, setShowPassword] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [isMounted, setIsMounted] = React.useState(false)
-
-  // Get redirect URL from query params or default to dashboard
-  const redirectTo = searchParams.get('from') || '/dashboard'
   
   // Check if user is already logged in
   React.useEffect(() => {
@@ -139,7 +139,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background to-muted/20 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 py-12">
       <Card className="w-full max-w-md shadow-lg border-0">
         <CardHeader className="space-y-1 text-center px-8 pt-8 pb-2">
           <div className="flex justify-center mb-4">
@@ -261,5 +261,18 @@ export default function LoginPage() {
         </Form>
       </Card>
     </div>
+  )
+}
+
+// Main page component that wraps the form in Suspense
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }

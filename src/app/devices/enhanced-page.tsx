@@ -115,7 +115,15 @@ export default function EnhancedDevicesPage() {
           fetchDeviceMasters({ page: 1, limit: 1 }), // Get first page with 1 item to get total count
         ]);
 
-      const mastersCount = mastersResponse.meta?.total || 0;
+      // Handle different possible response types from fetchDeviceMasters
+      let mastersCount = 0;
+      if (mastersResponse && typeof mastersResponse === 'object' && 'meta' in mastersResponse && 'total' in (mastersResponse as any).meta) {
+        // Handle paginated response with meta
+        mastersCount = (mastersResponse as any).meta.total;
+      } else if (Array.isArray(mastersResponse)) {
+        // Handle direct array response
+        mastersCount = mastersResponse.length;
+      }
 
       setDevices(devicesData);
       setDeviceMasters(mastersData);

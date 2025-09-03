@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+// @ts-ignore
 import jwt from 'jsonwebtoken';
 
 // This is a test endpoint to bypass login
@@ -27,11 +27,16 @@ export async function POST() {
       { expiresIn: '1d' }
     );
 
-    // Set cookies
-    const cookieStore = cookies();
-    
+    // Create response with user data
+    const response = NextResponse.json({
+      success: true,
+      user: testUser
+    });
+
     // Set auth token cookie
-    cookieStore.set('auth_token', token, {
+    response.cookies.set({
+      name: 'auth_token',
+      value: token,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -40,7 +45,9 @@ export async function POST() {
     });
 
     // Set user data cookie (not httpOnly so it can be read by the client)
-    cookieStore.set('user_data', JSON.stringify(testUser), {
+    response.cookies.set({
+      name: 'user_data',
+      value: JSON.stringify(testUser),
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -48,11 +55,7 @@ export async function POST() {
       maxAge: 60 * 60 * 24 // 1 day
     });
 
-    return NextResponse.json({
-      success: true,
-      user: testUser,
-      token
-    });
+    return response;
 
   } catch (error) {
     console.error('Test login error:', error);
