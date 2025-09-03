@@ -24,7 +24,7 @@ import {
   FileText,
   Terminal,
 } from 'lucide-react'
-import { logout } from '@/actions/auth'
+import { useAuth } from '@/contexts/AuthContext'
 
 const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -41,6 +41,7 @@ const navItems = [
 
 export function Header() {
   const pathname = usePathname()
+  const { user, logout } = useAuth()
   
   const getPageTitle = () => {
     if (pathname === '/') return 'Dashboard';
@@ -54,44 +55,64 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur-sm md:px-8">
-        <div className="md:hidden">
-            <SidebarTrigger />
-        </div>
-        
-        <div className="flex w-full items-center gap-4">
-            <h1 className="text-xl font-semibold hidden md:block flex-1">{getPageTitle()}</h1>
-            <div className="ml-auto flex items-center gap-2">
-                <div className="relative hidden sm:block">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                    type="search"
-                    placeholder="Search..."
-                    className="pl-8 w-48 lg:w-72"
-                    />
+      <div className="md:hidden">
+        <SidebarTrigger />
+      </div>
+      
+      <div className="flex w-full items-center gap-4">
+        <h1 className="text-xl font-semibold hidden md:block flex-1">{getPageTitle()}</h1>
+        <div className="ml-auto flex items-center gap-4">
+          <div className="relative hidden sm:block">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search..."
+              className="pl-8 w-48 lg:w-72"
+            />
+          </div>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="/avatars/01.png" alt={user?.name || 'User'} />
+                  <AvatarFallback>
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{user?.name || 'User'}</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user?.email}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground capitalize">
+                    {user?.role}
+                  </p>
                 </div>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                    <Bell className="h-5 w-5" />
-                    <span className="sr-only">Toggle notifications</span>
-                </Button>
-                <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar className="h-10 w-10">
-                        <AvatarImage src="https://placehold.co/100x100.png" alt="Admin" data-ai-hint="person face" />
-                        <AvatarFallback>AD</AvatarFallback>
-                    </Avatar>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <Link href="/settings" passHref><DropdownMenuItem>Settings</DropdownMenuItem></Link>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
-                </DropdownMenuContent>
-                </DropdownMenu>
-            </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/profile" className="w-full">
+                  Profile
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings" className="w-full">
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+      </div>
     </header>
   )
 }

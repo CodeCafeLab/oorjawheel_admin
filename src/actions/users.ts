@@ -1,24 +1,42 @@
 "use server";
 
-import apiClient from "@/lib/api-client";
 import { z } from "zod";
 import { userFormSchema } from "./schemas";
 import type { User } from "@/app/users/schema";
 
 export async function addUser(values: z.infer<typeof userFormSchema>) {
   try {
-    await apiClient.post("/users", {
-      fullName: values.fullName,
-      email: values.email,
-      contactNumber: values.contactNumber,
-      address: values.address,
-      country: values.country,
-      status: values.status || "active",
-      password_hash: values.password, // optionally hash on backend
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api';
+    const response = await fetch(`${apiBase}/users`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fullName: values.fullName,
+        email: values.email,
+        contactNumber: values.contactNumber,
+        address: values.address,
+        country: values.country,
+        status: values.status || 'active',
+        password: values.password,
+      }),
     });
-    return { success: true, message: "User added successfully." };
-  } catch (e: any) {
-    return { success: false, message: e.message };
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to add user');
+    }
+
+    return { success: true, message: 'User added successfully.' };
+  } catch (error: any) {
+    console.error('Add user error:', error);
+    return { 
+      success: false, 
+      message: error.message || 'Failed to add user. Please try again.' 
+    };
   }
 }
 
@@ -33,44 +51,96 @@ export async function updateUser(
     address,
     country,
     password,
-    status = "active",
+    status = 'active',
   } = values;
+  
   try {
-    await apiClient.put(`/users/${id}`, {
-      fullName,
-      email,
-      contactNumber,
-      address,
-      country,
-      status,
-      ...(password ? { password } : {}),
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api';
+    const response = await fetch(`${apiBase}/users/${id}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        fullName,
+        email,
+        contactNumber,
+        address,
+        country,
+        status,
+        ...(password ? { password } : {}),
+      }),
     });
-    return { success: true, message: "User updated successfully." };
-  } catch (error) {
-    return { success: false, message: "Failed to update user." };
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to update user');
+    }
+
+    return { success: true, message: 'User updated successfully.' };
+  } catch (error: any) {
+    console.error('Update user error:', error);
+    return { 
+      success: false, 
+      message: error.message || 'Failed to update user. Please try again.' 
+    };
   }
 }
 
 export async function deleteUser(id: string) {
   try {
-    await apiClient.delete(`/users/${id}`);
-    return { success: true, message: "User deleted successfully." };
-  } catch (error) {
-    return { success: false, message: "Failed to delete user." };
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api';
+    const response = await fetch(`${apiBase}/users/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to delete user');
+    }
+
+    return { 
+      success: true, 
+      message: 'User deleted successfully.' 
+    };
+  } catch (error: any) {
+    console.error('Delete user error:', error);
+    return { 
+      success: false, 
+      message: error.message || 'Failed to delete user. Please try again.' 
+    };
   }
 }
 
 export async function fetchUsers(): Promise<User[]> {
   try {
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api';
     const res = await fetch(
-      "http://localhost:4000/api/users?page=1&limit=1000",
-      { cache: "no-store" }
+      `${apiBase}/users?page=1&limit=1000`,
+      { 
+        cache: "no-store",
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     );
-    if (!res.ok) return [];
+    
+    if (!res.ok) {
+      console.error('Failed to fetch users:', res.status, res.statusText);
+      return [];
+    }
+    
     const data = await res.json();
-    console.log(data, "data  ");
-    return data?.data ?? [];
+    return Array.isArray(data) ? data : (data.data || []);
   } catch (error) {
+    console.error('Error fetching users:', error);
     return [];
   }
 }

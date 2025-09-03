@@ -17,7 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { addDevice, updateDevice } from "@/actions/devices";
@@ -50,6 +50,8 @@ export default function EnhancedDeviceForm({
     defaultCmd: device?.default_cmd || device?.defaultCmd || "",
     firstConnectedAt: device?.first_connected_at || device?.firstConnectedAt || "",
   });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [isLoading, setIsLoading] = useState(false);
   const [date, setDate] = useState<Date | undefined>(
@@ -61,9 +63,42 @@ export default function EnhancedDeviceForm({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.deviceName.trim()) {
+      newErrors.deviceName = 'Device name is required';
+    }
+    
+    if (!formData.macAddress) {
+      newErrors.macAddress = 'MAC address is required';
+    } else if (!/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(formData.macAddress)) {
+      newErrors.macAddress = 'Invalid MAC address format. Use format: 00:1A:2B:3C:4D:5E';
+    }
+    
+    if (!formData.deviceType) {
+      newErrors.deviceType = 'Device type is required';
+    }
+    
+    if (!formData.passcode) {
+      newErrors.passcode = 'Passcode is required';
+    } else if (formData.passcode.length < 6) {
+      newErrors.passcode = 'Passcode must be at least 6 characters';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsLoading(true);
+    setErrors({});
 
     try {
       const result = device
@@ -80,14 +115,15 @@ export default function EnhancedDeviceForm({
         toast({
           variant: "destructive",
           title: "Error",
-          description: result.message,
+          description: result.message || 'Failed to save device',
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Device form submission error:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred while saving the device.",
       });
     } finally {
       setIsLoading(false);
@@ -131,8 +167,11 @@ export default function EnhancedDeviceForm({
               value={formData.deviceName}
               onChange={(e) => handleChange("deviceName", e.target.value)}
               placeholder="e.g., Living Room Wheel"
-              required
+              className={errors.deviceName ? 'border-red-500' : ''}
             />
+            {errors.deviceName && (
+              <p className="text-sm text-red-500">{errors.deviceName}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -142,8 +181,11 @@ export default function EnhancedDeviceForm({
               value={formData.macAddress}
               onChange={(e) => handleChange("macAddress", e.target.value)}
               placeholder="00:1A:2B:3C:4D:5E"
-              required
+              className={errors.macAddress ? 'border-red-500' : ''}
             />
+            {errors.macAddress && (
+              <p className="text-sm text-red-500">{errors.macAddress}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -152,7 +194,7 @@ export default function EnhancedDeviceForm({
               value={formData.deviceType}
               onValueChange={(value) => handleChange("deviceType", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger className={errors.deviceType ? 'border-red-500' : ''}>
                 <SelectValue placeholder="Select device type" />
               </SelectTrigger>
               <SelectContent>
@@ -165,6 +207,9 @@ export default function EnhancedDeviceForm({
                   ))}
               </SelectContent>
             </Select>
+            {errors.deviceType && (
+              <p className="text-sm text-red-500">{errors.deviceType}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -180,17 +225,23 @@ export default function EnhancedDeviceForm({
           <div className="space-y-2">
             <Label htmlFor="passcode">Passcode *</Label>
             <div className="flex gap-2">
-              <Input
-                id="passcode"
-                value={formData.passcode}
-                onChange={(e) => handleChange("passcode", e.target.value)}
-                placeholder="Auto-generated from MAC"
-                required
-              />
+              <div className="flex-1">
+                <Input
+                  id="passcode"
+                  value={formData.passcode}
+                  onChange={(e) => handleChange("passcode", e.target.value)}
+                  placeholder="Auto-generated from MAC"
+                  className={errors.passcode ? 'border-red-500' : ''}
+                />
+                {errors.passcode && (
+                  <p className="text-sm text-red-500">{errors.passcode}</p>
+                )}
+              </div>
               <Button
                 type="button"
                 variant="outline"
                 onClick={generatePasscode}
+                disabled={!formData.macAddress}
               >
                 Generate
               </Button>
@@ -293,11 +344,28 @@ export default function EnhancedDeviceForm({
       </div>
 
       <div className="flex justify-end gap-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onCancel}
+          disabled={isLoading}
+          className="min-w-[120px]"
+        >
           Cancel
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Saving..." : device ? "Update Device" : "Create Device"}
+        <Button 
+          type="submit" 
+          disabled={isLoading}
+          className="min-w-[120px] bg-blue-600 hover:bg-blue-700"
+        >
+          {isLoading ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              {device ? "Updating..." : "Creating..."}
+            </>
+          ) : (
+            <>{device ? "Update Device" : "Create Device"}</>
+          )}
         </Button>
       </div>
     </form>
