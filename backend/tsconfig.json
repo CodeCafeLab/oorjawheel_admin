@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "dist",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowJs": true,                 // 👈 allow .js files
+    "checkJs": false,                // 👈 don’t type-check JS unless you want
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"]
+}

@@ -1,0 +1,6 @@
+{
+  "/cms/page": "app/cms/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/notifications/page": "app/notifications/page.js",
+  "/settings/page": "app/settings/page.js"
+}
