@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -37,16 +35,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# generated
 .genkit/*
 .env*
 
 # firebase
 firebase-debug.log
 firestore-debug.log
-node_modules
-node_modules
-node_modules
-node_modules
-node_modules
-node_modules
-node_modules
