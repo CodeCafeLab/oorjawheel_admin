@@ -87,7 +87,7 @@ api.interceptors.response.use((res)=>res, (err)=>{
 "[project]/src/actions/auth.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"00166e6505713b8b3d3d45b1810afcc541291e64e7":"logout","4045df1a41ceb4a58f92c94fb1b2443f7655e2a6e0":"login"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"00d9a28086d7698260964b8d214d27db0303965f30":"logout","40eb43280ecdc31991449b759b3f66490dfe465139":"login"},"",""] */ __turbopack_context__.s([
     "login",
     ()=>login,
     "logout",
@@ -130,8 +130,8 @@ async function logout() {
     login,
     logout
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(login, "4045df1a41ceb4a58f92c94fb1b2443f7655e2a6e0", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(logout, "00166e6505713b8b3d3d45b1810afcc541291e64e7", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(login, "40eb43280ecdc31991449b759b3f66490dfe465139", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(logout, "00d9a28086d7698260964b8d214d27db0303965f30", null);
 }),
 "[project]/src/app/cms/schema.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
@@ -154,7 +154,7 @@ const pageSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$
 "[project]/src/actions/cms.ts [app-rsc] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
-/* __next_internal_action_entry_do_not_use__ [{"00213d58fb404eba2aec94fd9422782338e64f36ad":"getPages","0044d6affe472bebb17c3af24bc951661a4bbacaf3":"getCategories","00ad457b09e1edd29a561a1bc04dbbf407c13bfe03":"getAllStaticContent","402d2d67103789fb8bc0758fdfb34aae7f6df4ffb1":"deletePage","40897b7781e57a13bfb3a9ae7b2f49a45dfd8282b9":"addPage","4093792142ec086675d81ad92895637f438462973b":"addCategory","40a74f27843667be2b66e8e982113ba05dba2f99ca":"getStaticContent","40d8ad74a5150439ccc85b0468d3695dcffa1d750f":"deleteStaticContent","60461f8d14e201841b59a2370de028e6db0d7c3a4b":"updatePage","700783119d6d00c145cd8abaa792e78e8ff134599c":"updateStaticContent","70dc63381fb1116aca89e9587aeb1de27e3e922140":"saveStaticContent"},"",""] */ __turbopack_context__.s([
+/* __next_internal_action_entry_do_not_use__ [{"00a236637558708e2c805d1b2484ca42c4dcb5c216":"getCategories","00bacbfe02073eb0aa69f7f5595c5bae43736482f3":"getPages","00c2d806a569727e5ba85e95a1320dbab9bba2bc42":"getAllStaticContent","40609bc9671577689c955c7fa24d1fb6a3b6ece907":"addCategory","40740cbf5589aea21119b323f8fe891c04df3a6eed":"deleteStaticContent","407f11323a6a0e0776227ba633cda6cf4a1e5a86de":"deletePage","408bdb20fc15b642cea7573e727231b014831ec2af":"getStaticContent","40e5718354abdb8c80ce36fdcd3f803c8fb6bb8038":"addPage","606353b5393db303c52cd3f40996622b35e42d9c1d":"updatePage","60debc144b2ff01dcbfdae047d2b60faf8b39501e5":"linkContentToCategory","7089e38844cfe7ffe52be196c49fb8e8e6652b84af":"saveStaticContent","70e5f20f19d45fdb6d9855b473a304e663be3ad837":"updateStaticContent"},"",""] */ __turbopack_context__.s([
     "addCategory",
     ()=>addCategory,
     "addPage",
@@ -171,6 +171,8 @@ const pageSchema = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$
     ()=>getPages,
     "getStaticContent",
     ()=>getStaticContent,
+    "linkContentToCategory",
+    ()=>linkContentToCategory,
     "saveStaticContent",
     ()=>saveStaticContent,
     "updatePage",
@@ -195,9 +197,9 @@ async function getPages() {
         const pages = data.map((row)=>({
                 id: row.id?.toString?.() ?? String(row.id),
                 title: row.title,
-                category: 'General',
-                command: 'N/A',
-                description: `Page with order ${row.order}`,
+                category: row.category_name ?? 'Uncategorized',
+                command: row.command ?? 'N/A',
+                description: row.description ?? '',
                 image: `https://placehold.co/100x100.png?text=${row.title?.charAt(0) ?? 'P'}`
             }));
         return __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$zod$2f$v3$2f$external$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__$2a$__as__z$3e$__["z"].array(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$cms$2f$schema$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pageSchema"]).parse(pages);
@@ -207,24 +209,32 @@ async function getPages() {
     }
 }
 async function getCategories() {
-    return [
-        'Special Modes',
-        'Ambiance',
-        'Wellness',
-        'General'
-    ];
+    try {
+        const { data } = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$api$2d$client$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["api"].get('/cms/categories');
+        const rows = data?.data ?? [];
+        return rows.map((r)=>({
+                id: Number(r.id),
+                name: String(r.name)
+            }));
+    } catch (e) {
+        return [];
+    }
 }
-// Types for form data based on `pages` table
+// Types for form data based on `pages` table (category is handled separately)
 const PageFormSchema = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$app$2f$cms$2f$schema$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["pageSchema"].omit({
     id: true,
-    image: true
+    image: true,
+    category: true
 });
 async function addPage(values) {
     try {
         await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$api$2d$client$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["api"].post('/pages', {
             title: values.title,
             order: 0,
-            is_published: 1
+            is_published: 1,
+            command: values.command,
+            description: values.description,
+            category_id: values.category_id
         });
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/cms');
         return {
@@ -243,7 +253,10 @@ async function updatePage(id, values) {
         await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$api$2d$client$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["api"].put(`/pages/${id}`, {
             title: values.title,
             order: 0,
-            is_published: 1
+            is_published: 1,
+            command: values.command,
+            description: values.description,
+            category_id: values.category_id
         });
         (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/cms');
         return {
@@ -273,12 +286,28 @@ async function deletePage(id) {
     }
 }
 async function addCategory(values) {
-    console.log("Adding category:", values.title);
-    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/cms');
-    return {
-        success: true,
-        message: 'Category added successfully (Mock).'
-    };
+    try {
+        const payload = {
+            name: values.title,
+            slug: values.title.toLowerCase().replace(/\s+/g, '-')
+        };
+        await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$api$2d$client$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["api"].post('/cms/categories', payload);
+        (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$cache$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["revalidatePath"])('/cms');
+        return {
+            success: true,
+            message: 'Category added successfully.'
+        };
+    } catch (e) {
+        return {
+            success: false,
+            message: 'Failed to add category.'
+        };
+    }
+}
+async function linkContentToCategory(contentItemId, categoryId) {
+    await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$api$2d$client$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["api"].post(`/cms/content/${contentItemId}/categories`, {
+        categoryId
+    });
 }
 async function getStaticContent(pageType) {
     try {
@@ -360,23 +389,25 @@ async function deleteStaticContent(pageType) {
     updatePage,
     deletePage,
     addCategory,
+    linkContentToCategory,
     getStaticContent,
     getAllStaticContent,
     saveStaticContent,
     updateStaticContent,
     deleteStaticContent
 ]);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPages, "00213d58fb404eba2aec94fd9422782338e64f36ad", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCategories, "0044d6affe472bebb17c3af24bc951661a4bbacaf3", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(addPage, "40897b7781e57a13bfb3a9ae7b2f49a45dfd8282b9", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePage, "60461f8d14e201841b59a2370de028e6db0d7c3a4b", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deletePage, "402d2d67103789fb8bc0758fdfb34aae7f6df4ffb1", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(addCategory, "4093792142ec086675d81ad92895637f438462973b", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStaticContent, "40a74f27843667be2b66e8e982113ba05dba2f99ca", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAllStaticContent, "00ad457b09e1edd29a561a1bc04dbbf407c13bfe03", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(saveStaticContent, "70dc63381fb1116aca89e9587aeb1de27e3e922140", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateStaticContent, "700783119d6d00c145cd8abaa792e78e8ff134599c", null);
-(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteStaticContent, "40d8ad74a5150439ccc85b0468d3695dcffa1d750f", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getPages, "00bacbfe02073eb0aa69f7f5595c5bae43736482f3", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getCategories, "00a236637558708e2c805d1b2484ca42c4dcb5c216", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(addPage, "40e5718354abdb8c80ce36fdcd3f803c8fb6bb8038", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updatePage, "606353b5393db303c52cd3f40996622b35e42d9c1d", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deletePage, "407f11323a6a0e0776227ba633cda6cf4a1e5a86de", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(addCategory, "40609bc9671577689c955c7fa24d1fb6a3b6ece907", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(linkContentToCategory, "60debc144b2ff01dcbfdae047d2b60faf8b39501e5", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getStaticContent, "408bdb20fc15b642cea7573e727231b014831ec2af", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(getAllStaticContent, "00c2d806a569727e5ba85e95a1320dbab9bba2bc42", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(saveStaticContent, "7089e38844cfe7ffe52be196c49fb8e8e6652b84af", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(updateStaticContent, "70e5f20f19d45fdb6d9855b473a304e663be3ad837", null);
+(0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$webpack$2f$loaders$2f$next$2d$flight$2d$loader$2f$server$2d$reference$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["registerServerReference"])(deleteStaticContent, "40740cbf5589aea21119b323f8fe891c04df3a6eed", null);
 }),
 "[project]/.next-internal/server/app/cms/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/auth.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/actions/cms.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript) <locals>", ((__turbopack_context__) => {
 "use strict";
@@ -398,23 +429,23 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cms$2e$ts_
 "use strict";
 
 __turbopack_context__.s([
-    "00166e6505713b8b3d3d45b1810afcc541291e64e7",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$auth$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["logout"],
-    "00213d58fb404eba2aec94fd9422782338e64f36ad",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cms$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPages"],
-    "0044d6affe472bebb17c3af24bc951661a4bbacaf3",
+    "00a236637558708e2c805d1b2484ca42c4dcb5c216",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cms$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getCategories"],
-    "402d2d67103789fb8bc0758fdfb34aae7f6df4ffb1",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cms$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deletePage"],
-    "40897b7781e57a13bfb3a9ae7b2f49a45dfd8282b9",
-    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cms$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["addPage"],
-    "4093792142ec086675d81ad92895637f438462973b",
+    "00bacbfe02073eb0aa69f7f5595c5bae43736482f3",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cms$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getPages"],
+    "00d9a28086d7698260964b8d214d27db0303965f30",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$auth$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["logout"],
+    "40609bc9671577689c955c7fa24d1fb6a3b6ece907",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cms$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["addCategory"],
-    "40a74f27843667be2b66e8e982113ba05dba2f99ca",
+    "407f11323a6a0e0776227ba633cda6cf4a1e5a86de",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cms$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["deletePage"],
+    "408bdb20fc15b642cea7573e727231b014831ec2af",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cms$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["getStaticContent"],
-    "60461f8d14e201841b59a2370de028e6db0d7c3a4b",
+    "40e5718354abdb8c80ce36fdcd3f803c8fb6bb8038",
+    ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cms$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["addPage"],
+    "606353b5393db303c52cd3f40996622b35e42d9c1d",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cms$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["updatePage"],
-    "70dc63381fb1116aca89e9587aeb1de27e3e922140",
+    "7089e38844cfe7ffe52be196c49fb8e8e6652b84af",
     ()=>__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$actions$2f$cms$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["saveStaticContent"]
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f2e$next$2d$internal$2f$server$2f$app$2f$cms$2f$page$2f$actions$2e$js__$7b$__ACTIONS_MODULE0__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$auth$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$29222c$__ACTIONS_MODULE1__$3d3e$__$225b$project$5d2f$src$2f$actions$2f$cms$2e$ts__$5b$app$2d$rsc$5d$__$28$ecmascript$2922$__$7d$__$5b$app$2d$rsc$5d$__$28$server__actions__loader$2c$__ecmascript$29$__$3c$locals$3e$__ = __turbopack_context__.i('[project]/.next-internal/server/app/cms/page/actions.js { ACTIONS_MODULE0 => "[project]/src/actions/auth.ts [app-rsc] (ecmascript)", ACTIONS_MODULE1 => "[project]/src/actions/cms.ts [app-rsc] (ecmascript)" } [app-rsc] (server actions loader, ecmascript) <locals>');

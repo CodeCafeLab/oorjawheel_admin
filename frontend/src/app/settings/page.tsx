@@ -14,9 +14,62 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import * as React from "react"
+import { getAdminProfile, updateAdminProfile, changeAdminPassword, getAdminGeneralSettings, updateAdminGeneralSettings } from "@/actions/settings"
+import { useToast } from "@/hooks/use-toast"
 import { Switch } from "@/components/ui/switch"
 
 export default function SettingsPage() {
+  const [profile, setProfile] = React.useState<{ id: number; name: string | null; email: string } | null>(null)
+  const [loading, setLoading] = React.useState(false)
+  const [pwd, setPwd] = React.useState({ oldPassword: "", newPassword: "" })
+  const { toast } = useToast()
+  const [general, setGeneral] = React.useState<Record<string, any>>({})
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const data = await getAdminProfile()
+        if (data) setProfile(data)
+        const g = await getAdminGeneralSettings()
+        if (g) setGeneral(g)
+      } catch {}
+    })()
+  }, [])
+
+  const onSaveProfile = async () => {
+    if (!profile) return
+    setLoading(true)
+    try {
+      await updateAdminProfile({ name: profile.name ?? undefined, email: profile.email })
+      toast({ title: 'Profile updated', description: 'Your profile has been saved.' })
+    } catch (e:any) {
+      toast({ variant: 'destructive', title: 'Save failed', description: e?.message || 'Could not update profile.' })
+    } finally { setLoading(false) }
+  }
+
+  const onSavePassword = async () => {
+    if (!pwd.oldPassword || !pwd.newPassword) return
+    setLoading(true)
+    try { 
+      await changeAdminPassword(pwd)
+      toast({ title: 'Password changed', description: 'Your password was updated successfully.' })
+      setPwd({ oldPassword: '', newPassword: '' })
+    } catch (e:any) {
+      toast({ variant: 'destructive', title: 'Password change failed', description: e?.message || 'Check current password and try again.' })
+    } finally { setLoading(false) }
+  }
+
+  const onSaveGeneral = async () => {
+    setLoading(true)
+    try {
+      await updateAdminGeneralSettings(general)
+      toast({ title: 'General settings saved' })
+    } catch (e:any) {
+      toast({ variant: 'destructive', title: 'Save failed', description: e?.message || 'Could not save general settings.' })
+    } finally { setLoading(false) }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -42,15 +95,15 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue="Admin User" />
+                <Input id="name" value={profile?.name ?? ''} onChange={(e)=> setProfile(p=> p? { ...p, name: e.target.value } : p)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue="admin@oorja.com" readOnly disabled />
+                <Input id="email" type="email" value={profile?.email ?? ''} onChange={(e)=> setProfile(p=> p? { ...p, email: e.target.value } : p)} />
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Save changes</Button>
+              <Button onClick={onSaveProfile} disabled={loading || !profile}>Save changes</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -65,15 +118,15 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="current-password">Current Password</Label>
-                <Input id="current-password" type="password" />
+                <Input id="current-password" type="password" value={pwd.oldPassword} onChange={(e)=> setPwd(s=>({ ...s, oldPassword: e.target.value }))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
-                <Input id="new-password" type="password" />
+                <Input id="new-password" type="password" value={pwd.newPassword} onChange={(e)=> setPwd(s=>({ ...s, newPassword: e.target.value }))} />
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Save password</Button>
+              <Button onClick={onSavePassword} disabled={loading || !pwd.oldPassword || !pwd.newPassword}>Save password</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -121,59 +174,59 @@ export default function SettingsPage() {
             <CardContent className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="app-title">App Title</Label>
-                <Input id="app-title" defaultValue="Oorja" />
+                <Input id="app-title" value={general.site_name ?? ''} onChange={(e)=> setGeneral(s=> ({...s, site_name: e.target.value}))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="official-email">Official Email</Label>
-                <Input id="official-email" type="email" defaultValue="contact@oorjawheel.com" />
+                <Input id="official-email" type="email" value={general.official_email ?? ''} onChange={(e)=> setGeneral(s=> ({...s, official_email: e.target.value}))} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="app-logo">App Logo URL</Label>
-                <Input id="app-logo" placeholder="https://example.com/logo.png" />
+                <Input id="app-logo" placeholder="https://example.com/logo.png" value={general.app_logo_url ?? ''} onChange={(e)=> setGeneral(s=> ({...s, app_logo_url: e.target.value}))} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="app-icon">App Icon URL</Label>
-                <Input id="app-icon" placeholder="https://example.com/icon.png" />
+                <Input id="app-icon" placeholder="https://example.com/icon.png" value={general.app_icon_url ?? ''} onChange={(e)=> setGeneral(s=> ({...s, app_icon_url: e.target.value}))} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="admin-logo">Admin Logo URL</Label>
-                <Input id="admin-logo" placeholder="https://example.com/admin-logo.png" />
+                <Input id="admin-logo" placeholder="https://example.com/admin-logo.png" value={general.admin_logo_url ?? ''} onChange={(e)=> setGeneral(s=> ({...s, admin_logo_url: e.target.value}))} />
               </div>
                <div className="space-y-2">
                 <Label htmlFor="admin-icon">Admin Icon URL</Label>
-                <Input id="admin-icon" placeholder="https://example.com/admin-icon.png" />
+                <Input id="admin-icon" placeholder="https://example.com/admin-icon.png" value={general.admin_icon_url ?? ''} onChange={(e)=> setGeneral(s=> ({...s, admin_icon_url: e.target.value}))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="play-store-link">Play Store Link</Label>
-                <Input id="play-store-link" placeholder="https://play.google.com/store/apps/details?id=..." />
+                <Input id="play-store-link" placeholder="https://play.google.com/store/apps/details?id=..." value={general.play_store_link ?? ''} onChange={(e)=> setGeneral(s=> ({...s, play_store_link: e.target.value}))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="app-store-link">App Store Link</Label>
-                <Input id="app-store-link" placeholder="https://apps.apple.com/app/id..." />
+                <Input id="app-store-link" placeholder="https://apps.apple.com/app/id..." value={general.app_store_link ?? ''} onChange={(e)=> setGeneral(s=> ({...s, app_store_link: e.target.value}))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="support-number">Support Number</Label>
-                <Input id="support-number" placeholder="+91 12345 67890" />
+                <Input id="support-number" placeholder="+91 12345 67890" value={general.support_number ?? ''} onChange={(e)=> setGeneral(s=> ({...s, support_number: e.target.value}))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="whatsapp-number">WhatsApp Number</Label>
-                <Input id="whatsapp-number" placeholder="+91 12345 67890" />
+                <Input id="whatsapp-number" placeholder="+91 12345 67890" value={general.whatsapp_number ?? ''} onChange={(e)=> setGeneral(s=> ({...s, whatsapp_number: e.target.value}))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="facebook-link">Facebook Link</Label>
-                <Input id="facebook-link" placeholder="https://facebook.com/oorjawheel" />
+                <Input id="facebook-link" placeholder="https://facebook.com/oorjawheel" value={general.facebook_link ?? ''} onChange={(e)=> setGeneral(s=> ({...s, facebook_link: e.target.value}))} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="instagram-link">Instagram Link</Label>
-                <Input id="instagram-link" placeholder="https://instagram.com/oorjawheel" />
+                <Input id="instagram-link" placeholder="https://instagram.com/oorjawheel" value={general.instagram_link ?? ''} onChange={(e)=> setGeneral(s=> ({...s, instagram_link: e.target.value}))} />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="website-link">Website Link</Label>
-                <Input id="website-link" placeholder="https://oorjawheel.com" />
+                <Input id="website-link" placeholder="https://oorjawheel.com" value={general.website_link ?? ''} onChange={(e)=> setGeneral(s=> ({...s, website_link: e.target.value}))} />
               </div>
             </CardContent>
             <CardFooter>
-              <Button>Save General Settings</Button>
+              <Button onClick={onSaveGeneral} disabled={loading}>Save General Settings</Button>
             </CardFooter>
           </Card>
         </TabsContent>

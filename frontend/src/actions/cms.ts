@@ -13,9 +13,9 @@ export async function getPages(): Promise<Page[]> {
     const pages = (data as any[]).map((row) => ({
       id: row.id?.toString?.() ?? String(row.id),
       title: row.title,
-      category: 'General',
-      command: 'N/A',
-      description: `Page with order ${row.order}`,
+      category: row.category_name ?? 'Uncategorized',
+      command: row.command ?? 'N/A',
+      description: row.description ?? '',
       image: `https://placehold.co/100x100.png?text=${row.title?.charAt(0) ?? 'P'}`,
     }));
     return z.array(pageSchema).parse(pages);
@@ -25,19 +25,27 @@ export async function getPages(): Promise<Page[]> {
   }
 }
 
-export async function getCategories(): Promise<string[]> {
-    return ['Special Modes', 'Ambiance', 'Wellness', 'General'];
+export type Category = { id: number; name: string };
+
+export async function getCategories(): Promise<Category[]> {
+  try {
+    const { data } = await api.get('/cms/categories');
+    const rows = data?.data ?? [];
+    return rows.map((r: any) => ({ id: Number(r.id), name: String(r.name) }));
+  } catch (e) {
+    return [];
+  }
 }
 
 
-// Types for form data based on `pages` table
-const PageFormSchema = pageSchema.omit({ id: true, image: true });
+// Types for form data based on `pages` table (category is handled separately)
+const PageFormSchema = pageSchema.omit({ id: true, image: true, category: true });
 
 // --- Page Actions ---
 
-export async function addPage(values: z.infer<typeof PageFormSchema>) {
+export async function addPage(values: z.infer<typeof PageFormSchema> & { category_id?: number }) {
   try {
-    await api.post('/pages', { title: values.title, order: 0, is_published: 1 });
+    await api.post('/pages', { title: values.title, order: 0, is_published: 1, command: values.command, description: values.description, category_id: values.category_id });
     revalidatePath('/cms');
     return { success: true, message: 'Page added successfully.' };
   } catch (error) {
@@ -45,9 +53,9 @@ export async function addPage(values: z.infer<typeof PageFormSchema>) {
   }
 }
 
-export async function updatePage(id: string, values: z.infer<typeof PageFormSchema>) {
+export async function updatePage(id: string, values: z.infer<typeof PageFormSchema> & { category_id?: number }) {
   try {
-    await api.put(`/pages/${id}`, { title: values.title, order: 0, is_published: 1 });
+    await api.put(`/pages/${id}`, { title: values.title, order: 0, is_published: 1, command: values.command, description: values.description, category_id: values.category_id });
     revalidatePath('/cms');
     return { success: true, message: 'Page updated successfully.' };
   } catch (error) {
@@ -66,9 +74,18 @@ export async function deletePage(id: string) {
 }
 
 export async function addCategory(values: { title: string }) {
-    console.log("Adding category:", values.title);
+  try {
+    const payload = { name: values.title, slug: values.title.toLowerCase().replace(/\s+/g,'-') };
+    await api.post('/cms/categories', payload);
     revalidatePath('/cms');
-    return { success: true, message: 'Category added successfully (Mock).' };
+    return { success: true, message: 'Category added successfully.' };
+  } catch (e) {
+    return { success: false, message: 'Failed to add category.' };
+  }
+}
+
+export async function linkContentToCategory(contentItemId: number, categoryId: number) {
+  await api.post(`/cms/content/${contentItemId}/categories`, { categoryId });
 }
 
 // Static Content Actions

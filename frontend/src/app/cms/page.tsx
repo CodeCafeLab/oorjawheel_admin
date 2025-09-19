@@ -30,12 +30,12 @@ import Image from 'next/image';
 import * as React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { addCategory, addPage, deletePage, updatePage, getPages, getCategories, getStaticContent, saveStaticContent, StaticContentType, StaticContent } from '@/actions/cms';
+import { addCategory, addPage, deletePage, updatePage, getPages, getCategories, getStaticContent, saveStaticContent, StaticContentType, StaticContent, Category } from '@/actions/cms';
 
 
 export default function CmsPage() {
   const [pages, setPages] = React.useState<Page[]>([]);
-  const [categories, setCategories] = React.useState<string[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
   const [isContentSheetOpen, setContentSheetOpen] = React.useState(false);
   const [isCategorySheetOpen, setCategorySheetOpen] = React.useState(false);
   const [selectedPage, setSelectedPage] = React.useState<Page | null>(null);
@@ -115,11 +115,11 @@ export default function CmsPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const data = {
-        category: formData.get('content-category') as string,
         title: formData.get('content-title') as string,
         command: formData.get('content-command') as string,
         description: formData.get('content-description') as string,
-    };
+        category_id: Number(formData.get('content-category') || 0) || undefined,
+    } as const;
 
     const result = selectedPage
         ? await updatePage(selectedPage.id, data)
@@ -249,12 +249,12 @@ export default function CmsPage() {
                             <div className='space-y-4 px-6 py-4'>
                                 <div className="space-y-2">
                                     <Label htmlFor="content-category">Category</Label>
-                                    <Select name="content-category" defaultValue={selectedPage?.category}>
+                                    <Select name="content-category" defaultValue={undefined}>
                                         <SelectTrigger id="content-category">
                                             <SelectValue placeholder="Select a category" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                                            {categories.map(cat => <SelectItem key={cat.id} value={String(cat.id)}>{cat.name}</SelectItem>)}
                                         </SelectContent>
                                     </Select>
                                 </div>
@@ -286,7 +286,7 @@ export default function CmsPage() {
                   <DataTable 
                     columns={columns(handleEdit, handleDelete)} 
                     data={pages} 
-                    categories={categories}
+                    categories={categories.map(c => c.name)}
                     onDelete={handleDelete}
                   />
               </CardContent>

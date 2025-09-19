@@ -1,9 +1,9 @@
 {
   "node": {
-    "00166e6505713b8b3d3d45b1810afcc541291e64e7": {
+    "00d9a28086d7698260964b8d214d27db0303965f30": {
       "workers": {
         "app/settings/page": {
-          "moduleId": "[project]/.next-internal/server/app/settings/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/auth.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "moduleId": "[project]/.next-internal/server/app/settings/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/auth.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/actions/settings.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
           "async": false,
           "exportedName": "logout",
           "filename": "src/actions/auth.ts"
@@ -14,6 +14,81 @@
       },
       "exportedName": "logout",
       "filename": "src/actions/auth.ts"
+    },
+    "0053dd1eb2327a97326451a1d39a0ff751733b37e8": {
+      "workers": {
+        "app/settings/page": {
+          "moduleId": "[project]/.next-internal/server/app/settings/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/auth.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/actions/settings.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getAdminProfile",
+          "filename": "src/actions/settings.ts"
+        }
+      },
+      "layer": {
+        "app/settings/page": "action-browser"
+      },
+      "exportedName": "getAdminProfile",
+      "filename": "src/actions/settings.ts"
+    },
+    "4007cb83c128f378ae9c134a9746980caf198bdfe7": {
+      "workers": {
+        "app/settings/page": {
+          "moduleId": "[project]/.next-internal/server/app/settings/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/auth.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/actions/settings.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "updateAdminProfile",
+          "filename": "src/actions/settings.ts"
+        }
+      },
+      "layer": {
+        "app/settings/page": "action-browser"
+      },
+      "exportedName": "updateAdminProfile",
+      "filename": "src/actions/settings.ts"
+    },
+    "40e1c77adb621d4ec03a309a7bd093dd17eba70e40": {
+      "workers": {
+        "app/settings/page": {
+          "moduleId": "[project]/.next-internal/server/app/settings/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/auth.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/actions/settings.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "changeAdminPassword",
+          "filename": "src/actions/settings.ts"
+        }
+      },
+      "layer": {
+        "app/settings/page": "action-browser"
+      },
+      "exportedName": "changeAdminPassword",
+      "filename": "src/actions/settings.ts"
+    },
+    "00b3dea7271af450cdd4599a57eb08f0e0925fc25e": {
+      "workers": {
+        "app/settings/page": {
+          "moduleId": "[project]/.next-internal/server/app/settings/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/auth.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/actions/settings.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "getAdminGeneralSettings",
+          "filename": "src/actions/settings.ts"
+        }
+      },
+      "layer": {
+        "app/settings/page": "action-browser"
+      },
+      "exportedName": "getAdminGeneralSettings",
+      "filename": "src/actions/settings.ts"
+    },
+    "40ddb6cea61e19645121232f5e074f779ebabc8095": {
+      "workers": {
+        "app/settings/page": {
+          "moduleId": "[project]/.next-internal/server/app/settings/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/auth.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/actions/settings.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "updateAdminGeneralSettings",
+          "filename": "src/actions/settings.ts"
+        }
+      },
+      "layer": {
+        "app/settings/page": "action-browser"
+      },
+      "exportedName": "updateAdminGeneralSettings",
+      "filename": "src/actions/settings.ts"
     }
   },
   "edge": {}

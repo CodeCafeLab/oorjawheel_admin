@@ -1,0 +1,50 @@
+{
+  "node": {
+    "00d9a28086d7698260964b8d214d27db0303965f30": {
+      "workers": {
+        "app/devices/page": {
+          "moduleId": "[project]/.next-internal/server/app/devices/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/auth.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/actions/devices.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "logout",
+          "filename": "src/actions/auth.ts"
+        }
+      },
+      "layer": {
+        "app/devices/page": "action-browser"
+      },
+      "exportedName": "logout",
+      "filename": "src/actions/auth.ts"
+    },
+    "40c950b540b445810e6c60c5c33e078661c776fbe2": {
+      "workers": {
+        "app/devices/page": {
+          "moduleId": "[project]/.next-internal/server/app/devices/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/auth.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/actions/devices.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "addDevice",
+          "filename": "src/actions/devices.ts"
+        }
+      },
+      "layer": {
+        "app/devices/page": "action-browser"
+      },
+      "exportedName": "addDevice",
+      "filename": "src/actions/devices.ts"
+    },
+    "60aaeb361c5bf359f7ee90f8b2ee7712f091dd10ef": {
+      "workers": {
+        "app/devices/page": {
+          "moduleId": "[project]/.next-internal/server/app/devices/page/actions.js { ACTIONS_MODULE0 => \"[project]/src/actions/auth.ts [app-rsc] (ecmascript)\", ACTIONS_MODULE1 => \"[project]/src/actions/devices.ts [app-rsc] (ecmascript)\" } [app-rsc] (server actions loader, ecmascript)",
+          "async": false,
+          "exportedName": "updateDevice",
+          "filename": "src/actions/devices.ts"
+        }
+      },
+      "layer": {
+        "app/devices/page": "action-browser"
+      },
+      "exportedName": "updateDevice",
+      "filename": "src/actions/devices.ts"
+    }
+  },
+  "edge": {}
+}
