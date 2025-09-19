@@ -150,7 +150,7 @@ export function DataTable<TData, TValue>({
   
   const handleDeleteSelectedItems = () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
-    const idsToDelete = selectedRows.map(row => (row.original as Device | DeviceMaster).id);
+    const idsToDelete = selectedRows.map(row => String((row.original as Device | DeviceMaster).id));
     onDeleteSelected(idsToDelete);
     table.resetRowSelection();
   }

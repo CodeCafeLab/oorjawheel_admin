@@ -42,8 +42,8 @@ export function NotificationForm({
     description: "",
     user_id: "all",
     image_url: "",
-    type: "info" as const,
-    status: "draft" as const,
+    type: "info" as 'info' | 'alert' | 'promotion' | 'warning' | 'success',
+    status: "draft" as 'draft' | 'scheduled' | 'sent' | 'failed',
     scheduled_at: "",
     schedule_immediately: false,
   })
@@ -59,8 +59,8 @@ export function NotificationForm({
         description: notification.description || "",
         user_id: notification.user_id?.toString() || "all",
         image_url: notification.image_url || "",
-        type: notification.type || "info",
-        status: notification.status || "draft",
+        type: (notification.type as 'info' | 'alert' | 'promotion' | 'warning' | 'success') || "info",
+        status: (notification.status as 'draft' | 'scheduled' | 'sent' | 'failed') || "draft",
         scheduled_at: notification.scheduled_at || "",
         schedule_immediately: false,
       })

@@ -1,6 +1,6 @@
-import { IronSessionData } from 'iron-session';
-
-export type SessionUser = IronSessionData & {
+export type SessionUser = {
   email?: string;
   isLoggedIn?: boolean;
+  // Extra session fields, if any
+  [key: string]: unknown;
 };

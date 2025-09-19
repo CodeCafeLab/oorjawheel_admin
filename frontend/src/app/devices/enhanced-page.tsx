@@ -33,7 +33,7 @@ import {
     fetchDeviceMasters,
     getTotalDeviceCount,
     getTotalDeviceMasterCount
-} from '@/actions/devices-enhanced';
+} from '@/actions/devices';
 
 // Enhanced modal data with proper device types
 const modals = [
@@ -209,7 +209,7 @@ export default function EnhancedDevicesPage() {
         };
 
         const result = selectedMaster
-            ? await updateDeviceMaster(selectedMaster.id, masterData)
+            ? await updateDeviceMaster(String(selectedMaster.id), masterData)
             : await addDeviceMaster(masterData);
 
         if (result.success) {
@@ -412,7 +412,7 @@ export default function EnhancedDevicesPage() {
                                                     </div>
                                                     <div className="space-y-2">
                                                         <Label htmlFor="device-type">Device Type</Label>
-                                                        <Select name="device-type" defaultValue={selectedDevice?.deviceType}>
+                                                        <Select name="device-type" defaultValue={selectedDevice?.deviceType ?? undefined}>
                                                             <SelectTrigger id="device-type">
                                                                 <SelectValue placeholder="Select a device type" />
                                                             </SelectTrigger>
@@ -442,7 +442,7 @@ export default function EnhancedDevicesPage() {
                                                             name="device-name" 
                                                             id="device-name" 
                                                             placeholder="e.g., Living Room Wheel" 
-                                                            defaultValue={selectedDevice?.deviceName}
+                                                            defaultValue={selectedDevice?.deviceName ?? undefined}
                                                             required
                                                         />
                                                     </div>

@@ -103,6 +103,15 @@ export async function fetchDeviceMasters(filters?: { status?: string; search?: s
   }
 }
 
+export async function getTotalDeviceMasterCount(filters?: { status?: string; search?: string }) {
+  try {
+    const { data } = await api.get('/device-masters', { params: { ...filters, page: 1, limit: 1 } });
+    return data?.total ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 export async function addDeviceMaster(values: z.infer<typeof DeviceMasterFormSchema>) {
   try {
     await api.post('/device-masters', values);
