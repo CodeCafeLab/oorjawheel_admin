@@ -301,6 +301,26 @@ export async function createCategory({ name, slug, description, parent_id, color
   }
 }
 
+// Link a content item to a single category (replace existing link)
+export async function setContentItemCategory({ content_item_id, category_id }) {
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.execute('DELETE FROM content_categories WHERE content_item_id = ?', [content_item_id]);
+    await conn.execute(
+      'INSERT INTO content_categories (content_item_id, category_id) VALUES (?, ?)',
+      [content_item_id, category_id]
+    );
+    await conn.commit();
+    return true;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
 // Media Files
 export async function getMediaFiles({ page = 1, limit = 20, mime_type }) {
   const conn = await pool.getConnection();

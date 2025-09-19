@@ -24,6 +24,7 @@ import {
   createMediaFile,
   updateMediaFile,
   deleteMediaFile,
+  setContentItemCategory,
   getFieldTypes,
   getTemplates,
   getContentTypeFields,
@@ -171,7 +172,7 @@ export async function listContentItems(req, res, next) {
 
 export async function addContentItem(req, res, next) {
   try {
-    const { content_type_id, title, slug, status, featured_image, excerpt, meta_title, meta_description, fieldValues } = req.body;
+    const { content_type_id, title, slug, status, featured_image, excerpt, meta_title, meta_description, fieldValues, category_id } = req.body;
     
     if (!content_type_id || !title || !slug) {
       return res.status(400).json({ error: 'Content type, title, and slug are required' });
@@ -189,6 +190,14 @@ export async function addContentItem(req, res, next) {
       author_id: req.user?.id, // Assuming auth middleware sets req.user
       fieldValues: fieldValues || []
     });
+
+    // Link category if provided
+    if (category_id) {
+      await setContentItemCategory({
+        content_item_id: Number(result.id),
+        category_id: Number(category_id)
+      });
+    }
 
     res.status(201).json({ message: 'Content item created', id: result.id });
   } catch (err) {
@@ -210,7 +219,7 @@ export async function getContentItem(req, res, next) {
 
 export async function editContentItem(req, res, next) {
   try {
-    const { title, slug, status, featured_image, excerpt, meta_title, meta_description, fieldValues } = req.body;
+    const { title, slug, status, featured_image, excerpt, meta_title, meta_description, fieldValues, category_id } = req.body;
     
     await updateContentItem(req.params.id, {
       title,
@@ -222,6 +231,14 @@ export async function editContentItem(req, res, next) {
       meta_description,
       fieldValues: fieldValues || []
     });
+
+    // Update category link if provided
+    if (category_id) {
+      await setContentItemCategory({
+        content_item_id: Number(req.params.id),
+        category_id: Number(category_id)
+      });
+    }
 
     res.json({ message: 'Content item updated' });
   } catch (err) {
@@ -242,7 +259,7 @@ export async function removeContentItem(req, res, next) {
 export async function listCategories(_req, res, next) {
   try {
     const categories = await getCategories();
-    res.json(categories);
+    res.json({ data: categories });
   } catch (err) {
     next(err);
   }
@@ -256,17 +273,36 @@ export async function addCategory(req, res, next) {
       return res.status(400).json({ error: 'Name and slug are required' });
     }
 
+    // Derive slug from name when not provided
+    const baseSlug = (slug || name)
+      .toString()
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+
+    const existing = await getCategories();
+    const taken = new Set((existing || []).map((c) => c.slug));
+    if (taken.has(baseSlug)) {
+      return res.status(409).json({ error: 'Category already exists' });
+    }
+
     const result = await createCategory({
       name,
-      slug,
-      description,
-      parent_id,
-      color,
-      icon
+      slug: baseSlug,
+      description: description ?? null,
+      parent_id: parent_id ?? null,
+      color: color ?? null,
+      icon: icon ?? null
     });
 
     res.status(201).json({ message: 'Category created', id: result.id });
   } catch (err) {
+    // Gracefully report duplicate-key errors if they slip through
+    if (err?.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'Category already exists' });
+    }
     next(err);
   }
 }
@@ -585,6 +621,21 @@ export const deleteStaticContentController = async (req, res, next) => {
         message: 'Static content not found' 
       });
     }
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Link content item to a category
+export const setContentItemCategoryController = async (req, res, next) => {
+  try {
+    const { id } = req.params; // content item id
+    const { categoryId } = req.body;
+    if (!id || !categoryId) {
+      return res.status(400).json({ success: false, message: 'content_item_id and categoryId are required' });
+    }
+    await setContentItemCategory({ content_item_id: Number(id), category_id: Number(categoryId) });
+    res.json({ success: true, message: 'Category linked successfully' });
   } catch (err) {
     next(err);
   }

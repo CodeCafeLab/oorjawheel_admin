@@ -4,7 +4,14 @@ export async function getPages() {
   const conn = await pool.getConnection();
   try {
     const [rows] = await conn.execute(
-      'SELECT * FROM pages ORDER BY `order` ASC'
+      `SELECT 
+         p.*, 
+         COALESCE(MAX(cat.name), 'Uncategorized') AS category_name
+       FROM pages p
+       LEFT JOIN content_categories cc ON cc.content_item_id = p.id
+       LEFT JOIN categories cat ON cat.id = cc.category_id
+       GROUP BY p.id
+       ORDER BY p.\`order\` ASC`
     );
     return rows;
   } finally {
@@ -12,12 +19,12 @@ export async function getPages() {
   }
 }
 
-export async function createPage({ title, order = 0, is_published = 1 }) {
+export async function createPage({ title, order = 0, is_published = 1, command = null, description = null }) {
   const conn = await pool.getConnection();
   try {
     const [result] = await conn.execute(
-      'INSERT INTO pages (title, `order`, is_published) VALUES (?, ?, ?)',
-      [title, order, is_published]
+      'INSERT INTO pages (title, `order`, is_published, command, description) VALUES (?, ?, ?, ?, ?)',
+      [title, order, is_published, command, description]
     );
     return { id: result.insertId };
   } finally {
@@ -38,12 +45,12 @@ export async function getPageById(id) {
   }
 }
 
-export async function updatePage(id, { title, order = 0, is_published = 1 }) {
+export async function updatePage(id, { title, order = 0, is_published = 1, command = null, description = null }) {
   const conn = await pool.getConnection();
   try {
     await conn.execute(
-      'UPDATE pages SET title = ?, `order` = ?, is_published = ? WHERE id = ?',
-      [title, order, is_published, id]
+      'UPDATE pages SET title = ?, `order` = ?, is_published = ?, command = ?, description = ? WHERE id = ?',
+      [title, order, is_published, command, description, id]
     );
     return true;
   } finally {
