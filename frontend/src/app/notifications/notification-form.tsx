@@ -57,15 +57,29 @@ export function NotificationForm({
       setFormData({
         title: notification.title || "",
         description: notification.description || "",
-        user_id: notification.user_id?.toString() || "all",
+        user_id: notification.user_id ? notification.user_id.toString() : "all",
         image_url: notification.image_url || "",
         type: (notification.type as 'info' | 'alert' | 'promotion' | 'warning' | 'success') || "info",
         status: (notification.status as 'draft' | 'scheduled' | 'sent' | 'failed') || "draft",
         scheduled_at: notification.scheduled_at || "",
-        schedule_immediately: false,
+        schedule_immediately: !notification.scheduled_at && notification.status === 'sent',
       })
       setSelectedDate(scheduledDate)
       setSelectedTime(scheduledDate ? format(scheduledDate, "HH:mm") : "")
+    } else {
+      // Reset form for new notification
+      setFormData({
+        title: "",
+        description: "",
+        user_id: "all",
+        image_url: "",
+        type: "info",
+        status: "draft",
+        scheduled_at: "",
+        schedule_immediately: false,
+      })
+      setSelectedDate(undefined)
+      setSelectedTime("")
     }
   }, [notification])
 
@@ -93,12 +107,12 @@ export function NotificationForm({
     // Prepare the data for submission
     const submitData = {
       title: formData.title.trim(),
-      description: formData.description?.trim() || undefined,
-      user_id: formData.user_id && formData.user_id !== "all" ? parseInt(formData.user_id) : undefined,
-      image_url: formData.image_url?.trim() || undefined,
+      description: formData.description?.trim() || null,
+      user_id: formData.user_id && formData.user_id !== "all" ? parseInt(formData.user_id) : null,
+      image_url: formData.image_url?.trim() || null,
       type: formData.type || 'info',
-      status: formData.schedule_immediately ? 'sent' : (formData.status || 'draft'),
-      scheduled_at: formData.schedule_immediately ? new Date().toISOString() : scheduledDateTime,
+      status: formData.schedule_immediately ? 'sent' : (scheduledDateTime ? 'scheduled' : 'draft'),
+      scheduled_at: formData.schedule_immediately ? null : scheduledDateTime,
     }
 
     onSubmit(submitData)
@@ -285,6 +299,7 @@ export function NotificationForm({
                       {/* Quick time options */}
                       <div className="flex flex-wrap gap-2 mt-2">
                         <Button
+                          type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => {
@@ -298,6 +313,7 @@ export function NotificationForm({
                         {['09:00', '12:00', '15:00', '18:00', '21:00'].map((time) => (
                           <Button
                             key={time}
+                            type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => setSelectedTime(time)}

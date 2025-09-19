@@ -50,22 +50,22 @@ export type NotificationStats = z.infer<typeof notificationStatsSchema>;
 // Form schema for creating/updating notifications
 export const notificationFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   user_id: z.number().nullable().optional(),
-  image_url: z.string().optional(),
+  image_url: z.string().nullable().optional(),
   type: z.enum(['info', 'alert', 'promotion', 'warning', 'success']).default('info'),
   status: z.enum(['draft', 'scheduled', 'sent', 'failed']).default('draft'),
-  scheduled_at: z.string().optional(),
+  scheduled_at: z.string().nullable().optional(),
   schedule_immediately: z.boolean().optional(),
 }).transform((data) => ({
   ...data,
   // Ensure type and status are not empty strings
   type: data.type || 'info',
   status: data.status || 'draft',
-  // Convert empty strings to undefined for optional fields
-  description: data.description === '' ? undefined : data.description,
-  image_url: data.image_url === '' ? undefined : data.image_url,
-  scheduled_at: data.scheduled_at === '' ? undefined : data.scheduled_at,
+  // Convert empty strings and null to undefined for optional fields
+  description: data.description === '' || data.description === null ? undefined : data.description,
+  image_url: data.image_url === '' || data.image_url === null ? undefined : data.image_url,
+  scheduled_at: data.scheduled_at === '' || data.scheduled_at === null ? undefined : data.scheduled_at,
   user_id: data.user_id === null ? undefined : data.user_id,
 }));
 

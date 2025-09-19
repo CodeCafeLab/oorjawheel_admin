@@ -155,10 +155,11 @@ export async function getNotificationStats(): Promise<NotificationStats | null> 
 }
 
 // Create notification
-export async function createNotification(values: NotificationFormData) {
+export async function createNotification(values: NotificationFormData, fcmToken?: string) {
   try {
     const validatedData = notificationFormSchema.parse(values);
-    await api.post('/notifications', validatedData);
+    const payload = fcmToken ? { ...validatedData, token: fcmToken } : validatedData;
+    await api.post('/notifications', payload);
     revalidatePath('/notifications');
     return { success: true, message: 'Notification created successfully.' };
   } catch (error) {
@@ -172,10 +173,11 @@ export async function createNotification(values: NotificationFormData) {
 }
 
 // Update notification
-export async function updateNotification(id: string, values: NotificationFormData) {
+export async function updateNotification(id: string, values: NotificationFormData, fcmToken?: string) {
   try {
     const validatedData = notificationFormSchema.parse(values);
-    await api.put(`/notifications/${id}`, validatedData);
+    const payload = fcmToken ? { ...validatedData, token: fcmToken } : validatedData;
+    await api.put(`/notifications/${id}`, payload);
     revalidatePath('/notifications');
     return { success: true, message: 'Notification updated successfully.' };
   } catch (error) {
@@ -201,9 +203,10 @@ export async function deleteNotification(id: string) {
 }
 
 // Send notification
-export async function sendNotification(id: string) {
+export async function sendNotification(id: string, token?: string) {
   try {
-    await api.post(`/notifications/${id}/send`);
+    const payload = token ? { token } : {};
+    await api.post(`/notifications/${id}/send`, payload);
     revalidatePath('/notifications');
     return { success: true, message: 'Notification sent successfully.' };
   } catch (error) {

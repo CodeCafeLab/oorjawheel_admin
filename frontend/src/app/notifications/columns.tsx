@@ -125,6 +125,24 @@ export const columns = ({ onEdit, onDelete, onSend }: ColumnProps): ColumnDef<No
     header: "Scheduled",
     cell: ({ row }) => {
       const scheduledAt = row.getValue("scheduled_at") as string
+      const status = row.original.status
+      
+      // For sent notifications without scheduled_at, show current IST time as "Immediate"
+      if (!scheduledAt && status === 'sent') {
+        const now = new Date()
+        // Get current IST time properly
+        const istTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}))
+        
+        return (
+          <div className="text-sm">
+            <div className="font-medium text-green-600">Immediate</div>
+            <div className="text-muted-foreground">
+              {format(istTime, "MMM dd, yyyy hh:mm a")} IST
+            </div>
+          </div>
+        )
+      }
+      
       if (!scheduledAt) return <span className="text-muted-foreground">-</span>
       
       try {
@@ -134,8 +152,8 @@ export const columns = ({ onEdit, onDelete, onSend }: ColumnProps): ColumnDef<No
           return <span className="text-muted-foreground">Invalid date</span>
         }
         
-        // Convert to IST timezone
-        const istDate = toZonedTime(date, 'Asia/Kolkata')
+        // Format in IST timezone
+        const istDate = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}))
         
         return (
           <div className="text-sm">
@@ -152,6 +170,41 @@ export const columns = ({ onEdit, onDelete, onSend }: ColumnProps): ColumnDef<No
         )
       } catch (error) {
         console.error("Date formatting error:", error, "Original value:", scheduledAt)
+        return <span className="text-muted-foreground">Invalid date</span>
+      }
+    },
+  },
+  {
+    accessorKey: "sent_at",
+    header: "Sent At",
+    cell: ({ row }) => {
+      const sentAt = row.getValue("sent_at") as string
+      if (!sentAt) return <span className="text-muted-foreground">-</span>
+      
+      try {
+        const date = new Date(sentAt)
+        if (isNaN(date.getTime())) {
+          return <span className="text-muted-foreground">Invalid date</span>
+        }
+        
+        // Format in IST timezone
+        const istDate = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}))
+        
+        return (
+          <div className="text-sm">
+            <div className="font-medium">
+              {format(istDate, "MMM dd, yyyy")}
+            </div>
+            <div className="text-muted-foreground">
+              {format(istDate, "hh:mm a")} IST
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {formatDistanceToNow(date)} ago
+            </div>
+          </div>
+        )
+      } catch (error) {
+        console.error("Sent date formatting error:", error, "Original value:", sentAt)
         return <span className="text-muted-foreground">Invalid date</span>
       }
     },
@@ -177,8 +230,8 @@ export const columns = ({ onEdit, onDelete, onSend }: ColumnProps): ColumnDef<No
           return <span className="text-muted-foreground">Invalid date</span>
         }
         
-        // Convert to IST timezone
-        const istDate = toZonedTime(date, 'Asia/Kolkata')
+        // Format in IST timezone
+        const istDate = new Date(date.toLocaleString("en-US", {timeZone: "Asia/Kolkata"}))
         
         return (
           <div className="text-sm">

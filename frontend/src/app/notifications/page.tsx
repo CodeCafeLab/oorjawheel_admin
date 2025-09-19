@@ -2,6 +2,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { getMessagingToken } from "@/firebase"
 import { Button } from "@/components/ui/button"
 import { PlusCircle, Bell, Users, Send, Clock } from "lucide-react"
 import {
@@ -38,6 +39,7 @@ export default function NotificationsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [fcmToken, setFcmToken] = useState<string>('')
   const { toast } = useToast()
 
   const loadData = async () => {
@@ -66,6 +68,23 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     loadData()
+    
+    // Get FCM token for sending notifications
+    const getToken = async () => {
+      try {
+        const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY
+        if (vapidKey) {
+          const token = await getMessagingToken(vapidKey)
+          if (token) {
+            setFcmToken(token)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to get FCM token:', error)
+      }
+    }
+    
+    getToken()
   }, [])
 
   const handleEdit = (notification: Notification) => {
@@ -100,7 +119,17 @@ export default function NotificationsPage() {
 
   const handleSend = async (id: string) => {
     try {
-      const result = await sendNotification(id)
+      if (!fcmToken) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "FCM token not available. Please refresh the page and allow notifications.",
+        })
+        return
+      }
+      
+      const result = await sendNotification(id, fcmToken)
+      
       if (result.success) {
         toast({
           title: "Success",
@@ -115,6 +144,7 @@ export default function NotificationsPage() {
         })
       }
     } catch (error) {
+      console.error('Send notification error:', error)
       toast({
         variant: "destructive",
         title: "Error",
@@ -152,8 +182,8 @@ export default function NotificationsPage() {
     try {
       setIsSubmitting(true)
       const result = selectedNotification
-        ? await updateNotification(selectedNotification.id, data)
-        : await createNotification(data)
+        ? await updateNotification(selectedNotification.id, data, fcmToken)
+        : await createNotification(data, fcmToken)
 
       if (result.success) {
         toast({

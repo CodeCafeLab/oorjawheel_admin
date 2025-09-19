@@ -1,4 +1,5 @@
 import { getNotifications, getNotificationById, createNotification, updateNotification, deleteNotification, getUsersForDropdown, getNotificationStats, markNotificationAsSent, getScheduledNotifications } from '../models/notificationModel.js';
+import { sendFcmMessage } from '../services/fcmService.js';
 // Get all notifications with pagination and filtering
 export async function listNotifications(req, res, next) {
     try {
@@ -81,6 +82,30 @@ export async function addNotification(req, res, next) {
             scheduled_at: scheduled_at || null,
             created_by: req.user?.id || 1 // Default to admin user if no auth
         });
+        // If status is 'sent' (immediate), send the notification right away
+        if (status === 'sent') {
+            try {
+                const tokenFromBody = req.body?.token;
+                const fallbackToken = process.env.TEST_FCM_TOKEN || null;
+                const token = tokenFromBody || fallbackToken;
+                if (token) {
+                    const isImage = Boolean(image_url);
+                    const fcmType = isImage ? 'image' : 'text';
+                    const fcmTitle = title.trim();
+                    const fcmDescription = description?.trim() || '';
+                    const fcmImage = image_url?.trim() || undefined;
+                    await sendFcmMessage({ type: fcmType, title: fcmTitle, description: fcmDescription, image: fcmImage, token });
+                    await markNotificationAsSent(result.id);
+                }
+                else {
+                    console.error('No FCM token available for immediate notification');
+                }
+            }
+            catch (fcmError) {
+                console.error('Failed to send immediate notification:', fcmError);
+                // Don't fail the creation, just log the error
+            }
+        }
         res.status(201).json({
             success: true,
             message: 'Notification created successfully',
@@ -153,6 +178,33 @@ export async function editNotification(req, res, next) {
                 success: false,
                 message: 'Notification not found or no changes made'
             });
+        }
+        // If status is being updated to 'sent' (immediate), send the notification right away
+        if (status === 'sent') {
+            try {
+                const tokenFromBody = req.body?.token;
+                const fallbackToken = process.env.TEST_FCM_TOKEN || null;
+                const token = tokenFromBody || fallbackToken;
+                if (token) {
+                    const notification = await getNotificationById(id);
+                    if (notification) {
+                        const isImage = Boolean(notification.image_url);
+                        const fcmType = isImage ? 'image' : 'text';
+                        const fcmTitle = notification.title;
+                        const fcmDescription = notification.description || '';
+                        const fcmImage = notification.image_url || undefined;
+                        await sendFcmMessage({ type: fcmType, title: fcmTitle, description: fcmDescription, image: fcmImage, token });
+                        await markNotificationAsSent(id);
+                    }
+                }
+                else {
+                    console.error('No FCM token available for immediate notification');
+                }
+            }
+            catch (fcmError) {
+                console.error('Failed to send immediate notification:', fcmError);
+                // Don't fail the update, just log the error
+            }
         }
         res.json({
             success: true,
@@ -227,12 +279,25 @@ export async function sendNotification(req, res, next) {
                 message: 'Notification has already been sent'
             });
         }
-        const result = await markNotificationAsSent(id);
-        if (result.affectedRows === 0) {
-            return res.status(404).json({
-                success: false,
-                message: 'Notification not found'
-            });
+        // Resolve FCM token
+        const tokenFromBody = req.body?.token;
+        const fallbackToken = process.env.TEST_FCM_TOKEN || null;
+        const token = tokenFromBody || fallbackToken;
+        if (!token) {
+            return res.status(400).json({ success: false, message: 'Missing FCM token. Provide in body.token or set TEST_FCM_TOKEN' });
+        }
+        // Map current notification shape to FCM payload
+        const isImage = Boolean(notification.image_url);
+        const type = isImage ? 'image' : 'text';
+        const title = notification.title;
+        const description = notification.description || '';
+        const image = notification.image_url || undefined;
+        try {
+            await sendFcmMessage({ type, title, description, image, token });
+            await markNotificationAsSent(id);
+        }
+        catch (err) {
+            return res.status(502).json({ success: false, message: 'Failed to send via FCM', error: err.message });
         }
         res.json({
             success: true,
