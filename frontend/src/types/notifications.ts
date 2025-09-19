@@ -5,7 +5,7 @@ export const notificationSchema = z.object({
   id: z.string(),
   title: z.string(),
   description: z.string().optional(),
-  user_id: z.number().optional(),
+  user_id: z.number().nullable().optional(),
   user_name: z.string().optional(),
   user_email: z.string().optional(),
   image_url: z.string().optional(),
@@ -51,7 +51,7 @@ export type NotificationStats = z.infer<typeof notificationStatsSchema>;
 export const notificationFormSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  user_id: z.number().optional(),
+  user_id: z.number().nullable().optional(),
   image_url: z.string().optional(),
   type: z.enum(['info', 'alert', 'promotion', 'warning', 'success']).default('info'),
   status: z.enum(['draft', 'scheduled', 'sent', 'failed']).default('draft'),
@@ -66,6 +66,7 @@ export const notificationFormSchema = z.object({
   description: data.description === '' ? undefined : data.description,
   image_url: data.image_url === '' ? undefined : data.image_url,
   scheduled_at: data.scheduled_at === '' ? undefined : data.scheduled_at,
+  user_id: data.user_id === null ? undefined : data.user_id,
 }));
 
 export type NotificationFormData = z.infer<typeof notificationFormSchema>;
