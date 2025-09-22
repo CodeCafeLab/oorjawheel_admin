@@ -22,6 +22,7 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           port: 22
           script: |
+            set -e
             cd /var/www/oorjawheel_admin/backend
             git reset --hard
             git pull origin main
@@ -38,6 +39,7 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           port: 22
           script: |
+            set -e
             cd /var/www/oorjawheel_admin/frontend
             git reset --hard
             git pull origin main
