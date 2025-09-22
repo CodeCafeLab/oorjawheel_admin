@@ -53,8 +53,8 @@ export default function CommandManagementPage() {
     setFetching(true);
     try {
       const { fetchData } = await import('@/lib/api-utils');
-      const data = await fetchData("/command-logs");
-      setCommands(data.data ?? data);
+      const data = await fetchData("/command-logs") as { data?: any[] } | any[];
+      setCommands(Array.isArray(data) ? data : (data.data ?? []));
     } catch (error) {
       toast({
         variant: "destructive",

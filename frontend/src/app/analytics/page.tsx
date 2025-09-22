@@ -56,13 +56,22 @@ export default function AnalyticsPage() {
     const load = async () => {
       try {
         const { fetchData } = await import('@/lib/api-utils');
-        const data = await fetchData('/analytics');
+        const data = await fetchData('/analytics') as {
+          kpis?: any;
+          charts?: {
+            commandVolume?: any;
+            deviceActivations?: any;
+            warrantyTriggers?: any;
+            weeklyActiveUsers?: any;
+            deviceStatus?: any;
+          };
+        };
         setKpis(data.kpis)
-        setCommandVolumeData(data.charts.commandVolume)
-        setDeviceActivationData(data.charts.deviceActivations)
-        setWarrantyTriggersData(data.charts.warrantyTriggers)
-        setWeeklyActiveUsersData(data.charts.weeklyActiveUsers)
-        setDeviceStatusData(data.charts.deviceStatus)
+        setCommandVolumeData(data.charts?.commandVolume)
+        setDeviceActivationData(data.charts?.deviceActivations)
+        setWarrantyTriggersData(data.charts?.warrantyTriggers)
+        setWeeklyActiveUsersData(data.charts?.weeklyActiveUsers)
+        setDeviceStatusData(data.charts?.deviceStatus)
       } catch (error) {
         console.error('Error loading analytics:', error);
       } finally {

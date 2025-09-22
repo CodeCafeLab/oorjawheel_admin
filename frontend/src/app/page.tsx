@@ -63,7 +63,7 @@ export default function DashboardPage() {
     const load = async () => {
       try {
         const { fetchData } = await import('@/lib/api-utils');
-        const data = await fetchData('/analytics');
+        const data = await fetchData('/analytics') as { kpis?: { activeDevices?: number; totalUsers?: number } };
         if (data?.kpis) {
           setActiveDevices(Number(data.kpis.activeDevices || 0))
           setTotalUsers(Number(data.kpis.totalUsers || 0))
