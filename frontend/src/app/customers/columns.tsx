@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { StatusSwitch } from "@/components/ui/status-switch"
 import { Customer } from "./schema"
 import {
     AlertDialog,
@@ -107,7 +108,29 @@ export const columns = (onEdit: (customer: Customer) => void, onDelete: (id: str
     header: "Status",
     cell: ({ row }) => {
         const status = row.getValue("status") as string;
-        return <Badge variant={status === 'active' ? 'default' : 'secondary'}>{status}</Badge>
+        const id = String(row.original.id)
+        return (
+          <StatusSwitch
+            id={id}
+            initialStatus={status as any}
+            activeValue="active"
+            inactiveValue="inactive"
+            labelMap={{ active: 'Active', inactive: 'Inactive' }}
+            onStatusChange={async (customerId, checked) => {
+              try {
+                const { updateData } = await import("@/lib/api-utils")
+                const newStatus = checked ? "active" : "inactive"
+                await updateData(`/customers/${customerId}`, { status: newStatus })
+                return { success: true, message: `Customer status set to ${newStatus}` }
+              } catch (e: any) {
+                return { success: false, message: e?.message || "Failed to update customer status" }
+              }
+            }}
+          onLocalUpdate={(checked) => {
+            row.original.status = checked ? 'active' as any : 'inactive' as any
+          }}
+          />
+        )
     }
   },
   {

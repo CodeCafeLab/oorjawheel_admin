@@ -1,4 +1,4 @@
-import { resolveUserId, getAdminProfileById, updateAdminProfile, changeAdminPassword, getAdminGeneralSettings, upsertAdminGeneralSettings } from '../models/adminSettingsModel.js';
+import { resolveUserId, getAdminProfileById, updateAdminProfile, changeAdminPassword, getAdminGeneralSettings, upsertAdminGeneralSettings, getAdminNotificationSettings, upsertAdminNotificationSettings } from '../models/adminSettingsModel.js';
 export async function getAdminProfile(req, res, next) {
     try {
         const id = await resolveUserId(req);
@@ -51,6 +51,27 @@ export async function putAdminGeneral(req, res, next) {
         const id = await resolveUserId(req);
         await upsertAdminGeneralSettings(id, req.body || {});
         res.json({ message: 'General settings saved' });
+    }
+    catch (err) {
+        next(err);
+    }
+}
+// Notifications per-admin
+export async function getAdminNotifications(req, res, next) {
+    try {
+        const id = await resolveUserId(req);
+        const data = await getAdminNotificationSettings(id);
+        res.json({ data });
+    }
+    catch (err) {
+        next(err);
+    }
+}
+export async function putAdminNotifications(req, res, next) {
+    try {
+        const id = await resolveUserId(req);
+        await upsertAdminNotificationSettings(id, req.body || {});
+        res.json({ message: 'Notification settings saved' });
     }
     catch (err) {
         next(err);
