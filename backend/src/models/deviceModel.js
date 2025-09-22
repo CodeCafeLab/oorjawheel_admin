@@ -97,13 +97,13 @@ export async function updateDevice(
         device_name,
         mac_address,
         device_type,
-        user_id,
+        user_id || null,
         passcode,
         status,
-        bt_name,
-        warranty_start,
-        default_cmd,
-        first_connected_at,
+        bt_name || null,
+        warranty_start || null,
+        default_cmd || null,
+        first_connected_at || null,
         id,
       ]
     );

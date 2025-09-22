@@ -25,7 +25,7 @@ export async function findUserById(id) {
 }
 // ---- Admin Management ----
 export async function findAdminByEmail(email) {
-    const rows = await query(`SELECT id, email, password_hash, role, created_at 
+    const rows = await query(`SELECT id, email, password_hash, role, status, created_at 
      FROM admins 
      WHERE email = ?`, [email]);
     return rows.length > 0 ? rows[0] : null;
@@ -48,7 +48,7 @@ export async function createAdmin(adminData) {
     };
 }
 export async function updateAdmin(id, updates) {
-    const { email, password_hash, role } = updates;
+    const { email, password_hash, role, last_login } = updates;
     const updateFields = [];
     const params = [];
     if (email) {
@@ -62,6 +62,10 @@ export async function updateAdmin(id, updates) {
     if (role) {
         updateFields.push('role = ?');
         params.push(role);
+    }
+    if (last_login) {
+        updateFields.push('last_login = ?');
+        params.push(last_login);
     }
     if (updateFields.length === 0) {
         throw new Error('No fields to update');

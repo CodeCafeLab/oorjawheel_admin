@@ -45,15 +45,59 @@ async function apiRequest<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
-  const apiBase =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api";
-  const res = await fetch(`${apiBase}${endpoint}`, {
-    credentials: "include",
-    ...options,
-  });
-
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || "Request failed");
+  // Get token from localStorage - check multiple possible keys
+  let token = null;
+  if (typeof window !== 'undefined') {
+    token = localStorage.getItem('auth_token') || 
+            localStorage.getItem('authToken') || 
+            localStorage.getItem('token');
+  }
+  
+  if (!token) {
+    throw new Error('No authentication token found. Please log in again.');
+  }
+  
+  
+  const baseURL = 'http://localhost:4000/api';
+  const url = `${baseURL}${endpoint}`;
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  };
+  
+  let response: Response;
+  
+  if (options?.method === 'POST') {
+    response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: options.body,
+    });
+  } else if (options?.method === 'PUT') {
+    response = await fetch(url, {
+      method: 'PUT',
+      headers,
+      body: options.body,
+    });
+  } else if (options?.method === 'DELETE') {
+    response = await fetch(url, {
+      method: 'DELETE',
+      headers,
+    });
+  } else {
+    response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+  }
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`API request failed: ${response.status} ${errorText}`);
+  }
+  
+  const data = await response.json();
   return data;
 }
 
@@ -166,7 +210,6 @@ export default function DevicesPage() {
         selectedDevice
           ? apiRequest(`/devices/${selectedDevice.id}`, {
               method: "PUT",
-              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 device_name: data.deviceName,
                 mac_address: data.macAddress,
@@ -182,7 +225,6 @@ export default function DevicesPage() {
             })
           : apiRequest(`/devices`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 device_name: data.deviceName,
                 mac_address: data.macAddress,
@@ -211,7 +253,6 @@ export default function DevicesPage() {
       () =>
         apiRequest(`/devices/bulk-delete`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ids }),
         }),
       "Devices Deleted",
@@ -239,12 +280,10 @@ export default function DevicesPage() {
         selectedMaster
           ? apiRequest(`/device-masters/${selectedMaster.id}`, {
               method: "PUT",
-              headers: { "Content-Type": "application/json" },
               body: JSON.stringify(masterData),
             })
           : apiRequest(`/device-masters`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
               body: JSON.stringify(masterData),
             }),
       selectedMaster ? "Device Type Updated" : "Device Type Created"
@@ -263,7 +302,6 @@ export default function DevicesPage() {
       () =>
         apiRequest(`/device-masters/bulk-delete`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ids }),
         }),
       "Device Types Deleted",

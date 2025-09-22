@@ -1,4 +1,12 @@
 {
+  "/cms/page": "app/cms/page.js",
+  "/commands/page": "app/commands/page.js",
+  "/devices/page": "app/devices/page.js",
   "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/notifications/page": "app/notifications/page.js"
+  "/login/page": "app/login/page.js",
+  "/notification-test/page": "app/notification-test/page.js",
+  "/notifications/page": "app/notifications/page.js",
+  "/page": "app/page.js",
+  "/settings/page": "app/settings/page.js",
+  "/users/page": "app/users/page.js"
 }
