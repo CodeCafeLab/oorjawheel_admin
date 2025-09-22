@@ -2,7 +2,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { login } from "@/actions/auth"
+import { useAuth } from "@/contexts/AuthContext"
 import { z } from "zod"
 import { loginSchema } from "@/actions/schemas"
 import { Eye, EyeOff } from "lucide-react"
@@ -43,11 +43,21 @@ const OorjaLogo = () => (
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
+  const { login: authLogin, isAuthenticated } = useAuth()
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [loading, setLoading] = React.useState(false)
   const [showPassword, setShowPassword] = React.useState(false)
+
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      const redirectUrl = searchParams.get('redirect') || '/'
+      router.push(redirectUrl)
+    }
+  }, [isAuthenticated, router, searchParams])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,14 +65,14 @@ export default function LoginPage() {
 
     try {
         const values: z.infer<typeof loginSchema> = { email, password };
-        const result = await login(values)
+        const redirectUrl = searchParams.get('redirect') || undefined;
+        const result = await authLogin(email, password, redirectUrl)
 
         if (result.success) {
             toast({
                 title: "Login Successful",
                 description: "Redirecting you to the dashboard...",
             })
-            router.push("/")
         } else {
             toast({
                 variant: "destructive",

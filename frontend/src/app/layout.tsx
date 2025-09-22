@@ -2,6 +2,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import RootClientLayout from './client-layout'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 export const metadata: Metadata = {
   title: 'Oorja Admin',
@@ -28,7 +29,9 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <RootClientLayout>{children}</RootClientLayout>
+        <AuthProvider>
+          <RootClientLayout>{children}</RootClientLayout>
+        </AuthProvider>
       </body>
     </html>
   )

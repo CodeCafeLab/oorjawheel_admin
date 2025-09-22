@@ -26,15 +26,12 @@ export default function UsersPage() {
   React.useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(
-          (process.env.NEXT_PUBLIC_API_BASE_URL ||
-            "http://localhost:4000/api") + "/users?page=1&limit=1000",
-          { credentials: "include" } // only if you actually need cookies/session
-        );
-        console.log("res", res);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Failed");
+        const { fetchData } = await import('@/lib/api-utils');
+        const data = await fetchData("/users?page=1&limit=1000") as { data: User[] };
         setUsers(data.data ?? []);
+      } catch (error) {
+        console.error("Error loading users:", error);
+        setUsers([]);
       } finally {
         setLoading(false);
       }

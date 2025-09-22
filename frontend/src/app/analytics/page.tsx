@@ -55,15 +55,16 @@ export default function AnalyticsPage() {
   React.useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch((process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api') + '/analytics', { credentials: 'include' })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Failed')
+        const { fetchData } = await import('@/lib/api-utils');
+        const data = await fetchData('/analytics');
         setKpis(data.kpis)
         setCommandVolumeData(data.charts.commandVolume)
         setDeviceActivationData(data.charts.deviceActivations)
         setWarrantyTriggersData(data.charts.warrantyTriggers)
         setWeeklyActiveUsersData(data.charts.weeklyActiveUsers)
         setDeviceStatusData(data.charts.deviceStatus)
+      } catch (error) {
+        console.error('Error loading analytics:', error);
       } finally {
         setLoading(false)
       }

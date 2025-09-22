@@ -1,15 +1,14 @@
 
-'use server';
+'use client';
 
-import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { pageSchema, Page } from '@/app/cms/schema';
-import { api } from '@/lib/api-client';
 
 
 export async function getPages(): Promise<Page[]> {
   try {
-    const { data } = await api.get('/pages');
+    const { fetchData } = await import('@/lib/api-utils');
+    const data = await fetchData('/pages');
     const pages = (data as any[]).map((row) => ({
       id: row.id?.toString?.() ?? String(row.id),
       title: row.title,
@@ -29,7 +28,8 @@ export type Category = { id: number; name: string };
 
 export async function getCategories(): Promise<Category[]> {
   try {
-    const { data } = await api.get('/cms/categories');
+    const { fetchData } = await import('@/lib/api-utils');
+    const data = await fetchData('/cms/categories') as { data: any[] };
     const rows = data?.data ?? [];
     return rows.map((r: any) => ({ id: Number(r.id), name: String(r.name) }));
   } catch (e) {
@@ -45,8 +45,8 @@ const PageFormSchema = pageSchema.omit({ id: true, image: true, category: true }
 
 export async function addPage(values: z.infer<typeof PageFormSchema> & { category_id?: number }) {
   try {
-    await api.post('/pages', { title: values.title, order: 0, is_published: 1, command: values.command, description: values.description, category_id: values.category_id });
-    revalidatePath('/cms');
+    const { postData } = await import('@/lib/api-utils');
+    await postData('/pages', { title: values.title, order: 0, is_published: 1, command: values.command, description: values.description, category_id: values.category_id });
     return { success: true, message: 'Page added successfully.' };
   } catch (error) {
     return { success: false, message: 'Failed to add page.' };
@@ -55,8 +55,8 @@ export async function addPage(values: z.infer<typeof PageFormSchema> & { categor
 
 export async function updatePage(id: string, values: z.infer<typeof PageFormSchema> & { category_id?: number }) {
   try {
-    await api.put(`/pages/${id}`, { title: values.title, order: 0, is_published: 1, command: values.command, description: values.description, category_id: values.category_id });
-    revalidatePath('/cms');
+    const { updateData } = await import('@/lib/api-utils');
+    await updateData(`/pages/${id}`, { title: values.title, order: 0, is_published: 1, command: values.command, description: values.description, category_id: values.category_id });
     return { success: true, message: 'Page updated successfully.' };
   } catch (error) {
     return { success: false, message: 'Failed to update page.' };
@@ -65,8 +65,8 @@ export async function updatePage(id: string, values: z.infer<typeof PageFormSche
 
 export async function deletePage(id: string) {
   try {
-    await api.delete(`/pages/${id}`);
-    revalidatePath('/cms');
+    const { deleteData } = await import('@/lib/api-utils');
+    await deleteData(`/pages/${id}`);
     return { success: true, message: 'Page deleted successfully.' };
   } catch (error) {
     return { success: false, message: 'Failed to delete page.' };
@@ -76,8 +76,8 @@ export async function deletePage(id: string) {
 export async function addCategory(values: { title: string }) {
   try {
     const payload = { name: values.title, slug: values.title.toLowerCase().replace(/\s+/g,'-') };
-    await api.post('/cms/categories', payload);
-    revalidatePath('/cms');
+    const { postData } = await import('@/lib/api-utils');
+    await postData('/cms/categories', payload);
     return { success: true, message: 'Category added successfully.' };
   } catch (e) {
     return { success: false, message: 'Failed to add category.' };
@@ -85,7 +85,8 @@ export async function addCategory(values: { title: string }) {
 }
 
 export async function linkContentToCategory(contentItemId: number, categoryId: number) {
-  await api.post(`/cms/content/${contentItemId}/categories`, { categoryId });
+  const { postData } = await import('@/lib/api-utils');
+  await postData(`/cms/content/${contentItemId}/categories`, { categoryId });
 }
 
 // Static Content Actions
@@ -105,7 +106,8 @@ export interface StaticContent {
 
 export async function getStaticContent(pageType: StaticContentType): Promise<StaticContent | null> {
   try {
-    const { data } = await api.get(`/cms/static-content/${pageType}`);
+    const { fetchData } = await import('@/lib/api-utils');
+    const data = await fetchData(`/cms/static-content/${pageType}`) as { data: StaticContent | null };
     return data.data || null;
   } catch (error) {
     console.error('Failed to fetch static content:', error);
@@ -115,7 +117,8 @@ export async function getStaticContent(pageType: StaticContentType): Promise<Sta
 
 export async function getAllStaticContent(): Promise<StaticContent[]> {
   try {
-    const { data } = await api.get('/cms/static-content');
+    const { fetchData } = await import('@/lib/api-utils');
+    const data = await fetchData('/cms/static-content') as { data: StaticContent[] };
     return data.data || [];
   } catch (error) {
     console.error('Failed to fetch all static content:', error);
@@ -125,8 +128,8 @@ export async function getAllStaticContent(): Promise<StaticContent[]> {
 
 export async function saveStaticContent(pageType: StaticContentType, title: string, content: string) {
   try {
-    const { data } = await api.post(`/cms/static-content/${pageType}`, { title, content });
-    revalidatePath('/cms');
+    const { postData } = await import('@/lib/api-utils');
+    const data = await postData(`/cms/static-content/${pageType}`, { title, content }) as { message?: string };
     return { success: true, message: data.message || 'Content saved successfully.' };
   } catch (error) {
     console.error('Failed to save static content:', error);
@@ -136,8 +139,8 @@ export async function saveStaticContent(pageType: StaticContentType, title: stri
 
 export async function updateStaticContent(pageType: StaticContentType, title: string, content: string) {
   try {
-    const { data } = await api.put(`/cms/static-content/${pageType}`, { title, content });
-    revalidatePath('/cms');
+    const { updateData } = await import('@/lib/api-utils');
+    const data = await updateData(`/cms/static-content/${pageType}`, { title, content }) as { message?: string };
     return { success: true, message: data.message || 'Content updated successfully.' };
   } catch (error) {
     console.error('Failed to update static content:', error);
@@ -147,8 +150,8 @@ export async function updateStaticContent(pageType: StaticContentType, title: st
 
 export async function deleteStaticContent(pageType: StaticContentType) {
   try {
-    const { data } = await api.delete(`/cms/static-content/${pageType}`);
-    revalidatePath('/cms');
+    const { deleteData } = await import('@/lib/api-utils');
+    const data = await deleteData(`/cms/static-content/${pageType}`) as { message?: string };
     return { success: true, message: data.message || 'Content deleted successfully.' };
   } catch (error) {
     console.error('Failed to delete static content:', error);

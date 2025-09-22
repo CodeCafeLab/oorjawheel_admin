@@ -1,8 +1,6 @@
-'use server';
+'use client';
 
-import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
-import { api } from '@/lib/api-client';
 import { 
   notificationSchema, 
   userSchema, 
@@ -32,7 +30,8 @@ export async function getNotifications(params: {
     if (params.user_id) queryParams.append('user_id', params.user_id.toString());
     if (params.search) queryParams.append('search', params.search);
 
-    const { data } = await api.get(`/notifications?${queryParams.toString()}`);
+    const { fetchData } = await import('@/lib/api-utils');
+    const data = await fetchData(`/notifications?${queryParams.toString()}`) as { data: any[]; pagination: any };
     
     const notifications = (data.data as any[]).map((row) => ({
       id: row.id?.toString?.() ?? String(row.id),
@@ -76,7 +75,8 @@ export async function getNotifications(params: {
 // Get notification by ID
 export async function getNotification(id: string): Promise<Notification | null> {
   try {
-    const { data } = await api.get(`/notifications/${id}`);
+    const { fetchData } = await import('@/lib/api-utils');
+    const data = await fetchData(`/notifications/${id}`) as { data: any };
     
     const notification = {
       id: data.data.id?.toString?.() ?? String(data.data.id),
@@ -106,7 +106,8 @@ export async function getNotification(id: string): Promise<Notification | null> 
 // Get users for dropdown
 export async function getUsers(): Promise<User[]> {
   try {
-    const { data } = await api.get('/notifications/users');
+    const { fetchData } = await import('@/lib/api-utils');
+    const data = await fetchData('/notifications/users') as { data: any[] };
     
     // Try to parse with schema, but fallback if it fails
     try {
@@ -125,7 +126,8 @@ export async function getUsers(): Promise<User[]> {
 // Get notification statistics
 export async function getNotificationStats(): Promise<NotificationStats | null> {
   try {
-    const { data } = await api.get('/notifications/stats');
+    const { fetchData } = await import('@/lib/api-utils');
+    const data = await fetchData('/notifications/stats') as { data: any };
     
     // Try to parse with schema, but fallback to manual parsing if it fails
     try {
@@ -159,8 +161,8 @@ export async function createNotification(values: NotificationFormData, fcmToken?
   try {
     const validatedData = notificationFormSchema.parse(values);
     const payload = fcmToken ? { ...validatedData, token: fcmToken } : validatedData;
-    await api.post('/notifications', payload);
-    revalidatePath('/notifications');
+    const { postData } = await import('@/lib/api-utils');
+    await postData('/notifications', payload);
     return { success: true, message: 'Notification created successfully.' };
   } catch (error) {
     console.error('Failed to create notification:', error);
@@ -177,8 +179,8 @@ export async function updateNotification(id: string, values: NotificationFormDat
   try {
     const validatedData = notificationFormSchema.parse(values);
     const payload = fcmToken ? { ...validatedData, token: fcmToken } : validatedData;
-    await api.put(`/notifications/${id}`, payload);
-    revalidatePath('/notifications');
+    const { updateData } = await import('@/lib/api-utils');
+    await updateData(`/notifications/${id}`, payload);
     return { success: true, message: 'Notification updated successfully.' };
   } catch (error) {
     console.error('Failed to update notification:', error);
@@ -193,8 +195,8 @@ export async function updateNotification(id: string, values: NotificationFormDat
 // Delete notification
 export async function deleteNotification(id: string) {
   try {
-    await api.delete(`/notifications/${id}`);
-    revalidatePath('/notifications');
+    const { deleteData } = await import('@/lib/api-utils');
+    await deleteData(`/notifications/${id}`);
     return { success: true, message: 'Notification deleted successfully.' };
   } catch (error) {
     console.error('Failed to delete notification:', error);
@@ -206,8 +208,8 @@ export async function deleteNotification(id: string) {
 export async function sendNotification(id: string, token?: string) {
   try {
     const payload = token ? { token } : {};
-    await api.post(`/notifications/${id}/send`, payload);
-    revalidatePath('/notifications');
+    const { postData } = await import('@/lib/api-utils');
+    await postData(`/notifications/${id}/send`, payload);
     return { success: true, message: 'Notification sent successfully.' };
   } catch (error) {
     console.error('Failed to send notification:', error);
@@ -218,8 +220,8 @@ export async function sendNotification(id: string, token?: string) {
 // Bulk delete notifications
 export async function bulkDeleteNotifications(ids: string[]) {
   try {
-    await api.post('/notifications/bulk-delete', { ids });
-    revalidatePath('/notifications');
+    const { postData } = await import('@/lib/api-utils');
+    await postData('/notifications/bulk-delete', { ids });
     return { success: true, message: `${ids.length} notifications deleted successfully.` };
   } catch (error) {
     console.error('Failed to bulk delete notifications:', error);
