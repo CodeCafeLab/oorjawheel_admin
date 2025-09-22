@@ -3,6 +3,7 @@
 
 import * as React from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -41,7 +42,7 @@ const OorjaLogo = () => (
   )
 
 
-export default function LoginPage() {
+function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -149,3 +150,13 @@ export default function LoginPage() {
     </div>
   )
 }
+
+function LoginPageWithSuspense() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginPage />
+    </Suspense>
+  )
+}
+
+export default LoginPageWithSuspense

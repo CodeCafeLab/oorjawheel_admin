@@ -20,6 +20,8 @@ export async function authenticatedRequest<T>(
       response = await api.put(endpoint, options.data, { params: options?.params });
     } else if (options?.method === 'DELETE') {
       response = await api.delete(endpoint, { params: options?.params });
+    } else {
+      throw new Error(`Unsupported HTTP method: ${options?.method}`);
     }
     
     return response.data;

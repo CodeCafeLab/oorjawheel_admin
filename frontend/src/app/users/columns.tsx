@@ -176,16 +176,16 @@ export const columns = (onEdit: (user: User) => void): ColumnDef<User>[] => [
     header: "Email",
   },
   {
+    accessorKey: "country",
+    header: "Country Code",
+  },
+  {
     accessorKey: "contactNumber",
     header: "Contact Number",
   },
   {
     accessorKey: "address",
     header: "Address",
-  },
-  {
-    accessorKey: "country",
-    header: "Country",
   },
   {
     accessorKey: "status",
