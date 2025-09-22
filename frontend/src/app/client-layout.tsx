@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { Header } from '@/components/layout/header'
+import { AuthGuard } from '@/components/auth/AuthGuard'
 import { usePathname } from 'next/navigation'
 
 export default function RootClientLayout({
@@ -24,15 +25,17 @@ export default function RootClientLayout({
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <div className="flex flex-col w-full min-h-screen">
-        <Header />
-        <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-background">
-          {children}
-        </main>
-      </div>
-      <Toaster />
-    </SidebarProvider>
+    <AuthGuard>
+      <SidebarProvider>
+        <AppSidebar />
+        <div className="flex flex-col w-full min-h-screen">
+          <Header />
+          <main className="flex-grow p-4 sm:p-6 lg:p-8 bg-background">
+            {children}
+          </main>
+        </div>
+        <Toaster />
+      </SidebarProvider>
+    </AuthGuard>
   )
 }

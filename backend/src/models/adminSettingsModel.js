@@ -11,8 +11,8 @@ async function getAnyAdminId() {
 
 export async function resolveUserId(req) {
   if (req?.user?.id) return req.user.id;
-  // Fallback: pick first admin if auth context is missing in dev
-  return await getAnyAdminId();
+  // This should not happen in production with proper auth middleware
+  throw new Error('User not authenticated');
 }
 
 export async function getAdminProfileById(userId) {

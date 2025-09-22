@@ -4,20 +4,23 @@ import { generateToken } from '../utils/jwt.js';
 
 export async function login(req, res, next) {
   try {
-    const { email, password } = req.body;
+    const { email, password, redirectUrl } = req.body;
 
-    // First check admin table
-    let user = await findAdminByEmail(email);
+    // Only allow admin users to login
+    const user = await findAdminByEmail(email);
     
-    // If not admin, check users table
-    if (!user) {
-      user = await findUserByEmail(email);
-    }
-
     if (!user) {
       return res.status(401).json({ 
         success: false,
         message: 'Invalid email or password' 
+      });
+    }
+
+    // Check if user is active
+    if (user.status !== 'active') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account is not active. Please contact administrator.'
       });
     }
 
@@ -28,6 +31,10 @@ export async function login(req, res, next) {
         message: 'Invalid email or password' 
       });
     }
+
+    // Update last login
+    const { updateAdmin } = await import('../models/authModel.js');
+    await updateAdmin(user.id, { last_login: new Date() });
 
     // Generate JWT token
     const token = generateToken({
@@ -44,10 +51,12 @@ export async function login(req, res, next) {
         user: { 
           id: user.id, 
           email: user.email, 
+          name: user.name,
           role: user.role || 'admin',
           status: user.status 
         },
-        token
+        token,
+        redirectUrl: redirectUrl || '/'
       }
     });
   } catch (err) {
@@ -120,11 +129,45 @@ export async function getCurrentUser(req, res, next) {
       });
     }
 
+    // Get fresh user data from database
+    const { findAdminById } = await import('../models/authModel.js');
+    const user = await findAdminById(req.user.id);
+    
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
     res.json({
       success: true,
       data: {
-        user: req.user
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          status: user.status,
+          last_login: user.last_login,
+          created_at: user.created_at
+        }
       }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function logout(req, res, next) {
+  try {
+    // In a stateless JWT system, logout is handled client-side
+    // by removing the token. For enhanced security, you could
+    // implement a token blacklist here.
+    
+    res.json({
+      success: true,
+      message: 'Logged out successfully'
     });
   } catch (err) {
     next(err);

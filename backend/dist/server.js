@@ -4,6 +4,8 @@ import cors from "cors";
 import morgan from "morgan";
 // Error middlewares
 import { errorHandler, notFound } from "./middleware/error.js";
+// Authentication middleware
+import { authMiddleware } from "./utils/jwt.js";
 import authRoutes from "./routes/authRoutes.js";
 import deviceRoutes from "./routes/deviceRoutes.js";
 import deviceMasterRoutes from "./routes/deviceMasterRoutes.js";
@@ -53,26 +55,28 @@ app.use(cors({
 app.use(express.json({ limit: "1mb" }));
 app.use(morgan("dev"));
 // ---------------- Routes ----------------
+// Public routes (no authentication required)
 app.use("/api/auth", authRoutes);
-app.use("/api/devices", deviceRoutes);
-app.use("/api/device-masters", deviceMasterRoutes);
-app.use("/api/pages", pagesRoutes);
-app.use("/api/sections", sectionsRoutes);
-app.use("/api/elements", elementsRoutes);
-app.use("/api/device-events", deviceEventsRoutes);
-app.use("/api/analytics", analyticsRoutes);
-app.use("/api/users", usersRoutes);
 app.use("/api/health", healthRoutes);
-app.use("/api/command-logs", commandLogRoutes);
-app.use("/api/cms", cmsRoutes);
-app.use("/api/notifications", notificationRoutes);
-// Inline settings router (admin profile/password)
+// Protected routes (authentication required)
+app.use("/api/devices", authMiddleware, deviceRoutes);
+app.use("/api/device-masters", authMiddleware, deviceMasterRoutes);
+app.use("/api/pages", authMiddleware, pagesRoutes);
+app.use("/api/sections", authMiddleware, sectionsRoutes);
+app.use("/api/elements", authMiddleware, elementsRoutes);
+app.use("/api/device-events", authMiddleware, deviceEventsRoutes);
+app.use("/api/analytics", authMiddleware, analyticsRoutes);
+app.use("/api/users", authMiddleware, usersRoutes);
+app.use("/api/command-logs", authMiddleware, commandLogRoutes);
+app.use("/api/cms", authMiddleware, cmsRoutes);
+app.use("/api/notifications", authMiddleware, notificationRoutes);
+// Inline settings router (admin profile/password) - protected
 const settingsRouter = Router();
-settingsRouter.get('/profile', getAdminProfile);
-settingsRouter.put('/profile', putAdminProfile);
-settingsRouter.put('/password', putAdminPassword);
-settingsRouter.get('/general', getAdminGeneral);
-settingsRouter.put('/general', putAdminGeneral);
+settingsRouter.get('/profile', authMiddleware, getAdminProfile);
+settingsRouter.put('/profile', authMiddleware, putAdminProfile);
+settingsRouter.put('/password', authMiddleware, putAdminPassword);
+settingsRouter.get('/general', authMiddleware, getAdminGeneral);
+settingsRouter.put('/general', authMiddleware, putAdminGeneral);
 app.use('/api/settings', settingsRouter);
 // ---------------- Server start ----------------
 const port = Number(process.env.PORT || 4000);

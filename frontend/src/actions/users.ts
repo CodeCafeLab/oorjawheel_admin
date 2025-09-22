@@ -1,13 +1,13 @@
-"use server";
+"use client";
 
-import { api } from "@/lib/api-client";
 import { z } from "zod";
 import { userFormSchema } from "./schemas";
 import type { User } from "@/app/users/schema";
 
 export async function addUser(values: z.infer<typeof userFormSchema>) {
   try {
-    await api.post("/users", {
+    const { postData } = await import('@/lib/api-utils');
+    await postData("/users", {
       fullName: values.fullName,
       email: values.email,
       contactNumber: values.contactNumber,
@@ -36,7 +36,8 @@ export async function updateUser(
     status = "active",
   } = values;
   try {
-    await api.put(`/users/${id}`, {
+    const { updateData } = await import('@/lib/api-utils');
+    await updateData(`/users/${id}`, {
       fullName,
       email,
       contactNumber,
@@ -53,7 +54,8 @@ export async function updateUser(
 
 export async function deleteUser(id: string) {
   try {
-    await api.delete(`/users/${id}`);
+    const { deleteData } = await import('@/lib/api-utils');
+    await deleteData(`/users/${id}`);
     return { success: true, message: "User deleted successfully." };
   } catch (error) {
     return { success: false, message: "Failed to delete user." };
@@ -62,13 +64,8 @@ export async function deleteUser(id: string) {
 
 export async function fetchUsers(): Promise<User[]> {
   try {
-    const res = await fetch(
-      "http://localhost:4000/api/users?page=1&limit=1000",
-      { cache: "no-store" }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    console.log(data, "data  ");
+    const { fetchData } = await import('@/lib/api-utils');
+    const data = await fetchData("/users?page=1&limit=1000") as { data: User[] };
     return data?.data ?? [];
   } catch (error) {
     return [];

@@ -52,11 +52,8 @@ export default function CommandManagementPage() {
   const fetchCommands = async () => {
     setFetching(true);
     try {
-      const res = await fetch(`${API_BASE}/command-logs`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to fetch commands");
+      const { fetchData } = await import('@/lib/api-utils');
+      const data = await fetchData("/command-logs");
       setCommands(data.data ?? data);
     } catch (error) {
       toast({
@@ -84,16 +81,8 @@ export default function CommandManagementPage() {
 
   const addCommand = async (commandData: any) => {
     try {
-      const res = await fetch(`${API_BASE}/command-logs`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(commandData),
-      });
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Failed to add command");
-
+      const { postData } = await import('@/lib/api-utils');
+      await postData("/command-logs", commandData);
       return { success: true, message: "Command added successfully" };
     } catch (error) {
       return {
@@ -106,16 +95,8 @@ export default function CommandManagementPage() {
 
   const updateCommand = async (id: string, commandData: any) => {
     try {
-      const res = await fetch(`${API_BASE}/command-logs/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(commandData),
-      });
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Failed to update command");
-
+      const { updateData } = await import('@/lib/api-utils');
+      await updateData(`/command-logs/${id}`, commandData);
       return { success: true, message: "Command updated successfully" };
     } catch (error) {
       return {
@@ -128,14 +109,8 @@ export default function CommandManagementPage() {
 
   const deleteCommand = async (id: string) => {
     try {
-      const res = await fetch(`${API_BASE}/command-logs/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Failed to delete command");
-
+      const { deleteData } = await import('@/lib/api-utils');
+      await deleteData(`/command-logs/${id}`);
       return { success: true, message: "Command deleted successfully" };
     } catch (error) {
       return {

@@ -18,11 +18,14 @@ import * as React from "react"
 import { getAdminProfile, updateAdminProfile, changeAdminPassword, getAdminGeneralSettings, updateAdminGeneralSettings } from "@/actions/settings"
 import { useToast } from "@/hooks/use-toast"
 import { Switch } from "@/components/ui/switch"
+import { Eye, EyeOff } from "lucide-react"
 
 export default function SettingsPage() {
   const [profile, setProfile] = React.useState<{ id: number; name: string | null; email: string } | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [pwd, setPwd] = React.useState({ oldPassword: "", newPassword: "" })
+  const [showCurrentPassword, setShowCurrentPassword] = React.useState(false)
+  const [showNewPassword, setShowNewPassword] = React.useState(false)
   const { toast } = useToast()
   const [general, setGeneral] = React.useState<Record<string, any>>({})
 
@@ -118,11 +121,47 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="current-password">Current Password</Label>
-                <Input id="current-password" type="password" value={pwd.oldPassword} onChange={(e)=> setPwd(s=>({ ...s, oldPassword: e.target.value }))} />
+                <div className="relative">
+                  <Input 
+                    id="current-password" 
+                    type={showCurrentPassword ? "text" : "password"} 
+                    value={pwd.oldPassword} 
+                    onChange={(e)=> setPwd(s=>({ ...s, oldPassword: e.target.value }))}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 text-muted-foreground"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  >
+                    {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    <span className="sr-only">{showCurrentPassword ? 'Hide password' : 'Show password'}</span>
+                  </Button>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
-                <Input id="new-password" type="password" value={pwd.newPassword} onChange={(e)=> setPwd(s=>({ ...s, newPassword: e.target.value }))} />
+                <div className="relative">
+                  <Input 
+                    id="new-password" 
+                    type={showNewPassword ? "text" : "password"} 
+                    value={pwd.newPassword} 
+                    onChange={(e)=> setPwd(s=>({ ...s, newPassword: e.target.value }))}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 text-muted-foreground"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                  >
+                    {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    <span className="sr-only">{showNewPassword ? 'Hide password' : 'Show password'}</span>
+                  </Button>
+                </div>
               </div>
             </CardContent>
             <CardFooter>

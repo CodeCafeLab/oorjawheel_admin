@@ -24,7 +24,7 @@ import {
   FileText,
   Terminal,
 } from 'lucide-react'
-import { logout } from '@/actions/auth'
+import { useAuth } from '@/contexts/AuthContext'
 
 const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -41,6 +41,7 @@ const navItems = [
 
 export function Header() {
   const pathname = usePathname()
+  const { user, logout } = useAuth()
   
   const getPageTitle = () => {
     if (pathname === '/') return 'Dashboard';
@@ -48,8 +49,8 @@ export function Header() {
     return currentPath ? currentPath.label : 'Dashboard';
   }
 
-  const handleLogout = async () => {
-    await logout();
+  const handleLogout = () => {
+    logout();
   }
 
   return (
@@ -83,7 +84,7 @@ export function Header() {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                    <DropdownMenuLabel>{user?.name || 'Admin'}</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <Link href="/settings" passHref><DropdownMenuItem>Settings</DropdownMenuItem></Link>
                     <DropdownMenuSeparator />

@@ -66,9 +66,19 @@ export default function EnhancedDeviceForm({
     setIsLoading(true);
 
     try {
+      // Clean the form data - convert empty strings to null for optional fields
+      const cleanedFormData = {
+        ...formData,
+        userId: formData.userId || null,
+        btName: formData.btName || null,
+        warrantyStart: formData.warrantyStart || null,
+        defaultCmd: formData.defaultCmd || null,
+        firstConnectedAt: formData.firstConnectedAt || null,
+      };
+
       const result = device
-        ? await updateDevice(device.id, formData)
-        : await addDevice(formData);
+        ? await updateDevice(device.id, cleanedFormData)
+        : await addDevice(cleanedFormData);
 
       if (result.success) {
         toast({

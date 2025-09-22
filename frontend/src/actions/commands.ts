@@ -1,5 +1,5 @@
 
-'use server';
+'use client';
 
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
