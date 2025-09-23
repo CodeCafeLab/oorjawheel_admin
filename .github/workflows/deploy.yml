@@ -43,6 +43,13 @@ jobs:
             cd /var/www/oorjawheel_admin/frontend
             git reset --hard
             git pull origin main
-            npm install --production
-            npm run build
-            pm2 reload ow_frontend || pm2 restart ow_frontend
+            npm install
+            # Run build fully, don't exit immediately on error
+            npm run build || BUILD_FAILED=true
+            # If build failed, stop deployment
+            if [ "$BUILD_FAILED" = true ]; then
+              echo "❌ Frontend build failed"
+              exit 1
+            fi
+            # Reload frontend safely
+            pm2 reload ow_frontend || pm2 restart ow_frontend || true
