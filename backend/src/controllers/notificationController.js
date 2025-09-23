@@ -24,11 +24,11 @@ export async function listNotifications(req, res, next) {
     } = req.query;
     
     const result = await getNotifications({
-      page: parseInt(page),
-      limit: parseInt(limit),
+      page: parseInt(page, 10) || 1,
+      limit: parseInt(limit, 10) || 20,
       status,
       type,
-      user_id,
+      user_id: user_id ? parseInt(user_id, 10) || null : null,
       search
     });
     
