@@ -10,7 +10,11 @@ export async function getNotifications({
   search 
 } = {}) {
   try {
-    const offset = (page - 1) * limit;
+    // Ensure page and limit are numbers
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 20;
+    const offset = (pageNum - 1) * limitNum;
+    
     let query = `
       SELECT 
         n.*,
@@ -56,7 +60,7 @@ export async function getNotifications({
     
     // Get paginated results
     query += ' LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    params.push(Number(limitNum), Number(offset));
     
     const [rows] = await pool.execute(query, params);
     
