@@ -27,10 +27,9 @@ jobs:
             git reset --hard
             git pull origin main
             npm install --production
-            pm2 reload ow_backend || pm2 restart ow_backend
+            pm2 reload ow_backend || pm2 restart ow_backend || true
 
       # ---------- Frontend ----------
-      
       - name: Deploy Frontend
         uses: appleboy/ssh-action@v0.1.7
         with:
