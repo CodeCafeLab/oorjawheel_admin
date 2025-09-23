@@ -100,3 +100,43 @@ export async function upsertAdminGeneralSettings(userId, payload) {
         conn.release();
     }
 }
+// Notification settings per admin
+export async function getAdminNotificationSettings(userId) {
+    const conn = await pool.getConnection();
+    try {
+        const [rows] = await conn.execute('SELECT * FROM admin_notification_settings WHERE admin_id = ? LIMIT 1', [userId]);
+        return rows[0] || null;
+    }
+    finally {
+        conn.release();
+    }
+}
+export async function upsertAdminNotificationSettings(userId, payload) {
+    const conn = await pool.getConnection();
+    try {
+        const fields = [
+            'email_enabled', 'push_enabled', 'firebase_project_id', 'firebase_api_key', 'firebase_auth_domain', 'firebase_storage_bucket', 'firebase_sender_id', 'firebase_project_number', 'firebase_app_id', 'firebase_measurement_id', 'firebase_vapid_key'
+        ];
+        // Coerce booleans to 0/1 and default to 0 if undefined
+        const normalized = {
+            email_enabled: payload?.email_enabled ? 1 : 0,
+            push_enabled: payload?.push_enabled ? 1 : 0,
+            firebase_project_id: payload?.firebase_project_id ?? null,
+            firebase_api_key: payload?.firebase_api_key ?? null,
+            firebase_auth_domain: payload?.firebase_auth_domain ?? null,
+            firebase_storage_bucket: payload?.firebase_storage_bucket ?? null,
+            firebase_sender_id: payload?.firebase_sender_id ?? payload?.firebase_project_number ?? '',
+            firebase_project_number: payload?.firebase_project_number ?? payload?.firebase_sender_id ?? '',
+            firebase_app_id: payload?.firebase_app_id ?? null,
+            firebase_measurement_id: payload?.firebase_measurement_id ?? null,
+            firebase_vapid_key: payload?.firebase_vapid_key ?? null,
+        };
+        const values = fields.map(k => normalized[k]);
+        await conn.execute(`INSERT INTO admin_notification_settings (admin_id, ${fields.join(',')}) VALUES (?, ${fields.map(() => '?').join(',')})
+       ON DUPLICATE KEY UPDATE ${fields.map(f => `${f}=VALUES(${f})`).join(', ')}`, [userId, ...values]);
+        return true;
+    }
+    finally {
+        conn.release();
+    }
+}

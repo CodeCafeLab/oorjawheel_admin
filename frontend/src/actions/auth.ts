@@ -8,7 +8,8 @@ export async function login(values: z.infer<typeof loginSchema>, redirectUrl?: s
   const { email, password } = values;
 
   try {
-    const response = await fetch('http://localhost:4000/api/auth/login', {
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || (typeof window !== 'undefined' ? `${window.location.origin}/api` : '');
+    const response = await fetch(`${apiBase}/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -46,7 +47,8 @@ export async function logout() {
     // Call logout endpoint if needed
     const token = localStorage.getItem('auth_token');
     if (token) {
-      await fetch('http://localhost:4000/api/auth/logout', {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || (typeof window !== 'undefined' ? `${window.location.origin}/api` : '');
+      await fetch(`${apiBase}/auth/logout`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

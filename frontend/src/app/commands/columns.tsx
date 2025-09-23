@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { StatusSwitch } from "@/components/ui/status-switch"
 import { Command } from "./schema"
 import {
   AlertDialog,
@@ -110,7 +111,29 @@ export const columns = (onEdit: (command: Command) => void, onDelete: (id: strin
     header: "Status",
     cell: ({ row }) => {
         const status = row.getValue("status") as string;
-        return <Badge variant={status === 'active' ? 'default' : 'secondary'} className="capitalize">{status}</Badge>
+        const id = String(row.original.id)
+        return (
+          <StatusSwitch
+            id={id}
+            initialStatus={status as any}
+            activeValue="active"
+            inactiveValue="inactive"
+            labelMap={{ active: 'Enabled', inactive: 'Disabled' }}
+            onStatusChange={async (commandId, checked) => {
+              try {
+                const { updateData } = await import("@/lib/api-utils")
+                const newStatus = checked ? "active" : "inactive"
+                await updateData(`/command-logs/${commandId}`, { status: newStatus })
+                return { success: true, message: `Command status set to ${newStatus}` }
+              } catch (e: any) {
+                return { success: false, message: e?.message || "Failed to update command status" }
+              }
+            }}
+          onLocalUpdate={(checked) => {
+            row.original.status = checked ? 'active' as any : 'inactive' as any
+          }}
+          />
+        )
     }
   },
   {

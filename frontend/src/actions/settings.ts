@@ -29,4 +29,15 @@ export async function updateAdminGeneralSettings(values: Record<string, any>) {
   return data;
 }
 
+// Notification settings (per admin) - Firebase credentials and preferences
+export async function getAdminNotificationSettings() {
+  const { data } = await api.get('/settings/notifications');
+  return data?.data ?? null;
+}
+
+export async function updateAdminNotificationSettings(values: Record<string, any>) {
+  const { data } = await api.put('/settings/notifications', values);
+  return data;
+}
+
 

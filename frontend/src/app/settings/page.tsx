@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import * as React from "react"
-import { getAdminProfile, updateAdminProfile, changeAdminPassword, getAdminGeneralSettings, updateAdminGeneralSettings } from "@/actions/settings"
+import { getAdminProfile, updateAdminProfile, changeAdminPassword, getAdminGeneralSettings, updateAdminGeneralSettings, getAdminNotificationSettings, updateAdminNotificationSettings } from "@/actions/settings"
 import { useToast } from "@/hooks/use-toast"
 import { Switch } from "@/components/ui/switch"
 import { Eye, EyeOff } from "lucide-react"
@@ -28,6 +28,39 @@ export default function SettingsPage() {
   const [showNewPassword, setShowNewPassword] = React.useState(false)
   const { toast } = useToast()
   const [general, setGeneral] = React.useState<Record<string, any>>({})
+  const [notif, setNotif] = React.useState<Record<string, any>>({})
+  const [showFirebaseForm, setShowFirebaseForm] = React.useState<{ email: boolean; push: boolean }>({ email: false, push: false })
+  const credsPresent = React.useMemo(() => {
+    return Boolean(
+      notif?.firebase_project_id &&
+      notif?.firebase_api_key &&
+      notif?.firebase_auth_domain &&
+      notif?.firebase_storage_bucket &&
+      (notif?.firebase_sender_id || notif?.firebase_project_number) &&
+      notif?.firebase_app_id &&
+      notif?.firebase_measurement_id &&
+      notif?.firebase_vapid_key
+    )
+  }, [notif])
+  const saveNotif = async (closeFlags: boolean = true) => {
+    try {
+      if ((notif.email_enabled || notif.push_enabled)) {
+        const required = ['firebase_project_id','firebase_api_key','firebase_auth_domain','firebase_storage_bucket','firebase_app_id','firebase_measurement_id','firebase_vapid_key']
+        for (const k of required) {
+          if (!notif[k]) throw new Error('Please fill all Firebase API fields to enable notifications.')
+        }
+        // Sender ID can be either explicit sender_id or legacy project_number
+        if (!notif.firebase_sender_id && !notif.firebase_project_number) {
+          throw new Error('Please provide Sender ID (Messaging Sender ID).')
+        }
+      }
+      await updateAdminNotificationSettings(notif)
+      if (closeFlags) setShowFirebaseForm({ email: false, push: false })
+      toast({ title: 'Notification settings saved' })
+    } catch (e:any) {
+      toast({ variant:'destructive', title: 'Save failed', description: e?.message || 'Could not save notification settings.' })
+    }
+  }
 
   React.useEffect(() => {
     (async () => {
@@ -36,6 +69,8 @@ export default function SettingsPage() {
         if (data) setProfile(data)
         const g = await getAdminGeneralSettings()
         if (g) setGeneral(g)
+        const n = await getAdminNotificationSettings()
+        if (n) setNotif(n)
       } catch {}
     })()
   }, [])
@@ -185,8 +220,55 @@ export default function SettingsPage() {
                             Receive emails about new orders and customer queries.
                         </p>
                     </div>
-                     <Switch id="email-notifications" defaultChecked />
+                     <div className="flex items-center gap-2">
+                       <Button variant="secondary" size="sm" disabled={!credsPresent} onClick={()=> setShowFirebaseForm(f=> ({...f, email: true}))}>Edit credentials</Button>
+                       <Switch id="email-notifications" checked={!!notif.email_enabled} onCheckedChange={(v)=>{
+                          setNotif(s=> ({...s, email_enabled: v}))
+                          setShowFirebaseForm(f=> ({...f, email: v && !notif.firebase_project_id }))
+                       }} />
+                     </div>
                 </div>
+                {showFirebaseForm.email && (
+                  <div className="rounded-lg border p-4 grid gap-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Firebase Project ID</Label>
+                        <Input value={notif.firebase_project_id ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_project_id: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>API Key</Label>
+                        <Input value={notif.firebase_api_key ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_api_key: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Auth Domain</Label>
+                        <Input value={notif.firebase_auth_domain ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_auth_domain: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Sender ID (Messaging Sender ID)</Label>
+                        <Input value={notif.firebase_sender_id ?? notif.firebase_project_number ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_sender_id: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Storage Bucket</Label>
+                        <Input value={notif.firebase_storage_bucket ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_storage_bucket: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>App ID</Label>
+                        <Input value={notif.firebase_app_id ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_app_id: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Measurement ID</Label>
+                        <Input value={notif.firebase_measurement_id ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_measurement_id: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>VAPID Key</Label>
+                        <Input value={notif.firebase_vapid_key ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_vapid_key: e.target.value}))} />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button onClick={()=> saveNotif(true)}>Save Firebase Credentials</Button>
+                    </div>
+                  </div>
+                )}
                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                         <Label htmlFor="push-notifications" className="text-base">Push Notifications</Label>
@@ -194,11 +276,58 @@ export default function SettingsPage() {
                             Get push notifications for important updates.
                         </p>
                     </div>
-                     <Switch id="push-notifications" />
+                     <div className="flex items-center gap-2">
+                       <Button variant="secondary" size="sm" disabled={!credsPresent} onClick={()=> setShowFirebaseForm(f=> ({...f, push: true}))}>Edit credentials</Button>
+                       <Switch id="push-notifications" checked={!!notif.push_enabled} onCheckedChange={(v)=>{
+                          setNotif(s=> ({...s, push_enabled: v}))
+                          setShowFirebaseForm(f=> ({...f, push: v && !notif.firebase_project_id }))
+                       }} />
+                     </div>
                 </div>
+                {showFirebaseForm.push && !showFirebaseForm.email && (
+                  <div className="rounded-lg border p-4 grid gap-4">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Firebase Project ID</Label>
+                        <Input value={notif.firebase_project_id ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_project_id: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>API Key</Label>
+                        <Input value={notif.firebase_api_key ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_api_key: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Auth Domain</Label>
+                        <Input value={notif.firebase_auth_domain ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_auth_domain: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Sender ID (Messaging Sender ID)</Label>
+                        <Input value={notif.firebase_sender_id ?? notif.firebase_project_number ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_sender_id: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Storage Bucket</Label>
+                        <Input value={notif.firebase_storage_bucket ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_storage_bucket: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>App ID</Label>
+                        <Input value={notif.firebase_app_id ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_app_id: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Measurement ID</Label>
+                        <Input value={notif.firebase_measurement_id ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_measurement_id: e.target.value}))} />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>VAPID Key</Label>
+                        <Input value={notif.firebase_vapid_key ?? ''} onChange={(e)=> setNotif(s=> ({...s, firebase_vapid_key: e.target.value}))} />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button onClick={()=> saveNotif(true)}>Save Firebase Credentials</Button>
+                    </div>
+                  </div>
+                )}
             </CardContent>
             <CardFooter>
-              <Button>Save preferences</Button>
+              <Button onClick={()=> saveNotif(true)}>Save preferences</Button>
             </CardFooter>
           </Card>
         </TabsContent>

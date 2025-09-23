@@ -23,7 +23,7 @@ import commandLogRoutes from "./routes/commandLogRoutes.js";
 import cmsRoutes from "./routes/cmsRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import { Router } from "express";
-import { getAdminProfile, putAdminProfile, putAdminPassword, getAdminGeneral, putAdminGeneral } from "./controllers/adminSettingsController.js";
+import { getAdminProfile, putAdminProfile, putAdminPassword, getAdminGeneral, putAdminGeneral, getAdminNotifications, putAdminNotifications } from "./controllers/adminSettingsController.js";
 
 const app = express();
 
@@ -91,6 +91,8 @@ settingsRouter.put('/profile', authMiddleware, putAdminProfile);
 settingsRouter.put('/password', authMiddleware, putAdminPassword);
 settingsRouter.get('/general', authMiddleware, getAdminGeneral);
 settingsRouter.put('/general', authMiddleware, putAdminGeneral);
+settingsRouter.get('/notifications', authMiddleware, getAdminNotifications);
+settingsRouter.put('/notifications', authMiddleware, putAdminNotifications);
 app.use('/api/settings', settingsRouter);
 
 // ---------------- Server start ----------------

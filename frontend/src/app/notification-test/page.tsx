@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, isSupported } from 'firebase/messaging';
+import { getClientFirebaseConfig } from '@/lib/firebase-config';
 
 export default function NotificationTestPage() {
   const [token, setToken] = useState<string>('');
@@ -18,28 +19,16 @@ export default function NotificationTestPage() {
         setPermission(permissionResult);
 
         if (permissionResult === 'granted') {
-          const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY;
-          
-          if (!vapidKey) {
-            setError('VAPID key not found in environment variables');
+          const cfg = await getClientFirebaseConfig();
+          if (!cfg) {
+            setError('Firebase credentials not found. Please save credentials in Settings → Notifications.');
             return;
           }
-          
-          // Initialize Firebase
-          const firebaseConfig = {
-            apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-            authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-            projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-            messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-            appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-          };
-
-          const app = initializeApp(firebaseConfig);
+          const app = initializeApp(cfg);
           const messaging = getMessaging(app);
 
           // Get FCM token
-          const fcmToken = await getToken(messaging, { vapidKey });
+          const fcmToken = await getToken(messaging, { vapidKey: cfg.vapidKey });
           if (fcmToken) {
             setToken(fcmToken);
           } else {
@@ -64,16 +53,18 @@ export default function NotificationTestPage() {
     }
 
     try {
-      const response = await fetch('http://localhost:5055/send-notification', {
+      const base = process.env.NEXT_PUBLIC_FCM_SERVER_BASE_URL || 'http://localhost:5055';
+      // FCM server exposes /send-notification
+      const response = await fetch(`${base}/send-notification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          type: 'text',
+          token,
           title: 'Test Notification',
           description: 'This is a test notification from your app!',
-          token: token
+          type: 'text'
         })
       });
 
@@ -82,7 +73,8 @@ export default function NotificationTestPage() {
         console.log('Notification sent:', result);
         alert('Notification sent successfully!');
       } else {
-        setError('Failed to send notification');
+        const text = await response.text().catch(()=> '');
+        setError(`Failed to send notification: ${response.status} ${text}`);
       }
     } catch (err) {
       setError(`Send error: ${err instanceof Error ? err.message : String(err)}`);

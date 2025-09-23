@@ -18,6 +18,7 @@ import {
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { StatusSwitch } from "@/components/ui/status-switch"
 import { User } from "./schema"
 import {
   AlertDialog,
@@ -192,7 +193,37 @@ export const columns = (onEdit: (user: User) => void): ColumnDef<User>[] => [
     header: "Status",
     cell: ({ row }) => {
         const status = row.getValue("status") as string;
-        return <Badge variant={status === 'active' ? 'default' : 'destructive'}>{status}</Badge>
+        const id = String(row.original.id)
+        return (
+          <StatusSwitch
+            id={id}
+            initialStatus={status as any}
+            activeValue="active"
+            inactiveValue="locked"
+            labelMap={{ active: 'Active', locked: 'Inactive' }}
+            onStatusChange={async (userId, checked) => {
+              try {
+                const { updateData } = await import("@/lib/api-utils")
+                const newStatus = checked ? "active" : "locked"
+                const u = row.original
+                await updateData(`/users/${userId}`, {
+                  fullName: u.fullName ?? '',
+                  email: u.email ?? '',
+                  contactNumber: u.contactNumber ?? null,
+                  address: u.address ?? null,
+                  country: u.country ?? null,
+                  status: newStatus,
+                })
+                return { success: true, message: `User status set to ${newStatus}` }
+              } catch (e: any) {
+                return { success: false, message: e?.message || "Failed to update user status" }
+              }
+            }}
+            onLocalUpdate={(checked) => {
+              row.original.status = checked ? 'active' as any : 'locked' as any
+            }}
+          />
+        )
     }
   },
   {

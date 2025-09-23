@@ -28,6 +28,7 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
   const [users, setUsers] = React.useState<User[]>([]);
   const [open, setOpen] = React.useState(false);
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
+  const router = require('next/navigation').useRouter();
 
   React.useEffect(() => {
     setUsers(initialUsers);
@@ -100,6 +101,7 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
       // toast({ title: "User Added", description: result.message });
       refreshUsers();
       setOpen(false);
+      try { router.refresh(); } catch {}
     } catch (e: any) {
       // toast({ variant: "destructive", title: "Error", description: e.message });
     } finally {
@@ -128,6 +130,7 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
       // toast({ title: "User Updated", description: result.message });
       refreshUsers();
       setOpen(false);
+      try { router.refresh(); } catch {}
     } catch (e: any) {
       // toast({ variant: "destructive", title: "Error", description: e.message });
     } finally {
@@ -149,6 +152,7 @@ export function UsersClient({ initialUsers }: { initialUsers: User[] }) {
       if (!res.ok) throw new Error(result.message || "Failed to delete user");
       // toast({ title: "User Deleted", description: result.message });
       refreshUsers();
+      try { router.refresh(); } catch {}
     } catch (e: any) {
       // toast({ variant: "destructive", title: "Error", description: e.message });
     } finally {

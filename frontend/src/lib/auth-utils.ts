@@ -105,7 +105,8 @@ export class AuthManager {
     if (!token) return false;
 
     try {
-      const response = await fetch('http://localhost:4000/api/auth/me', {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || (typeof window !== 'undefined' ? `${window.location.origin}/api` : '');
+      const response = await fetch(`${apiBase}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',

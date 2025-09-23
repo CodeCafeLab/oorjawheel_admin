@@ -1,8 +1,10 @@
 "use client"
 
 import { Switch } from "@/components/ui/switch"
+import { Badge } from "@/components/ui/badge"
+import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 
 interface StatusSwitchProps {
     id: string;
@@ -10,12 +12,34 @@ interface StatusSwitchProps {
     onStatusChange: (id: string, newStatus: boolean) => Promise<{ success: boolean; message: string }>;
     activeValue?: 'active' | 'inactive' | 'locked' | 'disabled' | 'never_used';
     inactiveValue?: 'active' | 'inactive' | 'locked' | 'disabled' | 'never_used';
+    labelMap?: Record<string, string>;
+    onLocalUpdate?: (checked: boolean) => void;
 }
 
-export function StatusSwitch({ id, initialStatus, onStatusChange, activeValue = 'active', inactiveValue = 'inactive' }: StatusSwitchProps) {
+export function StatusSwitch({ id, initialStatus, onStatusChange, activeValue = 'active', inactiveValue = 'inactive', labelMap, onLocalUpdate }: StatusSwitchProps) {
     const { toast } = useToast()
     const [isPending, startTransition] = useTransition()
     const [isChecked, setIsChecked] = useState(initialStatus === activeValue)
+    const router = useRouter()
+
+    // Keep UI in sync if upstream status changes (e.g., after page refresh or refetch)
+    useEffect(() => {
+        setIsChecked(initialStatus === activeValue)
+    }, [initialStatus, activeValue])
+
+    const defaultLabels: Record<string, string> = {
+        active: 'Active',
+        inactive: 'Inactive',
+        enabled: 'Enabled',
+        disabled: 'Disabled',
+        locked: 'Inactive',
+        never_used: 'Inactive',
+    }
+
+    const formatLabel = (value: string) => {
+        const fallback = value.replace(/_/g, ' ')
+        return (labelMap && labelMap[value]) || defaultLabels[value] || (fallback.charAt(0).toUpperCase() + fallback.slice(1))
+    }
 
     const handleCheckedChange = (checked: boolean) => {
         setIsChecked(checked);
@@ -34,16 +58,24 @@ export function StatusSwitch({ id, initialStatus, onStatusChange, activeValue = 
                     title: "Status Updated",
                     description: result.message,
                 })
+                onLocalUpdate && onLocalUpdate(checked)
+                // Force a route refresh so parent lists refetch and reflect latest status
+                try { router.refresh() } catch {}
             }
         })
     }
     
     return (
-        <Switch
-            checked={isChecked}
-            onCheckedChange={handleCheckedChange}
-            disabled={isPending}
-            aria-label="Toggle Status"
-        />
+        <div className="flex items-center gap-2">
+            <Badge variant={isChecked ? 'default' : 'secondary'} className="capitalize">
+                {isChecked ? formatLabel(String(activeValue)) : formatLabel(String(inactiveValue))}
+            </Badge>
+            <Switch
+                checked={isChecked}
+                onCheckedChange={handleCheckedChange}
+                disabled={isPending}
+                aria-label="Toggle Status"
+            />
+        </div>
     )
 }
