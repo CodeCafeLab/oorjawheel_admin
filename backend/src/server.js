@@ -30,6 +30,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:9002',
   'https://6000-firebase-studio-1754361228920.cluster-sumfw3zmzzhzkx4mpvz3ogth4y.cloudworkstations.dev',
+  'https://ow.codecafelab.in',
   ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : [])
 ].filter(Boolean);
 

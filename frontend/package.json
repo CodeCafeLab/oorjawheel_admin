@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "predev": "node scripts/inject-firebase-config.js",
-    "dev": "next dev --turbopack -p 9002",
+    "dev": "next dev -p 9002",
     "prebuild": "node scripts/inject-firebase-config.js",
     "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",

@@ -2,7 +2,9 @@ import axios from "axios";
 
 const baseURL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  (typeof window !== 'undefined' ? `${window.location.origin}/api` : 'http://localhost:4000/api');
+  (typeof window !== 'undefined' ? 
+    (window.location.hostname === 'ow.codecafelab.in' ? 'https://ow.codecafelab.in/api' : `${window.location.origin}/api`) 
+    : 'http://localhost:4000/api');
 
 export const api = axios.create({
   baseURL,
