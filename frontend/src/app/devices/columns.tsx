@@ -2,7 +2,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, ArrowUpDown, Trash2, Edit, Printer } from "lucide-react"
+import { MoreHorizontal, ArrowUpDown, Trash2, Edit, Printer, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -14,7 +14,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
+import { StatusSwitch } from "@/components/ui/status-switch"
 import { Device, DeviceMaster } from "./schema"
+import { useRouter } from "next/navigation"
 import {
     AlertDialog,
     AlertDialogAction,
@@ -63,6 +65,7 @@ const DeviceMasterActions = ({ deviceMaster, onEdit, onDelete }: { deviceMaster:
 }
 
 const DeviceActions = ({ device, onEdit, onDelete }: { device: Device, onEdit: (device: Device) => void, onDelete: (id: string) => void }) => {
+    const router = useRouter()
 
     const handlePrint = () => {
         window.print();
@@ -79,6 +82,7 @@ const DeviceActions = ({ device, onEdit, onDelete }: { device: Device, onEdit: (
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => router.push(`/devices/${device.id}`)}><Eye className="mr-2 h-4 w-4" /> View</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onEdit(device)}><Edit className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
                 <DropdownMenuItem onClick={handlePrint}><Printer className="mr-2 h-4 w-4" /> Print Welcome Kit</DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -156,7 +160,36 @@ export const deviceMasterColumns = (onEdit: (master: DeviceMaster) => void, onDe
         header: "Status",
         cell: ({ row }) => {
             const status = row.getValue("status") as string;
-            return <Badge variant={status === 'active' ? 'default' : 'secondary'} className="capitalize">{status}</Badge>
+            const id = String(row.original.id)
+            return (
+              <StatusSwitch
+                id={id}
+                initialStatus={status as any}
+                activeValue="active"
+                inactiveValue="inactive"
+                labelMap={{ active: 'Enabled', inactive: 'Disabled' }}
+                onStatusChange={async (deviceMasterId, checked) => {
+                  try {
+                    const { updateData } = await import("@/lib/api-utils")
+                    const newStatus = checked ? "active" : "inactive"
+                    const m = row.original
+                    await updateData(`/device-masters/${deviceMasterId}`, {
+                      deviceType: m.deviceType,
+                      btServe: m.btServe,
+                      btChar: m.btChar,
+                      soundBtName: m.soundBtName,
+                      status: newStatus,
+                    })
+                    return { success: true, message: `Type status set to ${newStatus}` }
+                  } catch (e: any) {
+                    return { success: false, message: e?.message || "Failed to update status" }
+                  }
+                }}
+              onLocalUpdate={(checked) => {
+                row.original.status = checked ? 'active' as any : 'inactive' as any
+              }}
+              />
+            )
         }
     },
     {
@@ -232,11 +265,42 @@ export const columns = (onEdit: (device: Device) => void, onDelete: (id: string)
     header: "Status",
     cell: ({ row }) => {
         const status = row.getValue("status") as string;
-        const variant: "default" | "secondary" | "destructive" = 
-            status === 'active' ? 'default' :
-            status === 'never_used' ? 'secondary' :
-            'destructive';
-        return <Badge variant={variant} className="capitalize">{status.replace('_', ' ')}</Badge>
+        const id = String(row.original.id)
+        return (
+          <StatusSwitch
+            id={id}
+            initialStatus={status as any}
+            activeValue="active"
+            inactiveValue="disabled"
+            labelMap={{ active: 'Enabled', disabled: 'Disabled' }}
+            onStatusChange={async (deviceId, checked) => {
+              try {
+                const { updateData } = await import("@/lib/api-utils")
+                const newStatus = checked ? "active" : "disabled"
+                // Send full payload to satisfy backend update expectations
+                const d = row.original
+                await updateData(`/devices/${deviceId}`, {
+                  device_name: d.deviceName ?? null,
+                  mac_address: d.macAddress ?? null,
+                  device_type: d.deviceType ?? null,
+                  user_id: d.userId ?? null,
+                  passcode: d.passcode ?? null,
+                  status: newStatus,
+                  bt_name: (d as any).btName ?? null,
+                  warranty_start: (d as any).warrantyStart ?? null,
+                  default_cmd: (d as any).defaultCmd ?? null,
+                  first_connected_at: (d as any).firstConnectedAt ?? null,
+                })
+                return { success: true, message: `Device status set to ${newStatus}` }
+              } catch (e: any) {
+                return { success: false, message: e?.message || "Failed to update device status" }
+              }
+            }}
+          onLocalUpdate={(checked) => {
+            row.original.status = checked ? 'active' as any : 'disabled' as any
+          }}
+          />
+        )
     }
   },
   {

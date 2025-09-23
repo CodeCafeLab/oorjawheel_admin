@@ -69,11 +69,6 @@ export const columns = ({ onEdit, onDelete, onSend }: ColumnProps): ColumnDef<No
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as string
-      const sentAt = row.original.sent_at
-      const createdAt = row.original.created_at
-      const isImmediate = status === 'sent' && sentAt && createdAt && 
-        new Date(sentAt).getTime() - new Date(createdAt).getTime() < 5000 // Within 5 seconds
-      
       const statusColors = {
         draft: "bg-gray-100 text-gray-800",
         scheduled: "bg-blue-100 text-blue-800",
@@ -81,16 +76,9 @@ export const columns = ({ onEdit, onDelete, onSend }: ColumnProps): ColumnDef<No
         failed: "bg-red-100 text-red-800",
       }
       return (
-        <div className="flex items-center gap-1">
-          <Badge className={statusColors[status as keyof typeof statusColors] || "bg-gray-100 text-gray-800"}>
-            {status}
-          </Badge>
-          {isImmediate && (
-            <Badge variant="outline" className="text-xs">
-              Immediate
-            </Badge>
-          )}
-        </div>
+        <Badge className={statusColors[status as keyof typeof statusColors] || "bg-gray-100 text-gray-800"}>
+          {status}
+        </Badge>
       )
     },
   },

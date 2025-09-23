@@ -58,7 +58,7 @@ async function apiRequest<T>(
   }
   
   
-  const baseURL = 'http://localhost:4000/api';
+  const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || `${window.location.origin}/api`;
   const url = `${baseURL}${endpoint}`;
   
   const headers: Record<string, string> = {

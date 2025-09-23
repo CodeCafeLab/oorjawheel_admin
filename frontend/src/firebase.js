@@ -1,27 +1,27 @@
 // Firebase client SDK (web) setup for Messaging
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
+import { getClientFirebaseConfig } from '@/lib/firebase-config';
 
-// Firebase web app config from environment variables
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
-
-export const firebaseApp = initializeApp(firebaseConfig);
+let firebaseAppPromise;
+async function ensureApp() {
+  if (firebaseAppPromise) return firebaseAppPromise;
+  firebaseAppPromise = (async () => {
+    const cfg = await getClientFirebaseConfig();
+    if (!cfg) throw new Error('Firebase config not available');
+    return initializeApp(cfg);
+  })();
+  return firebaseAppPromise;
+}
 
 export async function getMessagingToken(vapidKey) {
   const supported = await isSupported();
   if (!supported) return null;
-
-  const messaging = getMessaging(firebaseApp);
+  const app = await ensureApp();
+  const messaging = getMessaging(app);
   try {
     const token = await getToken(messaging, { 
-      vapidKey,
+      vapidKey: vapidKey || (await getClientFirebaseConfig())?.vapidKey,
       serviceWorkerRegistration: await navigator.serviceWorker.register('/firebase-messaging-sw.js')
     });
     return token || null;
@@ -32,12 +32,12 @@ export async function getMessagingToken(vapidKey) {
   }
 }
 
-export function onForegroundMessage(callback) {
-  return isSupported().then((supported) => {
-    if (!supported) return () => {};
-    const messaging = getMessaging(firebaseApp);
-    return onMessage(messaging, (payload) => callback(payload));
-  });
+export async function onForegroundMessage(callback) {
+  const supported = await isSupported();
+  if (!supported) return () => {};
+  const app = await ensureApp();
+  const messaging = getMessaging(app);
+  return onMessage(messaging, (payload) => callback(payload));
 }
 
 
