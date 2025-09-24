@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,18 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, User as UserIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { addDevice, updateDevice } from "@/actions/devices";
+import { fetchUsers } from "@/actions/users";
 import { useToast } from "@/hooks/use-toast";
 import { Device } from "@/app/devices/schema";
+import type { User } from "@/app/users/schema";
 
 interface EnhancedDeviceFormProps {
   device?: any;
@@ -42,7 +38,7 @@ export default function EnhancedDeviceForm({
     deviceName: device?.device_name || device?.deviceName || "",
     macAddress: device?.mac_address || device?.macAddress || "",
     deviceType: device?.device_type || device?.deviceType || "",
-    userId: device?.user_id || device?.userId || "",
+    userId: device?.user_id || device?.userId || "unassigned",
     passcode: device?.passcode || "",
     status: device?.status || "never_used",
     btName: device?.bt_name || device?.btName || "",
@@ -52,10 +48,31 @@ export default function EnhancedDeviceForm({
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  const [date, setDate] = useState<Date | undefined>(
-    device?.warranty_start || device?.warrantyStart ? new Date(device.warranty_start || device.warrantyStart) : undefined
-  );
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
   const { toast } = useToast();
+
+  // Fetch users for the dropdown
+  useEffect(() => {
+    const loadUsers = async () => {
+      setLoadingUsers(true);
+      try {
+        const usersData = await fetchUsers();
+        setUsers(usersData);
+      } catch (error) {
+        console.error("Failed to fetch users:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load users for assignment",
+        });
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    loadUsers();
+  }, [toast]);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -67,13 +84,15 @@ export default function EnhancedDeviceForm({
 
     try {
       // Clean the form data - convert empty strings to null for optional fields
+      // Note: warrantyStart and firstConnectedAt are read-only and managed by mobile app
       const cleanedFormData = {
         ...formData,
-        userId: formData.userId || null,
+        userId: formData.userId === "unassigned" ? null : formData.userId || null,
         btName: formData.btName || null,
-        warrantyStart: formData.warrantyStart || null,
         defaultCmd: formData.defaultCmd || null,
-        firstConnectedAt: formData.firstConnectedAt || null,
+        // Don't send warranty and first connected data as they're managed by mobile app
+        warrantyStart: null,
+        firstConnectedAt: null,
       };
 
       const result = device
@@ -179,12 +198,26 @@ export default function EnhancedDeviceForm({
 
           <div className="space-y-2">
             <Label htmlFor="userId">User ID (Optional)</Label>
-            <Input
-              id="userId"
+            <Select
               value={formData.userId}
-              onChange={(e) => handleChange("userId", e.target.value)}
-              placeholder="Assign to user"
-            />
+              onValueChange={(value) => handleChange("userId", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={loadingUsers ? "Loading users..." : "Select a user"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {users.map((user) => (
+                  <SelectItem key={user.id} value={user.id.toString()}>
+                    <div className="flex items-center gap-2">
+                      <UserIcon className="h-4 w-4" />
+                      <span>{user.fullName || user.email}</span>
+                      <span className="text-muted-foreground text-sm">({user.email})</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -241,34 +274,19 @@ export default function EnhancedDeviceForm({
 
           <div className="space-y-2">
             <Label htmlFor="warrantyStart">Warranty Start Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(newDate) => {
-                    setDate(newDate);
-                    handleChange(
-                      "warrantyStart",
-                      newDate ? format(newDate, "yyyy-MM-dd") : ""
-                    );
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="flex items-center gap-2">
+              <Input
+                id="warrantyStart"
+                value={formData.warrantyStart ? format(new Date(formData.warrantyStart), "PPP") : "Not started"}
+                readOnly
+                className="bg-muted"
+                placeholder="Auto-updated when user logs in"
+              />
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This field is automatically updated when the assigned user logs in through the mobile app
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -292,12 +310,19 @@ export default function EnhancedDeviceForm({
 
           <div className="space-y-2">
             <Label htmlFor="firstConnectedAt">First Connected At</Label>
-            <Input
-              id="firstConnectedAt"
-              type="datetime-local"
-              value={formData.firstConnectedAt ? format(new Date(formData.firstConnectedAt), "yyyy-MM-dd'T'HH:mm") : ""}
-              onChange={(e) => handleChange("firstConnectedAt", e.target.value)}
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                id="firstConnectedAt"
+                value={formData.firstConnectedAt ? format(new Date(formData.firstConnectedAt), "PPP 'at' p") : "Not connected"}
+                readOnly
+                className="bg-muted"
+                placeholder="Auto-updated when user connects"
+              />
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This field is automatically updated when the user first connects through the mobile app
+            </p>
           </div>
         </div>
       </div>

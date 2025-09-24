@@ -15,6 +15,11 @@ export async function getNotifications({
     const limitNum = parseInt(limit, 10) || 20;
     const offset = (pageNum - 1) * limitNum;
     
+    // Ensure page and limit are numbers
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 20;
+    const offset = (pageNum - 1) * limitNum;
+    
     let query = `
       SELECT 
         n.*,
@@ -58,9 +63,10 @@ export async function getNotifications({
     const [countResult] = await pool.execute(countQuery, params);
     const total = countResult[0].total;
     
-    // Get paginated results
-    query += ' LIMIT ? OFFSET ?';
-    params.push(Number(limitNum), Number(offset));
+    // Get paginated results (LIMIT/OFFSET must be interpolated as numbers for MySQL)
+    const safeLimit = Number(limit) || 20;
+    const safeOffset = Number(offset) || 0;
+    query += ` LIMIT ${safeLimit} OFFSET ${safeOffset}`;
     
     const [rows] = await pool.execute(query, params);
     

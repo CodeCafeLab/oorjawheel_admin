@@ -2,7 +2,6 @@
 
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
-import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { useEffect, useState, useTransition } from "react"
 
@@ -20,7 +19,6 @@ export function StatusSwitch({ id, initialStatus, onStatusChange, activeValue = 
     const { toast } = useToast()
     const [isPending, startTransition] = useTransition()
     const [isChecked, setIsChecked] = useState(initialStatus === activeValue)
-    const router = useRouter()
 
     // Keep UI in sync if upstream status changes (e.g., after page refresh or refetch)
     useEffect(() => {
@@ -59,8 +57,6 @@ export function StatusSwitch({ id, initialStatus, onStatusChange, activeValue = 
                     description: result.message,
                 })
                 onLocalUpdate && onLocalUpdate(checked)
-                // Force a route refresh so parent lists refetch and reflect latest status
-                try { router.refresh() } catch {}
             }
         })
     }

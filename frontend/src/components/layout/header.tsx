@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import logo from '@/assets/logo.png'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -78,7 +79,7 @@ export function Header() {
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar className="h-10 w-10">
-                        <AvatarImage src="https://placehold.co/100x100.png" alt="Admin" data-ai-hint="person face" />
+                        <AvatarImage src={(logo as any).src || (logo as any)} alt="Admin" />
                         <AvatarFallback>AD</AvatarFallback>
                     </Avatar>
                     </Button>
