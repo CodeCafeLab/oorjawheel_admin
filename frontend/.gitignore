@@ -1,6 +1,6 @@
 # dependencies
 /node_modules
-/.next
+/.next/
 out/
 /.pnp
 .pnp.*
