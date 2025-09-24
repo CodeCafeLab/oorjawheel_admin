@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-"# oorjawheel_admin" 
-=======
-# Firebase Studio
+# OorjaWheel Admin
 
-This is a NextJS starter in Firebase Studio.
+This is the admin dashboard for OorjaWheel, built with Next.js and Firebase.
 
 To get started, take a look at src/app/page.tsx.
->>>>>>> cd1e7bf (initial scaffold)

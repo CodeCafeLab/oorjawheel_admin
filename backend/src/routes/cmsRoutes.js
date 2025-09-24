@@ -28,6 +28,9 @@ import {
   upload,
   getStaticContentController,
   getAllStaticContentController,
+  getPublicLegalContent,
+  getPublicCategories,
+  getPublicContentByCategory,
   saveStaticContentController,
   updateStaticContentController,
   deleteStaticContentController,
@@ -71,6 +74,11 @@ router.delete('/media/:id', removeMediaFile);
 // Field Types and Templates Routes
 router.get('/field-types', listFieldTypes);
 router.get('/templates', listTemplates);
+
+// Public legal/static bundle (place before generic public routes)
+router.get('/public/legal', getPublicLegalContent);
+router.get('/public/categories', getPublicCategories);
+router.get('/public/categories/:categoryId/content', getPublicContentByCategory);
 
 // Public API Routes
 router.get('/public/:content_type_slug', getPublicContent);

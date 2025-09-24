@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { listContentTypes, addContentType, editContentType, removeContentType, getContentType, addContentTypeField, listContentTypeFields, editContentTypeField, removeContentTypeField, listContentItems, addContentItem, getContentItem, editContentItem, removeContentItem, listCategories, addCategory, editCategory, removeCategory, listMediaFiles, uploadMediaFile, editMediaFile, removeMediaFile, listFieldTypes, listTemplates, getPublicContent, upload, getStaticContentController, getAllStaticContentController, saveStaticContentController, updateStaticContentController, deleteStaticContentController, setContentItemCategoryController } from '../controllers/cmsController.js';
+import { listContentTypes, addContentType, editContentType, removeContentType, getContentType, addContentTypeField, listContentTypeFields, editContentTypeField, removeContentTypeField, listContentItems, addContentItem, getContentItem, editContentItem, removeContentItem, listCategories, addCategory, editCategory, removeCategory, listMediaFiles, uploadMediaFile, editMediaFile, removeMediaFile, listFieldTypes, listTemplates, getPublicContent, upload, getStaticContentController, getAllStaticContentController, getPublicLegalContent, getPublicCategories, getPublicContentByCategory, saveStaticContentController, updateStaticContentController, deleteStaticContentController, setContentItemCategoryController } from '../controllers/cmsController.js';
 const router = Router();
 // Content Types Routes
 router.get('/content-types', listContentTypes);
@@ -31,6 +31,10 @@ router.delete('/media/:id', removeMediaFile);
 // Field Types and Templates Routes
 router.get('/field-types', listFieldTypes);
 router.get('/templates', listTemplates);
+// Public legal/static bundle (place before generic public routes)
+router.get('/public/legal', getPublicLegalContent);
+router.get('/public/categories', getPublicCategories);
+router.get('/public/categories/:categoryId/content', getPublicContentByCategory);
 // Public API Routes
 router.get('/public/:content_type_slug', getPublicContent);
 router.get('/public/:content_type_slug/:slug', getPublicContent);

@@ -117,6 +117,70 @@ export async function getContentItems({ content_type_id, status, page = 1, limit
         conn.release();
     }
 }
+// Get content items by category
+export async function getContentItemsByCategory({ category_id, status = 'published', search }) {
+    const conn = await pool.getConnection();
+    try {
+        // Build filters
+        let whereClause = 'WHERE 1=1';
+        const params = [];
+        if (category_id) {
+            whereClause += ' AND cc.category_id = ?';
+            params.push(Number(category_id));
+        }
+        // content_items table supports status
+        const ciStatusClause = status ? ' AND ci.status = ?' : '';
+        const ciStatusParams = status ? [status] : [];
+        if (search) {
+            whereClause += ' AND (ci.title LIKE ? OR ci.excerpt LIKE ?)';
+            params.push(`%${search}%`, `%${search}%`);
+        }
+        // Query from content_items (normalized fields)
+        const [contentItems] = await conn.execute(`SELECT 
+         ci.id,
+         ci.title,
+         ci.excerpt AS description,
+         NULL AS command,
+         ct.name AS content_type_name,
+         ct.slug AS content_type_slug,
+         'content_item' AS source,
+         ci.created_at
+       FROM content_items ci
+       JOIN content_types ct ON ci.content_type_id = ct.id
+       JOIN content_categories cc ON cc.content_item_id = ci.id
+       ${whereClause}${ciStatusClause}
+       ORDER BY ci.created_at DESC`, [...params, ...ciStatusParams]);
+        // Query from pages (your data seems to be stored here). We reuse category link table.
+        let pagesWhere = 'WHERE 1=1';
+        const pagesParams = [];
+        if (category_id) {
+            pagesWhere += ' AND cc.category_id = ?';
+            pagesParams.push(Number(category_id));
+        }
+        if (search) {
+            pagesWhere += ' AND (p.title LIKE ? OR p.description LIKE ?)';
+            pagesParams.push(`%${search}%`, `%${search}%`);
+        }
+        const [pages] = await conn.execute(`SELECT 
+         p.id,
+         p.title,
+         p.description,
+         p.command,
+         NULL AS content_type_name,
+         NULL AS content_type_slug,
+         'page' AS source,
+         p.created_at
+       FROM pages p
+       JOIN content_categories cc ON cc.content_item_id = p.id
+       ${pagesWhere}
+       ORDER BY p.created_at DESC`, pagesParams);
+        // Merge results with pages first (to match your current data usage)
+        return [...pages, ...contentItems];
+    }
+    finally {
+        conn.release();
+    }
+}
 export async function createContentItem({ content_type_id, title, slug, status, featured_image, excerpt, meta_title, meta_description, author_id, fieldValues }) {
     const conn = await pool.getConnection();
     try {
