@@ -7,6 +7,7 @@ import {
   updateUser,
   deleteUser,
 } from "../models/userModel.js";
+import { getDevicesByUserId, getDeviceById, updateDevice } from "../models/deviceModel.js";
 
 export async function getUsers(req, res, next) {
   try {
@@ -75,11 +76,129 @@ export async function editUser(req, res, next) {
   }
 }
 
+// Public-safe update: prevents changing email
+export async function updateUserPublic(req, res, next) {
+  try {
+    const userId = req.params.id;
+    const body = req.body || {};
+
+    const existing = await getUserById(userId);
+    if (!existing) return res.status(404).json({ error: "Not found" });
+
+    // Disallow changing email explicitly
+    if (typeof body.email !== "undefined" && body.email !== existing.email) {
+      return res.status(400).json({ error: "Email cannot be changed" });
+    }
+
+    // Build a complete updates object to avoid undefined bind params
+    const updates = {
+      fullName: typeof body.fullName !== "undefined" ? body.fullName : existing.fullName,
+      email: existing.email,
+      contactNumber: typeof body.contactNumber !== "undefined" ? body.contactNumber : existing.contactNumber,
+      address: typeof body.address !== "undefined" ? body.address : existing.address,
+      country: typeof body.country !== "undefined" ? body.country : existing.country,
+      status: typeof body.status !== "undefined" ? body.status : (existing.status || "active"),
+    };
+
+    let passwordHash = null;
+    if (body.password) {
+      const salt = await bcrypt.genSalt(10);
+      passwordHash = await bcrypt.hash(body.password, salt);
+    } else if (body.password_hash) {
+      passwordHash = body.password_hash;
+    }
+
+    await updateUser(userId, updates, passwordHash);
+    res.json({ message: "Updated" });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Assign a device to a user (public endpoint)
+export async function assignDeviceToUserPublic(req, res, next) {
+  try {
+    const userId = Number(req.params.id);
+    const { deviceId } = req.body || {};
+
+    if (!deviceId) {
+      return res.status(400).json({ error: "deviceId is required" });
+    }
+
+    const user = await getUserById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const device = await getDeviceById(deviceId);
+    if (!device) return res.status(404).json({ error: "Device not found" });
+
+    // If already assigned to this user, respond idempotently
+    const currentAssignedUserId = Number(device.user_id) || null;
+    if (currentAssignedUserId === userId) {
+      return res.json({ message: "Already assigned" });
+    }
+
+    // If assigned to another user, block re-assignment by default
+    if (currentAssignedUserId && currentAssignedUserId !== userId) {
+      return res.status(409).json({ error: "Device already assigned to another user" });
+    }
+
+    // Update device with same fields but new user_id
+    await updateDevice(device.id, {
+      device_name: device.device_name,
+      mac_address: device.mac_address,
+      device_type: device.device_type,
+      user_id: userId,
+      passcode: device.passcode,
+      status: device.status,
+      bt_name: device.bt_name,
+      warranty_start: device.warranty_start,
+      default_cmd: device.default_cmd,
+      first_connected_at: device.first_connected_at,
+    });
+
+    res.json({ message: "Assigned" });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function removeUser(req, res, next) {
   try {
     await deleteUser(req.params.id);
     res.json({ message: "Deleted" });
   } catch (err) {
+    next(err);
+  }
+}
+
+export async function getUserDevices(req, res, next) {
+  try {
+    const userId = req.params.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const status = req.query.status || undefined;
+    const deviceType = req.query.deviceType || undefined;
+    const search = req.query.search || undefined;
+
+    // Ensure user exists (optional but helpful)
+    const user = await getUserById(userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const result = await getDevicesByUserId(userId, {
+      status,
+      deviceType,
+      search,
+      page,
+      limit,
+    });
+
+    res.json({
+      success: true,
+      user: { id: user.id, fullName: user.fullName, email: user.email },
+      ...result,
+    });
+  } catch (err) {
+    console.error("Error in getUserDevices:", err);
     next(err);
   }
 }

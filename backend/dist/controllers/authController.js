@@ -3,7 +3,13 @@ import { findUserByEmail, findAdminByEmail, createAdmin } from '../models/authMo
 import { generateToken } from '../utils/jwt.js';
 export async function login(req, res, next) {
     try {
-        const { email, password, redirectUrl } = req.body;
+        const { email, password, redirectUrl } = req.body || {};
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email and password are required'
+            });
+        }
         // Only allow admin users to login
         const user = await findAdminByEmail(email);
         if (!user) {

@@ -63,6 +63,16 @@ export async function changeAdminPassword(userId, { oldPassword, newPassword }) 
   } finally { conn.release(); }
 }
 
+// Password meta (do not expose hashes)
+export async function getAdminPasswordMeta(userId) {
+  const conn = await pool.getConnection();
+  try {
+    const [rows] = await conn.execute('SELECT password_hash FROM admins WHERE id = ? LIMIT 1', [userId]);
+    const hash = rows[0]?.password_hash;
+    return { hasPassword: Boolean(hash) };
+  } finally { conn.release(); }
+}
+
 // General settings per admin
 export async function getAdminGeneralSettings(userId) {
   const conn = await pool.getConnection();

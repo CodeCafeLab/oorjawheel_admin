@@ -38,9 +38,10 @@ export async function getNotifications({ page = 1, limit = 20, status, type, use
         const countQuery = query.replace(/SELECT[\s\S]*?FROM/, 'SELECT COUNT(*) as total FROM');
         const [countResult] = await pool.execute(countQuery, params);
         const total = countResult[0].total;
-        // Get paginated results
-        query += ' LIMIT ? OFFSET ?';
-        params.push(limit, offset);
+        // Get paginated results (interpolate numbers for MySQL)
+        const safeLimit = Number(limit) || 20;
+        const safeOffset = Number(offset) || 0;
+        query += ` LIMIT ${safeLimit} OFFSET ${safeOffset}`;
         const [rows] = await pool.execute(query, params);
         // Convert dates to ISO strings for proper frontend handling
         const processedRows = rows.map(row => ({

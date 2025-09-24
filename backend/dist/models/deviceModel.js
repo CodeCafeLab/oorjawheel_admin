@@ -2,21 +2,66 @@ import pool from "../config/pool.js";
 export async function getDevices(filters) {
     const conn = await pool.getConnection();
     try {
-        let sql = "SELECT * FROM devices";
+        let sql = `SELECT d.*, u.fullName as user_name, u.email as user_email 
+               FROM devices d 
+               LEFT JOIN users u ON CAST(d.user_id AS UNSIGNED) = u.id`;
         let params = [];
+        let whereClause = "";
         if (filters.status) {
-            sql += " WHERE status = ?";
+            whereClause += " WHERE d.status = ?";
             params.push(filters.status);
         }
-        // ... more filters ...
-        if (params.length > 0) {
-            const [rows] = await conn.execute(sql, params);
-            return rows;
+        if (filters.deviceType) {
+            whereClause += whereClause ? " AND d.device_type = ?" : " WHERE d.device_type = ?";
+            params.push(filters.deviceType);
         }
-        else {
-            const [rows] = await conn.execute(sql);
-            return rows;
+        if (filters.search) {
+            whereClause += whereClause ? " AND d.device_name LIKE ?" : " WHERE d.device_name LIKE ?";
+            params.push(`%${filters.search}%`);
         }
+        sql += whereClause;
+        // Add pagination if provided
+        if (filters.page && filters.limit) {
+            const offset = (filters.page - 1) * filters.limit;
+            sql += ` LIMIT ${filters.limit} OFFSET ${offset}`;
+        }
+        const [rows] = await conn.execute(sql, params);
+        return rows;
+    }
+    finally {
+        conn.release();
+    }
+}
+export async function getDevicesByUserId(userId, { status, deviceType, search, page = 1, limit = 20 } = {}) {
+    const conn = await pool.getConnection();
+    try {
+        let sql = `SELECT d.*
+               FROM devices d
+               WHERE CAST(d.user_id AS UNSIGNED) = ?`;
+        const params = [Number(userId)];
+        if (status) {
+            sql += " AND d.status = ?";
+            params.push(status);
+        }
+        if (deviceType) {
+            sql += " AND d.device_type = ?";
+            params.push(deviceType);
+        }
+        if (search) {
+            sql += " AND d.device_name LIKE ?";
+            params.push(`%${search}%`);
+        }
+        // Count total for pagination metadata
+        const countSql = `SELECT COUNT(*) as total FROM (${sql}) as sub`;
+        const [countRows] = await conn.execute(countSql, params);
+        const total = countRows?.[0]?.total ?? 0;
+        // Pagination
+        const safeLimit = Number(limit) || 20;
+        const safePage = Number(page) || 1;
+        const offset = (safePage - 1) * safeLimit;
+        sql += ` ORDER BY d.id DESC LIMIT ${safeLimit} OFFSET ${offset}`;
+        const [rows] = await conn.execute(sql, params);
+        return { data: rows, total, page: safePage, limit: safeLimit };
     }
     finally {
         conn.release();
@@ -48,9 +93,10 @@ export async function createDevice({ device_name, mac_address, device_type, user
 export async function getDeviceById(id) {
     const conn = await pool.getConnection();
     try {
-        const [rows] = await conn.execute("SELECT * FROM devices WHERE id = ?", [
-            id,
-        ]);
+        const [rows] = await conn.execute(`SELECT d.*, u.fullName as user_name, u.email as user_email 
+       FROM devices d 
+       LEFT JOIN users u ON CAST(d.user_id AS UNSIGNED) = u.id 
+       WHERE d.id = ?`, [id]);
         return rows[0] || null;
     }
     finally {

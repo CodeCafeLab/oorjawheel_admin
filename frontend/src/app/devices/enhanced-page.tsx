@@ -34,6 +34,7 @@ import {
     getTotalDeviceCount,
     getTotalDeviceMasterCount
 } from '@/actions/devices';
+import { WelcomeKitModal } from '@/components/welcome-kit-modal';
 
 // Enhanced modal data with proper device types
 const modals = [
@@ -56,6 +57,8 @@ export default function EnhancedDevicesPage() {
     const [totalDevices, setTotalDevices] = React.useState(0);
     const [totalMasters, setTotalMasters] = React.useState(0);
     const [isLoading, setIsLoading] = React.useState(false);
+    const [welcomeKitDevice, setWelcomeKitDevice] = React.useState<Device | null>(null);
+    const [isWelcomeKitOpen, setIsWelcomeKitOpen] = React.useState(false);
     const { toast } = useToast();
 
     const refreshData = async () => {
@@ -233,6 +236,11 @@ export default function EnhancedDevicesPage() {
         setCurrentPage(1); // Reset to first page
     };
 
+    const handlePrintWelcomeKit = (device: Device) => {
+        setWelcomeKitDevice(device);
+        setIsWelcomeKitOpen(true);
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -338,7 +346,7 @@ export default function EnhancedDevicesPage() {
                         </CardHeader>
                         <CardContent>
                             <DataTable 
-                                columns={deviceMasterColumns(handleEditMaster, handleDeleteMaster)} 
+                                columns={deviceMasterColumns(handleEditMaster, handleDeleteMaster, refreshData)} 
                                 data={deviceMasters} 
                                 filterColumnId='deviceType' 
                                 filterPlaceholder='Filter by device type...'
@@ -482,7 +490,7 @@ export default function EnhancedDevicesPage() {
                         </CardHeader>
                         <CardContent>
                             <DataTable 
-                                columns={columns(handleEditDevice, handleDeleteDevice)} 
+                                columns={columns(handleEditDevice, handleDeleteDevice, refreshData, handlePrintWelcomeKit)} 
                                 data={devices} 
                                 filterColumnId='deviceName' 
                                 filterPlaceholder='Filter by device name...'
@@ -550,6 +558,16 @@ export default function EnhancedDevicesPage() {
                     </Button>
                 </div>
             </div>
+
+            {/* Welcome Kit Modal */}
+            <WelcomeKitModal
+                device={welcomeKitDevice}
+                isOpen={isWelcomeKitOpen}
+                onClose={() => {
+                    setIsWelcomeKitOpen(false);
+                    setWelcomeKitDevice(null);
+                }}
+            />
         </div>
     );
 }
