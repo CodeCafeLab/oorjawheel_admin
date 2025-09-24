@@ -17,6 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import {
@@ -344,11 +345,10 @@ function StaticContentCard({ pageType, title, content, onSave }: StaticContentCa
         <CardTitle className="font-headline">{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Textarea 
-          placeholder={`Enter your ${title.toLowerCase()} content here...`}
-          rows={15}
+        <RichTextEditor
           value={localContent}
-          onChange={(e) => setLocalContent(e.target.value)}
+          onChange={setLocalContent}
+          placeholder={`Enter your ${title.toLowerCase()} content here...`}
         />
         <Button 
           onClick={handleSave}

@@ -19,6 +19,8 @@ export const deviceSchema = z.object({
   macAddress: z.string().nullable(),
   deviceType: z.string().nullable(),
   userId: z.string().nullable(),
+  userName: z.string().optional().nullable(),
+  userEmail: z.string().optional().nullable(),
   passcode: z.string().nullable(),
   status: z.enum(["never_used", "active", "disabled"]),
   btName: z.string().optional().nullable(),

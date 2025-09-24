@@ -13,7 +13,13 @@ export async function listDevices(req, res, next) {
             page,
             limit,
         });
-        res.json(result);
+        // Return data in the expected format
+        res.json({
+            data: result,
+            total: result.length,
+            page,
+            limit
+        });
     }
     catch (err) {
         next(err);
@@ -80,6 +86,37 @@ export async function removeDevice(req, res, next) {
     try {
         await deleteDevice(req.params.id);
         res.json({ message: "Deleted" });
+    }
+    catch (err) {
+        next(err);
+    }
+}
+// Public: Activate device by setting warranty_start and first_connected_at
+export async function activateDevicePublic(req, res, next) {
+    try {
+        const deviceId = Number(req.params.id);
+        const body = req.body || {};
+        const device = await getDeviceById(deviceId);
+        if (!device) {
+            return res.status(404).json({ error: "Device not found" });
+        }
+        // Determine timestamps: prefer provided values, else preserve existing, else now
+        const nowIso = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        const warrantyStart = body.warranty_start || body.warrantyStart || device.warranty_start || nowIso;
+        const firstConnectedAt = body.first_connected_at || body.firstConnectedAt || device.first_connected_at || nowIso;
+        await updateDevice(device.id, {
+            device_name: device.device_name,
+            mac_address: device.mac_address,
+            device_type: device.device_type,
+            user_id: device.user_id,
+            passcode: device.passcode,
+            status: device.status,
+            bt_name: device.bt_name,
+            warranty_start: warrantyStart,
+            default_cmd: device.default_cmd,
+            first_connected_at: firstConnectedAt,
+        });
+        res.json({ message: "Activated", warranty_start: warrantyStart, first_connected_at: firstConnectedAt });
     }
     catch (err) {
         next(err);

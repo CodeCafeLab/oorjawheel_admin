@@ -64,11 +64,20 @@ const DeviceMasterActions = ({ deviceMaster, onEdit, onDelete }: { deviceMaster:
     )
 }
 
-const DeviceActions = ({ device, onEdit, onDelete }: { device: Device, onEdit: (device: Device) => void, onDelete: (id: string) => void }) => {
+const DeviceActions = ({ device, onEdit, onDelete, onPrintWelcomeKit }: { 
+    device: Device, 
+    onEdit: (device: Device) => void, 
+    onDelete: (id: string) => void,
+    onPrintWelcomeKit?: (device: Device) => void
+}) => {
     const router = useRouter()
 
     const handlePrint = () => {
-        window.print();
+        if (onPrintWelcomeKit) {
+            onPrintWelcomeKit(device);
+        } else {
+            window.print();
+        }
     }
 
     return (
@@ -108,7 +117,7 @@ const DeviceActions = ({ device, onEdit, onDelete }: { device: Device, onEdit: (
 }
 
 
-export const deviceMasterColumns = (onEdit: (master: DeviceMaster) => void, onDelete: (id: string) => void): ColumnDef<DeviceMaster>[] => [
+export const deviceMasterColumns = (onEdit: (master: DeviceMaster) => void, onDelete: (id: string) => void, onRefresh?: () => void): ColumnDef<DeviceMaster>[] => [
     {
       id: "select",
       header: ({ table }) => (
@@ -180,6 +189,10 @@ export const deviceMasterColumns = (onEdit: (master: DeviceMaster) => void, onDe
                       soundBtName: m.soundBtName,
                       status: newStatus,
                     })
+                    // Trigger refresh after successful update
+                    if (onRefresh) {
+                      onRefresh()
+                    }
                     return { success: true, message: `Type status set to ${newStatus}` }
                   } catch (e: any) {
                     return { success: false, message: e?.message || "Failed to update status" }
@@ -194,6 +207,7 @@ export const deviceMasterColumns = (onEdit: (master: DeviceMaster) => void, onDe
     },
     {
         id: "actions",
+        header: "Actions",
         cell: ({ row }) => {
           return (
             <div className="text-right">
@@ -205,7 +219,7 @@ export const deviceMasterColumns = (onEdit: (master: DeviceMaster) => void, onDe
 ]
 
 
-export const columns = (onEdit: (device: Device) => void, onDelete: (id: string) => void): ColumnDef<Device>[] => [
+export const columns = (onEdit: (device: Device) => void, onDelete: (id: string) => void, onRefresh?: () => void, onPrintWelcomeKit?: (device: Device) => void): ColumnDef<Device>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -245,7 +259,23 @@ export const columns = (onEdit: (device: Device) => void, onDelete: (id: string)
     header: "User ID/Password",
     cell: ({ row }) => {
         const userId = row.getValue("userId") as string;
-        return userId ? `•••••••` : 'Unassigned';
+        const userName = (row.original as any).userName;
+        const userEmail = (row.original as any).userEmail;
+        
+        if (!userId || userId === 'unassigned' || userId === 'null') {
+            return (
+                <div className="flex items-center">
+                    <span className="text-muted-foreground">Unassigned</span>
+                </div>
+            );
+        }
+        
+        return (
+            <div className="flex flex-col">
+                <span className="font-medium">{userName || 'Unknown User'}</span>
+                <span className="text-sm text-muted-foreground">{userEmail || `ID: ${userId}`}</span>
+            </div>
+        );
     }
   },
   {
@@ -291,6 +321,10 @@ export const columns = (onEdit: (device: Device) => void, onDelete: (id: string)
                   default_cmd: (d as any).defaultCmd ?? null,
                   first_connected_at: (d as any).firstConnectedAt ?? null,
                 })
+                // Trigger refresh after successful update
+                if (onRefresh) {
+                  onRefresh()
+                }
                 return { success: true, message: `Device status set to ${newStatus}` }
               } catch (e: any) {
                 return { success: false, message: e?.message || "Failed to update device status" }
@@ -305,10 +339,16 @@ export const columns = (onEdit: (device: Device) => void, onDelete: (id: string)
   },
   {
     id: "actions",
+    header: "Actions",
     cell: ({ row }) => {
       return (
         <div className="text-right">
-            <DeviceActions device={row.original} onEdit={onEdit} onDelete={onDelete} />
+            <DeviceActions 
+                device={row.original} 
+                onEdit={onEdit} 
+                onDelete={onDelete} 
+                onPrintWelcomeKit={onPrintWelcomeKit}
+            />
         </div>
       )
     },

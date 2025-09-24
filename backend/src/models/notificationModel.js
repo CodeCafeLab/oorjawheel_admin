@@ -54,9 +54,10 @@ export async function getNotifications({
     const [countResult] = await pool.execute(countQuery, params);
     const total = countResult[0].total;
     
-    // Get paginated results
-    query += ' LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    // Get paginated results (LIMIT/OFFSET must be interpolated as numbers for MySQL)
+    const safeLimit = Number(limit) || 20;
+    const safeOffset = Number(offset) || 0;
+    query += ` LIMIT ${safeLimit} OFFSET ${safeOffset}`;
     
     const [rows] = await pool.execute(query, params);
     

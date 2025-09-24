@@ -71,3 +71,14 @@ export async function fetchUsers(): Promise<User[]> {
     return [];
   }
 }
+
+export async function fetchUserById(id: string | number): Promise<Partial<User> & { password?: string } | undefined> {
+  try {
+    const { fetchData } = await import('@/lib/api-utils');
+    const data = await fetchData(`/users/${id}`) as any;
+    // Some backends wrap result in { data: {...} }
+    return (data?.data ?? data) as Partial<User> & { password?: string };
+  } catch (error) {
+    return undefined;
+  }
+}

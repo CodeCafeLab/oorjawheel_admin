@@ -39,6 +39,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import * as React from "react";
 import { useToast } from "@/hooks/use-toast";
 import EnhancedDeviceForm from "./enhanced-device-form";
+import { WelcomeKitModal } from "@/components/welcome-kit-modal";
 
 // --- API helper ---
 async function apiRequest<T>(
@@ -112,6 +113,8 @@ export default function DevicesPage() {
   const [selectedMaster, setSelectedMaster] =
     React.useState<DeviceMaster | null>(null);
   const [loading, setLoading] = React.useState(false);
+  const [welcomeKitDevice, setWelcomeKitDevice] = React.useState<Device | null>(null);
+  const [isWelcomeKitOpen, setIsWelcomeKitOpen] = React.useState(false);
   const { toast } = useToast();
 
   // --- Refresh ---
@@ -123,24 +126,26 @@ export default function DevicesPage() {
         apiRequest<{ data: any[] }>("/device-masters"),
       ]);
 
+      const rawDevices = Array.isArray(devicesJson) ? devicesJson : devicesJson.data ?? [];
+      
       const parsedDevices = z.array(deviceSchema).parse(
-        (Array.isArray(devicesJson) ? devicesJson : devicesJson.data ?? []).map(
-          (d: any) => ({
-            id: d.id.toString(),
-            deviceName: d.device_name,
-            macAddress: d.mac_address,
-            deviceType: d.device_type,
-            userId: d.user_id,
-            passcode: d.passcode,
-            status: d.status,
-            btName: d.bt_name,
-            warrantyStart: d.warranty_start,
-            defaultCmd: d.default_cmd,
-            firstConnectedAt: d.first_connected_at,
-            createdAt: d.created_at,
-            updatedAt: d.updated_at,
-          })
-        )
+        rawDevices.map((d: any) => ({
+          id: d.id.toString(),
+          deviceName: d.device_name,
+          macAddress: d.mac_address,
+          deviceType: d.device_type,
+          userId: d.user_id,
+          userName: d.user_name,
+          userEmail: d.user_email,
+          passcode: d.passcode,
+          status: d.status,
+          btName: d.bt_name,
+          warrantyStart: d.warranty_start,
+          defaultCmd: d.default_cmd,
+          firstConnectedAt: d.first_connected_at,
+          createdAt: d.created_at,
+          updatedAt: d.updated_at,
+        }))
       );
 
       const parsedMasters = z.array(deviceMasterSchema).parse(
@@ -308,6 +313,11 @@ export default function DevicesPage() {
       false
     );
 
+  const handlePrintWelcomeKit = (device: Device) => {
+    setWelcomeKitDevice(device);
+    setIsWelcomeKitOpen(true);
+  };
+
   // --- UI ---
   return (
     <div className="space-y-6">
@@ -432,7 +442,7 @@ export default function DevicesPage() {
                     columns={deviceMasterColumns((m) => {
                       setSelectedMaster(m);
                       setIsMasterSheetOpen(true);
-                    }, handleDeleteMaster)}
+                    }, handleDeleteMaster, refreshData)}
                     data={deviceMasters}
                     filterColumnId="deviceType"
                     filterPlaceholder="Filter by device type..."
@@ -534,7 +544,7 @@ export default function DevicesPage() {
                     columns={columns((d) => {
                       setSelectedDevice(d);
                       setIsSheetOpen(true);
-                    }, handleDeleteDevice)}
+                    }, handleDeleteDevice, refreshData, handlePrintWelcomeKit)}
                     data={devices}
                     filterColumnId="deviceName"
                     filterPlaceholder="Filter by device name..."
@@ -590,6 +600,16 @@ export default function DevicesPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Welcome Kit Modal */}
+      <WelcomeKitModal
+        device={welcomeKitDevice}
+        isOpen={isWelcomeKitOpen}
+        onClose={() => {
+          setIsWelcomeKitOpen(false);
+          setWelcomeKitDevice(null);
+        }}
+      />
     </div>
   );
 }
