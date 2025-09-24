@@ -16,7 +16,6 @@ export async function getNotifications({
     const offset = (pageNum - 1) * limitNum;
     
     // Ensure page and limit are numbers
-    const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 20;
     const offset = (pageNum - 1) * limitNum;
     
