@@ -1,0 +1,54 @@
+name: Deploy OorjaWheel Admin
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # ---------- Backend ----------
+      - name: Deploy Backend
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: 168.231.112.124
+          username: root
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          script: |
+            set -e
+            cd /var/www/oorjawheel_admin/backend
+            git reset --hard
+            git pull origin main
+            npm install --production
+            pm2 reload ow_backend || pm2 restart ow_backend || true
+
+      # ---------- Frontend ----------
+      - name: Deploy Frontend
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: 168.231.112.124
+          username: root
+          password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+          script: |
+            set -e
+            cd /var/www/oorjawheel_admin/frontend
+            git reset --hard
+            git pull origin main
+            npm install
+            # Run build fully, don't exit immediately on error
+            npm run build || BUILD_FAILED=true
+            # If build failed, stop deployment
+            if [ "$BUILD_FAILED" = true ]; then
+              echo "❌ Frontend build failed"
+              exit 1
+            fi
+            # Reload frontend safely
+            pm2 reload ow_frontend || pm2 restart ow_frontend || true

@@ -105,7 +105,10 @@ export class AuthManager {
     if (!token) return false;
 
     try {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || (typeof window !== 'undefined' ? `${window.location.origin}/api` : '');
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 
+        (typeof window !== 'undefined' ? 
+          (window.location.hostname === 'ow.codecafelab.in' ? 'https://ow.codecafelab.in/api' : `${window.location.origin}/api`) 
+          : '');
       const response = await fetch(`${apiBase}/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,

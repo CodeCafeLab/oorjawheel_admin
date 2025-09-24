@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const API_URL =
-  process.env.BACKEND_API_URL || "http://localhost:4000/api/command-logs";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api/command-logs";
 
 export async function GET(req: NextRequest, { params }: any) {
   const res = await fetch(`${API_URL}/${params.id}`);
