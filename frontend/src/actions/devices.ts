@@ -44,7 +44,7 @@ export async function updateDevice(id: string, values: z.infer<typeof DeviceForm
       device_name: values.deviceName,
       mac_address: values.macAddress,
       device_type: values.deviceType,
-      user_id: values.userId || null,
+      user_id: values.userId === 'unassigned' ? null : (values.userId || null),
       passcode: values.passcode,
       status: values.status,
       bt_name: values.btName || null,
