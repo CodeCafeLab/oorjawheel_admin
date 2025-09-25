@@ -5,12 +5,12 @@ importScripts('https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-com
 
 // Firebase config - will be injected at build time or fetched from server
 const firebaseConfig = {
-  apiKey: "undefined",
-  authDomain: "undefined",
-  projectId: "undefined",
-  storageBucket: "undefined",
-  messagingSenderId: "undefined",
-  appId: "undefined"
+  apiKey: "AIzaSyB38lw_nFnx8es2Pmy8D0O-dPYQH_HnEQw",
+  authDomain: "oorjawheel-db6ab.firebaseapp.com",
+  projectId: "oorjawheel-db6ab",
+  storageBucket: "oorjawheel-db6ab.firebasestorage.app",
+  messagingSenderId: "461129703137",
+  appId: "1:461129703137:web:f18212eda3c4eefaa3a1a0"
 };
 
 // Try to fetch config from the server if we're on the production URL

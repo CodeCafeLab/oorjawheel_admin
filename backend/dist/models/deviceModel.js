@@ -103,6 +103,19 @@ export async function getDeviceById(id) {
         conn.release();
     }
 }
+export async function getDeviceByPasscode(passcode) {
+    const conn = await pool.getConnection();
+    try {
+        const [rows] = await conn.execute(`SELECT d.*, u.fullName as user_name, u.email as user_email 
+       FROM devices d 
+       LEFT JOIN users u ON CAST(d.user_id AS UNSIGNED) = u.id 
+       WHERE d.passcode = ?`, [passcode]);
+        return rows[0] || null;
+    }
+    finally {
+        conn.release();
+    }
+}
 export async function updateDevice(id, { device_name, mac_address, device_type, user_id, passcode, status, bt_name = "", warranty_start = null, default_cmd = null, first_connected_at = null, }) {
     const conn = await pool.getConnection();
     try {

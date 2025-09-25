@@ -70,6 +70,17 @@ export async function findUserByEmail(email) {
   }
 }
 
+// Get full user record by email (for authentication)
+export async function getUserByEmail(email) {
+  const conn = await pool.getConnection();
+  try {
+    const [rows] = await conn.execute("SELECT * FROM users WHERE email = ?", [email]);
+    return rows[0] || null;
+  } finally {
+    conn.release();
+  }
+}
+
 // Create user
 export async function createUser(user, passwordHash) {
   const conn = await pool.getConnection();
@@ -100,6 +111,59 @@ export async function getUserById(id) {
   try {
     const [rows] = await conn.execute("SELECT * FROM users WHERE id = ?", [id]);
     return rows[0] || null;
+  } finally {
+    conn.release();
+  }
+}
+
+// Minimal profile fetch for users
+export async function getUserProfileById(id) {
+  const conn = await pool.getConnection();
+  try {
+    const [rows] = await conn.execute(
+      "SELECT id, email, fullName FROM users WHERE id = ? LIMIT 1",
+      [id]
+    );
+    return rows[0] || null;
+  } finally {
+    conn.release();
+  }
+}
+
+// Update user profile (fullName, email)
+export async function updateUserProfile(id, { fullName, email }) {
+  const conn = await pool.getConnection();
+  try {
+    const fields = [];
+    const params = [];
+    if (typeof fullName !== 'undefined') { fields.push('fullName = ?'); params.push(fullName ?? null); }
+    if (typeof email !== 'undefined') { fields.push('email = ?'); params.push(email); }
+    if (fields.length === 0) return true;
+    params.push(id);
+    await conn.execute(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, params);
+    return true;
+  } finally {
+    conn.release();
+  }
+}
+
+// Change user password with oldPassword verification
+export async function changeUserPassword(id, { oldPassword, newPassword }) {
+  const conn = await pool.getConnection();
+  try {
+    const [rows] = await conn.execute(
+      "SELECT password_hash FROM users WHERE id = ?",
+      [id]
+    );
+    const currentHash = rows[0]?.password_hash || null;
+    if (!currentHash) return { ok: false, reason: "not_found" };
+    const bcrypt = (await import("bcryptjs")).default;
+    const ok = await bcrypt.compare(oldPassword, currentHash || "");
+    if (!ok) return { ok: false, reason: "invalid_old" };
+    const salt = await bcrypt.genSalt(10);
+    const newHash = await bcrypt.hash(newPassword, salt);
+    await conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", [newHash, id]);
+    return { ok: true };
   } finally {
     conn.release();
   }

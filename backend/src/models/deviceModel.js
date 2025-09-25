@@ -136,6 +136,22 @@ export async function getDeviceById(id) {
   }
 }
 
+export async function getDeviceByPasscode(passcode) {
+  const conn = await pool.getConnection();
+  try {
+    const [rows] = await conn.execute(
+      `SELECT d.*, u.fullName as user_name, u.email as user_email 
+       FROM devices d 
+       LEFT JOIN users u ON CAST(d.user_id AS UNSIGNED) = u.id 
+       WHERE d.passcode = ?`, 
+      [passcode]
+    );
+    return rows[0] || null;
+  } finally {
+    conn.release();
+  }
+}
+
 export async function updateDevice(
   id,
   {

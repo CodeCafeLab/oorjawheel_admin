@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import pool from '../config/pool.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 // Configure multer for file uploads
@@ -558,6 +559,33 @@ export const deleteStaticContentController = async (req, res, next) => {
         next(err);
     }
 };
+// Public: Get only selected legal/static pages
+export const getPublicLegalContent = async (_req, res, next) => {
+    try {
+        // Support common aliases to match existing DB values
+        const pageAliases = {
+            privacy_policy: ['privacy_policy'],
+            terms_and_conditions: ['terms_and_conditions', 'terms_conditions', 't_and_c'],
+            shipping_and_returns: ['shipping_and_returns', 'shipping_returns'],
+            payment_terms: ['payment_terms', 'payments', 'payment']
+        };
+        const results = {};
+        for (const key of Object.keys(pageAliases)) {
+            const aliases = pageAliases[key];
+            let content = null;
+            for (const alias of aliases) {
+                content = await getStaticContentModel(alias);
+                if (content)
+                    break;
+            }
+            results[key] = content || null;
+        }
+        res.json({ success: true, data: results });
+    }
+    catch (err) {
+        next(err);
+    }
+};
 // Link content item to a category
 export const setContentItemCategoryController = async (req, res, next) => {
     try {
@@ -573,3 +601,30 @@ export const setContentItemCategoryController = async (req, res, next) => {
         next(err);
     }
 };
+// Public: Get active categories list
+export async function getPublicCategories(_req, res, next) {
+    try {
+        const categories = await getCategories();
+        res.json({ success: true, data: categories });
+    }
+    catch (err) {
+        next(err);
+    }
+}
+// Public: Get content items by category
+export async function getPublicContentByCategory(req, res, next) {
+    try {
+        const category_id = Number(req.params.categoryId);
+        const search = req.query.search || undefined;
+        const status = 'published';
+        if (!category_id) {
+            return res.status(400).json({ success: false, message: 'categoryId is required' });
+        }
+        const { getContentItemsByCategory } = await import('../models/cmsModel.js');
+        const items = await getContentItemsByCategory({ category_id, status, search });
+        res.json({ success: true, data: items });
+    }
+    catch (err) {
+        next(err);
+    }
+}

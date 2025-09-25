@@ -2,7 +2,10 @@ import pool from '../config/pool.js';
 // Get all notifications with pagination and filtering
 export async function getNotifications({ page = 1, limit = 20, status, type, user_id, search } = {}) {
     try {
-        const offset = (page - 1) * limit;
+        // Ensure page and limit are numbers
+        const pageNum = parseInt(page, 10) || 1;
+        const limitNum = parseInt(limit, 10) || 20;
+        const offset = (pageNum - 1) * limitNum;
         let query = `
       SELECT 
         n.*,
@@ -38,7 +41,7 @@ export async function getNotifications({ page = 1, limit = 20, status, type, use
         const countQuery = query.replace(/SELECT[\s\S]*?FROM/, 'SELECT COUNT(*) as total FROM');
         const [countResult] = await pool.execute(countQuery, params);
         const total = countResult[0].total;
-        // Get paginated results (interpolate numbers for MySQL)
+        // Get paginated results (LIMIT/OFFSET must be interpolated as numbers for MySQL)
         const safeLimit = Number(limit) || 20;
         const safeOffset = Number(offset) || 0;
         query += ` LIMIT ${safeLimit} OFFSET ${safeOffset}`;

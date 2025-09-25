@@ -23,11 +23,13 @@ import settingsRoutes from "./routes/settingsRoutes.js";
 import publicUserRoutes from "./routes/publicUserRoutes.js";
 import publicDeviceRoutes from "./routes/publicDeviceRoutes.js";
 import publicCommandRoutes from "./routes/publicCommandRoutes.js";
+import userSettingsRoutes from "./routes/userSettingsRoutes.js";
 const app = express();
 const allowedOrigins = [
     'http://localhost:9002',
     'https://ow.codecafelab.in',
     'https://6000-firebase-studio-1754361228920.cluster-sumfw3zmzzhzkx4mpvz3ogth4y.cloudworkstations.dev',
+    'https://ow.codecafelab.in',
     ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : [])
 ].filter(Boolean);
 // Log allowed origins for debugging
@@ -71,6 +73,7 @@ app.use("/api/health", healthRoutes);
 app.use("/api/public/users", publicUserRoutes);
 app.use("/api/public/devices", publicDeviceRoutes);
 app.use("/api/public/commands", publicCommandRoutes);
+app.use("/api/user-settings", userSettingsRoutes);
 // Protected routes (authentication required)
 app.use("/api/devices", authMiddleware, deviceRoutes);
 app.use("/api/device-masters", authMiddleware, deviceMasterRoutes);
