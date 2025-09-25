@@ -16,21 +16,21 @@ module.exports = {
       return [
         {
           source: "/api/:path*",
-          destination: `${process.env.NEXT_PUBLIC_API_BASE_URL}/:path*`,
+          destination: `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/:path*`,
         },
       ];
     } else if (process.env.NODE_ENV === "production") {
       return [
         {
           source: "/api/:path*",
-          destination: "https://ow.codecafelab.in/api/:path*",
+          destination: "http://localhost:4000/api/:path*", // Backend server port
         },
       ];
     } else {
       return [
         {
           source: "/api/:path*",
-          destination: "http://localhost:9002/api/:path*",
+          destination: "http://localhost:4000/api/:path*", // Backend server port
         },
       ];
     }

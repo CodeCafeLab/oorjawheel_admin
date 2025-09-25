@@ -8,8 +8,8 @@ export async function login(values: z.infer<typeof loginSchema>, redirectUrl?: s
   const { email, password } = values;
 
   try {
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || (typeof window !== 'undefined' ? `${window.location.origin}/api` : '');
-    const response = await fetch(`${apiBase}/auth/login`, {
+    // Use relative URL to leverage Next.js rewrites
+    const response = await fetch(`/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -47,8 +47,8 @@ export async function logout() {
     // Call logout endpoint if needed
     const token = localStorage.getItem('auth_token');
     if (token) {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || (typeof window !== 'undefined' ? `${window.location.origin}/api` : '');
-      await fetch(`${apiBase}/auth/logout`, {
+      // Use relative URL to leverage Next.js rewrites
+      await fetch(`/api/auth/logout`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

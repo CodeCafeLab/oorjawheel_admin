@@ -15,6 +15,7 @@ export async function getNotifications({
     const limitNum = parseInt(limit, 10) || 20;
     const offset = (pageNum - 1) * limitNum;
     
+    
     let query = `
       SELECT 
         n.*,
