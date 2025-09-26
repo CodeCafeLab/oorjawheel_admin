@@ -38,7 +38,9 @@ export default function EnhancedDeviceForm({
     deviceName: device?.device_name || device?.deviceName || "",
     macAddress: device?.mac_address || device?.macAddress || "",
     deviceType: device?.device_type || device?.deviceType || "",
-    userId: device?.user_id || device?.userId || "unassigned",
+    userId: (device?.user_id !== undefined && device?.user_id !== null)
+      ? String(device?.user_id)
+      : (device?.userId ? String(device?.userId) : "unassigned"),
     passcode: device?.passcode || "",
     status: device?.status || "never_used",
     btName: device?.bt_name || device?.btName || "",
@@ -124,13 +126,29 @@ export default function EnhancedDeviceForm({
   };
 
   const generatePasscode = () => {
-    const cleanedMac = formData.macAddress.replace(/[^A-Fa-f0-9]/g, "");
-    if (cleanedMac.length >= 6) {
-      setFormData((prev) => ({
-        ...prev,
-        passcode: cleanedMac.slice(-6).toUpperCase(),
-      }));
+    const cleanedMac = (formData.macAddress || "").replace(/[^A-Fa-f0-9]/g, "").toUpperCase();
+    // Build prefix: first char of each MAC byte (e.g., 00:1A:2B:3C:4D:6F -> 012346)
+    let prefix = "";
+    for (let i = 0; i < cleanedMac.length; i += 2) {
+      prefix += cleanedMac[i] || "";
     }
+    // Trim to typical MAC bytes count (6)
+    if (prefix.length > 6) prefix = prefix.slice(0, 6);
+
+    // Time suffix: last 4 digits of HHmmss
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mm = String(now.getMinutes()).padStart(2, "0");
+    const ss = String(now.getSeconds()).padStart(2, "0");
+    const hhmmss = `${hh}${mm}${ss}`;
+    const suffix = hhmmss.slice(-4);
+
+    const passcode = `${prefix}${suffix}`;
+
+    setFormData((prev) => ({
+      ...prev,
+      passcode,
+    }));
   };
 
   const defaultCommands = [
